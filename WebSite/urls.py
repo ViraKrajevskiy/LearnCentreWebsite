@@ -9,7 +9,7 @@ from WebSite.views.views import (
 urlpatterns = [
     # Главные страницы (Main)
     path('', main_home, name='home'),
-    path('courses/', main_courses, name='main_courses'),
+    path('courses/', main_courses, name='courses'),
     path('about/', main_about, name='about'),
     path('contact/', main_contact, name='contact'),
     path('faq/', main_faq, name='faq'),

@@ -1,0 +1,337 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="promo-banner">
+    <div class="container promo-banner-inner">
+        <i class="bi bi-gift promo-banner-icon"></i>
+        <span class="promo-text">Начало новой карьеры — 2026. Скидка до 60% + 3 курса в подарок</span>
+        <span class="promo-badge">60%</span>
+        <a href="{% url 'courses' %}" class="btn btn-promo">Выбрать курс</a>
+        <i class="bi bi-snowflake promo-banner-icon promo-banner-icon-right"></i>
+    </div>
+</div>
+
+<section class="main-section about-block" id="about">
+    <div class="container">
+        <div class="about-card">
+            <div class="about-card-bg">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=400&fit=crop" alt="" loading="lazy">
+                <div class="about-card-overlay"></div>
+            </div>
+            <div class="about-card-content">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-7">
+                        <span class="about-badge">LearnCentre</span>
+                        <h2 class="about-title">Обучаем программированию и ИИ с поддержкой нейросетей</h2>
+                        <p class="about-desc">Персональный AI-ассистент 24/7, практика с первого дня. От основ к продвинутому — структурированные программы и экспертная поддержка.</p>
+                        <a href="{% url 'about' %}" class="btn-about-link">
+                            <span>Подробнее о школе</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="col-lg-5 d-none d-lg-block">
+                        <div class="about-stats-inline">
+                            <div class="about-stat"><span class="num">500+</span><span class="lbl">студентов</span></div>
+                            <div class="about-stat"><span class="num">12</span><span class="lbl">курсов</span></div>
+                            <div class="about-stat"><span class="num">98%</span><span class="lbl">рекомендуют</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="main-section section-alt">
+    <div class="container">
+        <div class="section-header mb-3">
+            <div class="section-accent-line"></div>
+            <h2 class="section-title">Наши преимущества</h2>
+            <p class="section-subtitle">Принципы нашей методологии</p>
+        </div>
+        <div class="advantages-control-row">
+            <div class="scroll-control-pill">
+                <button class="scroll-zone scroll-zone-prev" id="advantagesPrev" aria-label="Назад">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <span class="scroll-divider"></span>
+                <button class="scroll-zone scroll-zone-next" id="advantagesNext" aria-label="Вперёд">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+        <div class="advantages-carousel-wrap">
+            <div class="advantages-carousel" id="advantagesCarousel">
+                <div class="advantage-card-strict">
+                    <div class="advantage-card-image">
+                        <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=220&fit=crop" alt="AI" loading="lazy">
+                        <i class="bi bi-robot advantage-card-icon"></i>
+                    </div>
+                    <div class="advantage-card-body">
+                        <h6 class="fw-bold mb-2">AI-ассистент</h6>
+                        <p class="text-muted small mb-0">Персональная помощь 24/7. Ответы на вопросы, разбор кода.</p>
+                    </div>
+                </div>
+                <div class="advantage-card-strict">
+                    <div class="advantage-card-image">
+                        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=220&fit=crop" alt="Программа" loading="lazy">
+                        <i class="bi bi-diagram-3 advantage-card-icon"></i>
+                    </div>
+                    <div class="advantage-card-body">
+                        <h6 class="fw-bold mb-2">Структурированная программа</h6>
+                        <p class="text-muted small mb-0">От основ к сложному. Практические задачи на каждом этапе.</p>
+                    </div>
+                </div>
+                <div class="advantage-card-strict">
+                    <div class="advantage-card-image">
+                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop" alt="Поддержка" loading="lazy">
+                        <i class="bi bi-person-gear advantage-card-icon"></i>
+                    </div>
+                    <div class="advantage-card-body">
+                        <h6 class="fw-bold mb-2">Экспертная поддержка</h6>
+                        <p class="text-muted small mb-0">Преподаватели и кураторы контролируют прогресс.</p>
+                    </div>
+                </div>
+                <div class="advantage-card-strict">
+                    <div class="advantage-card-image">
+                        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=220&fit=crop" alt="Практика" loading="lazy">
+                        <i class="bi bi-code-square advantage-card-icon"></i>
+                    </div>
+                    <div class="advantage-card-body">
+                        <h6 class="fw-bold mb-2">Практика с первого дня</h6>
+                        <p class="text-muted small mb-0">Реальные проекты и задачи. Без воды — только полезные навыки.</p>
+                    </div>
+                </div>
+                <div class="advantage-card-strict">
+                    <div class="advantage-card-image">
+                        <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=220&fit=crop" alt="Сообщество" loading="lazy">
+                        <i class="bi bi-people-fill advantage-card-icon"></i>
+                    </div>
+                    <div class="advantage-card-body">
+                        <h6 class="fw-bold mb-2">Сообщество выпускников</h6>
+                        <p class="text-muted small mb-0">Обмен опытом, вакансии и нетворкинг с единомышленниками.</p>
+                    </div>
+                </div>
+                <div class="advantage-card-strict">
+                    <div class="advantage-card-image">
+                        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=220&fit=crop" alt="Карьера" loading="lazy">
+                        <i class="bi bi-graph-up-arrow advantage-card-icon"></i>
+                    </div>
+                    <div class="advantage-card-body">
+                        <h6 class="fw-bold mb-2">Карьерный рост</h6>
+                        <p class="text-muted small mb-0">Помощь с резюме и подготовка к собеседованиям в IT-компании.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="main-section section-dark">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-accent-line" style="background: rgba(255,255,255,0.5);"></div>
+            <h2 class="section-title">LearnCentre в цифрах</h2>
+            <p class="section-subtitle">Статистика нашей образовательной платформы</p>
+        </div>
+        <div class="stats-row justify-content-center gap-4 stats-row-skillbox">
+            <div class="stat-item stat-item-skillbox">
+                <div class="num">500+</div>
+                <div class="label">Студентов</div>
+            </div>
+            <div class="stat-item stat-item-skillbox">
+                <div class="num">12</div>
+                <div class="label">Курсов</div>
+            </div>
+            <div class="stat-item stat-item-skillbox">
+                <div class="num">98%</div>
+                <div class="label">Рекомендуют</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="main-section section-alt">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-accent-line"></div>
+            <h2 class="section-title">Направления обучения</h2>
+            <p class="section-subtitle">Программы с поддержкой AI-ассистента. Практика с первого дня.</p>
+        </div>
+        <div class="direction-blocks row g-4 mb-5">
+            <div class="col-md-4">
+                <a href="{% url 'courses' %}" class="direction-block direction-block-1">
+                    <span class="direction-badge">5 курсов</span>
+                    <h3 class="direction-title">Программирование</h3>
+                    <p class="direction-desc">Python, веб, бэкенд</p>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'courses' %}" class="direction-block direction-block-2">
+                    <span class="direction-badge">4 курса</span>
+                    <h3 class="direction-title">AI и машинное обучение</h3>
+                    <p class="direction-desc">Нейросети, ML, NLP</p>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'courses' %}" class="direction-block direction-block-3">
+                    <span class="direction-badge">3 курса</span>
+                    <h3 class="direction-title">Веб-разработка</h3>
+                    <p class="direction-desc">FastAPI, Django, фронтенд</p>
+                </a>
+            </div>
+        </div>
+        <div class="section-header mb-4">
+            <h3 class="section-title" style="font-size: 1.25rem;">Популярные курсы</h3>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'courses' %}" class="course-card-public course-card-skillbox">
+                    <div class="course-image">
+                        <img src="https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=200&fit=crop" alt="Python" loading="lazy">
+                        <span class="course-badge-overlay">AI</span>
+                    </div>
+                    <div class="course-body">
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Программирование на Python</h5>
+                        <p class="text-muted small mb-3">С нуля до профессионального уровня</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>12 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>24 урока</span>
+                        </div>
+                        <div class="course-price mb-2">24 900 ₽</div>
+                        <span class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Подробнее</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'courses' %}" class="course-card-public course-card-skillbox">
+                    <div class="course-image">
+                        <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=200&fit=crop" alt="AI" loading="lazy">
+                        <span class="course-badge-overlay">AI</span>
+                    </div>
+                    <div class="course-body">
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Искусственный интеллект и ML</h5>
+                        <p class="text-muted small mb-3">Машинное обучение и нейросети</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>10 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>18 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">29 900 ₽</div>
+                        <span class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Подробнее</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'courses' %}" class="course-card-public course-card-skillbox">
+                    <div class="course-image">
+                        <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=200&fit=crop" alt="Веб" loading="lazy">
+                        <span class="course-badge-overlay course-badge-new">Новый</span>
+                    </div>
+                    <div class="course-body">
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">FastAPI: Веб-разработка</h5>
+                        <p class="text-muted small mb-3">Современный асинхронный API</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>8 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>16 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">19 900 ₽</div>
+                        <span class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Подробнее</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="main-section">
+    <div class="container">
+        <div class="section-header mb-4">
+            <div class="section-accent-line"></div>
+            <h2 class="section-title">Преподаватели</h2>
+            <p class="section-subtitle">Опытные специалисты с практикой в индустрии</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100 text-center teacher-card">
+                    <div class="teacher-photo mb-3 mx-auto">
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop" alt="Алексей Петров" loading="lazy">
+                    </div>
+                    <h6 class="fw-bold mb-1">Алексей Петров</h6>
+                    <p class="text-muted small mb-2">Python, Backend</p>
+                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">10+ лет в разработке. Ex-Yandex, руководил командой из 12 человек.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100 text-center teacher-card">
+                    <div class="teacher-photo mb-3 mx-auto">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop" alt="Мария Смирнова" loading="lazy">
+                    </div>
+                    <h6 class="fw-bold mb-1">Мария Смирнова</h6>
+                    <p class="text-muted small mb-2">ML, Data Science</p>
+                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">Кандидат наук. 8 лет в ML-проектах, 4 года преподавания.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100 text-center teacher-card">
+                    <div class="teacher-photo mb-3 mx-auto">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop" alt="Дмитрий Козлов" loading="lazy">
+                    </div>
+                    <h6 class="fw-bold mb-1">Дмитрий Козлов</h6>
+                    <p class="text-muted small mb-2">FastAPI, DevOps</p>
+                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">Fullstack-разработчик. 6+ лет коммерческой разработки.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100 text-center teacher-card">
+                    <div class="teacher-photo mb-3 mx-auto">
+                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop" alt="Елена Васнецова" loading="lazy">
+                    </div>
+                    <h6 class="fw-bold mb-1">Елена Васнецова</h6>
+                    <p class="text-muted small mb-2">AI, NLP</p>
+                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">PhD в NLP. Работала в исследовательском отделе крупного банка.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="main-section section-alt">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="section-header">
+                    <div class="section-accent-line"></div>
+                    <h2 class="section-title">Как начать обучение</h2>
+                </div>
+                <div class="row g-3 mt-2 justify-content-center">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--mp-accent); color: white; font-weight: 600; font-size: 0.875rem;">1</span>
+                            <span class="fw-medium">Регистрация</span>
+                        </div>
+                        <p class="text-muted small mb-0">Создайте аккаунт и выберите курс</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--mp-accent); color: white; font-weight: 600; font-size: 0.875rem;">2</span>
+                            <span class="fw-medium">Оплата</span>
+                        </div>
+                        <p class="text-muted small mb-0">Оплатите курс онлайн</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--mp-accent); color: white; font-weight: 600; font-size: 0.875rem;">3</span>
+                            <span class="fw-medium">Обучение</span>
+                        </div>
+                        <p class="text-muted small mb-0">Доступ открыт сразу после оплаты</p>
+                    </div>
+                </div>
+                <a href="{% url 'register' %}" class="btn btn-hero btn-hero-lg mt-4">Начать обучение</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

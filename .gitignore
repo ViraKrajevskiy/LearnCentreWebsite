@@ -11,28 +11,19 @@ venv/
 ENV/
 env/
 
-# Django
 *.log
-local_settings.py
 db.sqlite3
 db.sqlite3-journal
 /media
-/staticfiles
-/static
 
 # IDE
 .idea/
 .vscode/
-*.swp
-*.swo
-*~
+
 
 .env
-# OS
 .DS_Store
 Thumbs.db
 
 # Python packages
-*.egg-info
-dist
 build

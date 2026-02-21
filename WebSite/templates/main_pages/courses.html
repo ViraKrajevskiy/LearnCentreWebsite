@@ -1,0 +1,109 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}Направления{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <h1 class="section-title">Направления</h1>
+        <p class="section-subtitle">Обучаем с AI. Выберите программу и начните обучение.</p>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card-public">
+                    <div class="course-image"><i class="bi bi-code-slash"></i></div>
+                    <div class="course-body">
+                        <span class="badge rounded-pill px-2 py-1 mb-2" style="background: var(--mp-subtle); color: var(--mp-accent);">AI</span>
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Программирование на Python</h5>
+                        <p class="text-muted small mb-3">С нуля до продвинутого. API, базы данных, тесты.</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>12 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>24 урока</span>
+                        </div>
+                        <div class="course-price mb-2">24 900 ₽</div>
+                        <a href="{% url 'student_home' %}" class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Записаться</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card-public">
+                    <div class="course-image"><i class="bi bi-robot"></i></div>
+                    <div class="course-body">
+                        <span class="badge rounded-pill px-2 py-1 mb-2" style="background: var(--mp-subtle); color: var(--mp-accent);">AI</span>
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Искусственный интеллект и ML</h5>
+                        <p class="text-muted small mb-3">Машинное обучение, нейросети, NLP.</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>10 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>18 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">29 900 ₽</div>
+                        <a href="{% url 'student_home' %}" class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Записаться</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card-public">
+                    <div class="course-image"><i class="bi bi-globe2"></i></div>
+                    <div class="course-body">
+                        <span class="badge rounded-pill px-2 py-1 mb-2" style="background: var(--mp-subtle); color: var(--mp-accent); font-size: 0.6875rem;">Новый</span>
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">FastAPI: Веб-разработка</h5>
+                        <p class="text-muted small mb-3">Современный асинхронный фреймворк для API.</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>8 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>16 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">19 900 ₽</div>
+                        <a href="{% url 'student_home' %}" class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Записаться</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card-public">
+                    <div class="course-image"><i class="bi bi-database"></i></div>
+                    <div class="course-body">
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Базы данных и SQL</h5>
+                        <p class="text-muted small mb-3">PostgreSQL, проектирование БД, оптимизация.</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>7 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>14 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">18 900 ₽</div>
+                        <a href="{% url 'student_home' %}" class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Записаться</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card-public">
+                    <div class="course-image"><i class="bi bi-braces"></i></div>
+                    <div class="course-body">
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">JavaScript и React</h5>
+                        <p class="text-muted small mb-3">Фронтенд-разработка с нуля до SPA.</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>10 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>20 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">22 900 ₽</div>
+                        <a href="{% url 'student_home' %}" class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Записаться</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="course-card-public">
+                    <div class="course-image"><i class="bi bi-git"></i></div>
+                    <div class="course-body">
+                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Git и DevOps основы</h5>
+                        <p class="text-muted small mb-3">Версионирование, CI/CD, Docker.</p>
+                        <div class="course-meta">
+                            <span><i class="bi bi-clock me-1"></i>5 недель</span>
+                            <span><i class="bi bi-collection me-1"></i>10 уроков</span>
+                        </div>
+                        <div class="course-price mb-2">14 900 ₽</div>
+                        <a href="{% url 'student_home' %}" class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Записаться</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

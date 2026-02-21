@@ -1,0 +1,131 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}Главная{% endblock %}
+{% block page_title %}Главная{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
+        <h1>Привет, <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Студент</span> 👋</h1>
+        <p class="lead">Уроки, оценки и новости в одном месте</p>
+    </div>
+
+    <div class="stats-grid mb-5">
+        <div class="stat-card animate-on-scroll stagger-1 stat-card-hover">
+            <div class="stat-value">12</div>
+            <div class="stat-label">Уроков пройдено</div>
+            <i class="bi bi-check2-circle position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
+        </div>
+        <div class="stat-card animate-on-scroll stagger-2 stat-card-hover">
+            <div class="stat-value">4.8</div>
+            <div class="stat-label">Средний балл</div>
+            <i class="bi bi-trophy position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
+        </div>
+        <div class="stat-card animate-on-scroll stagger-3 stat-card-hover">
+            <div class="stat-value">3</div>
+            <div class="stat-label">Активных курса</div>
+            <i class="bi bi-book position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
+        </div>
+        <div class="stat-card animate-on-scroll stagger-4 stat-card-hover">
+            <div class="stat-value">2</div>
+            <div class="stat-label">Новых задания</div>
+            <i class="bi bi-clipboard-check position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card-ai card-glow h-100 animate-on-scroll">
+                <div class="card-header-custom">
+                    <h3 class="card-title-custom">
+                        <i class="bi bi-calendar-event me-2" style="color: var(--accent);"></i>Ближайшие уроки
+                    </h3>
+                    <a href="{% url 'my-courses' %}" class="btn btn-sm btn-ai">Все уроки</a>
+                </div>
+                <div class="lesson-list">
+                    <div class="lesson-item d-flex align-items-center justify-content-between p-4 rounded-3 mb-3 lesson-card">
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="lesson-time text-center rounded-3 p-2" style="min-width: 70px; background: var(--ai-gradient); color: white;">
+                                <div class="fw-bold" style="font-size: 1.1rem;">14:00</div>
+                                <small style="opacity: 0.9;">Сегодня</small>
+                            </div>
+                            <div>
+                                <div class="fw-semibold mb-1">Python: Работа с API</div>
+                                <small class="text-secondary">Курс «Программирование на Python»</small>
+                            </div>
+                        </div>
+                        <span class="badge-ai"><i class="bi bi-broadcast me-1"></i>Онлайн</span>
+                    </div>
+                    <div class="lesson-item d-flex align-items-center justify-content-between p-4 rounded-3 mb-2 lesson-card">
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="lesson-time text-center rounded-3 p-2" style="min-width: 70px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
+                                <div class="fw-bold" style="font-size: 1.1rem;">10:00</div>
+                                <small style="opacity: 0.9;">Завтра</small>
+                            </div>
+                            <div>
+                                <div class="fw-semibold mb-1">Машинное обучение: Введение</div>
+                                <small class="text-secondary">Курс «AI и ML»</small>
+                            </div>
+                        </div>
+                        <span class="badge-ai"><i class="bi bi-broadcast me-1"></i>Онлайн</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card-ai card-glow h-100 animate-on-scroll">
+                <div class="card-header-custom">
+                    <h3 class="card-title-custom">
+                        <i class="bi bi-trophy me-2" style="color: var(--accent);"></i>Последние оценки
+                    </h3>
+                </div>
+                <div class="grades-list">
+                    <div class="grade-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom" style="border-color: var(--border) !important;">
+                        <span class="fw-medium">Домашняя работа №5</span>
+                        <span class="badge rounded-pill px-3 py-2" style="background: var(--success); color: white;">5</span>
+                    </div>
+                    <div class="grade-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom" style="border-color: var(--border) !important;">
+                        <span class="fw-medium">Тест по Python</span>
+                        <span class="badge rounded-pill px-3 py-2" style="background: var(--success); color: white;">5</span>
+                    </div>
+                    <div class="grade-item d-flex justify-content-between align-items-center py-3 px-0">
+                        <span class="fw-medium">Проект API</span>
+                        <span class="badge rounded-pill px-3 py-2" style="background: var(--accent); color: white;">4</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <h3 class="section-title mb-4">
+            <i class="bi bi-newspaper"></i> Свежие новости
+        </h3>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card-ai card-glow h-100 animate-on-scroll">
+                    <span class="badge-ai mb-3"><i class="bi bi-sparkles me-1"></i>Новое</span>
+                    <h5 class="mb-2 fw-bold">Запуск AI-ассистента</h5>
+                    <p class="text-secondary small mb-0">Теперь вы можете задавать вопросы по курсу нашему AI. Попробуйте в разделе «AI Чат»!</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card-ai card-glow h-100 animate-on-scroll">
+                    <span class="badge-ai mb-3"><i class="bi bi-arrow-up-circle me-1"></i>Обновление</span>
+                    <h5 class="mb-2 fw-bold">Новый курс: FastAPI</h5>
+                    <p class="text-secondary small mb-0">Добавлен курс по современному веб-фреймворку для Python.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card-ai card-glow h-100 animate-on-scroll">
+                    <h5 class="mb-2 fw-bold">Расписание на март</h5>
+                    <p class="text-secondary small mb-0">Опубликовано расписание занятий на следующий месяц.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LearnCentre{% endblock %} | Обучаем с AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/student.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- AI Background -->
+    <div class="ai-particles" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">◇</span>
+                <span class="logo-text">LearnCentre</span>
+            </div>
+            <button class="sidebar-toggle d-lg-none" id="sidebarClose" aria-label="Закрыть меню">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'student_home' %}" class="nav-item" data-page="home">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Главная</span>
+                <span class="nav-pulse"></span>
+            </a>
+            <a href="{% url 'student_courses' %}" class="nav-item" data-page="courses">
+                <i class="bi bi-collection-play-fill"></i>
+                <span>Курсы</span>
+            </a>
+            <a href="{% url 'my-courses' %}" class="nav-item" data-page="my-courses">
+                <i class="bi bi-book-half"></i>
+                <span>Мои курсы</span>
+            </a>
+            <a href="{% url 'assignments' %}" class="nav-item" data-page="assignments">
+                <i class="bi bi-clipboard-check-fill"></i>
+                <span>Мои задания</span>
+            </a>
+            <a href="{% url 'profile' %}" class="nav-item" data-page="profile">
+                <i class="bi bi-person-circle"></i>
+                <span>Профиль</span>
+            </a>
+            <a href="{% url 'ai-chat' %}" class="nav-item nav-item-ai" data-page="ai-chat">
+                <i class="bi bi-robot"></i>
+                <span>AI Чат</span>
+                <span class="ai-badge">AI</span>
+            </a>
+            <a href="{% url 'messages' %}" class="nav-item" data-page="messages">
+                <i class="bi bi-chat-dots-fill"></i>
+                <span>Сообщения</span>
+            </a>
+            <a href="{% url 'news' %}" class="nav-item" data-page="news">
+                <i class="bi bi-newspaper"></i>
+                <span>Новости</span>
+            </a>
+            <a href="{% url 'home' %}" class="nav-item nav-item-out" data-page="out">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>На главную</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="theme-toggle-sidebar" title="Светлая / Тёмная тема">
+                <span class="theme-toggle-label">Тема</span>
+                <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+                    <span class="theme-toggle-inner">
+                        <i class="bi bi-sun-fill theme-icon-light"></i>
+                        <i class="bi bi-moon-stars-fill theme-icon-dark"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <button class="sidebar-toggle d-lg-none" id="sidebarOpen" aria-label="Открыть меню">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="topbar-title">
+                {% block page_title %}Главная{% endblock %}
+            </div>
+            <div class="topbar-actions d-flex align-items-center gap-3">
+                <div class="theme-switcher-topbar" title="Сменить тему (Светлая ↔ Тёмная)">
+                    <button class="theme-switch-btn" id="themeToggleTopbar" aria-label="Переключить тему">
+                        <span class="theme-switch-track">
+                            <span class="theme-switch-thumb">
+                                <i class="bi bi-sun-fill theme-icon-sun"></i>
+                                <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                            </span>
+                        </span>
+                        <span class="theme-switch-label" id="themeLabel">Тёмная</span>
+                    </button>
+                </div>
+                <a href="{% url 'profile' %}" class="user-avatar" title="Профиль">
+                    <span class="avatar-initials">ИИ</span>
+                </a>
+            </div>
+        </header>
+
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/student.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

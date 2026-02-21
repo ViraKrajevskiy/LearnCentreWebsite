@@ -1,0 +1,41 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="benefit-card p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <h1 class="section-title mb-1">Вход</h1>
+                        <p class="text-muted small">Войдите в личный кабинет</p>
+                    </div>
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-500">Email</label>
+                            <input type="email" class="form-control" placeholder="email@example.com" style="border: 1px solid var(--mp-border); border-radius: 8px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-500">Пароль</label>
+                            <input type="password" class="form-control" placeholder="••••••••" style="border: 1px solid var(--mp-border); border-radius: 8px;">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-check small">
+                                <input type="checkbox" class="form-check-input">
+                                <span class="form-check-label">Запомнить меня</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-hero w-100 mb-3">Войти</button>
+                        <p class="text-center text-muted small mb-0">
+                            Нет аккаунта? <a href="{% url 'register' %}" style="color: var(--mp-accent); font-weight: 500;">Регистрация</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

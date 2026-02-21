@@ -1,0 +1,82 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}Курсы{% endblock %}
+{% block page_title %}Курсы{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Каталог</p>
+        <h1>Все <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">курсы</span></h1>
+        <p class="lead">Выберите курс и начните обучение с AI-поддержкой</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card-ai card-glow h-100 animate-on-scroll">
+                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
+                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                        <i class="bi bi-code-slash text-white" style="font-size: 4rem; opacity: 0.9;"></i>
+                    </div>
+                    <span class="badge-ai position-absolute top-0 end-0 m-3">AI</span>
+                    <div class="position-absolute bottom-0 start-0 end-0 p-3" style="background: linear-gradient(transparent, rgba(0,0,0,0.3));"></div>
+                </div>
+                <h5 class="mb-2 fw-bold">Программирование на Python</h5>
+                <p class="text-secondary small mb-4">С нуля до продвинутого уровня. API, базы данных, тесты.</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>24 урока • 12 недель</span>
+                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card-ai card-glow h-100 animate-on-scroll">
+                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
+                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);">
+                        <i class="bi bi-robot text-white" style="font-size: 4rem; opacity: 0.9;"></i>
+                    </div>
+                    <span class="badge-ai position-absolute top-0 end-0 m-3">AI</span>
+                </div>
+                <h5 class="mb-2 fw-bold">Искусственный интеллект и ML</h5>
+                <p class="text-secondary small mb-4">Машинное обучение, нейросети, NLP и компьютерное зрение.</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>18 уроков • 10 недель</span>
+                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card-ai card-glow h-100 animate-on-scroll">
+                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
+                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);">
+                        <i class="bi bi-globe2 text-white" style="font-size: 4rem; opacity: 0.9;"></i>
+                    </div>
+                    <span class="badge-ai position-absolute top-0 end-0 m-3">Новый</span>
+                </div>
+                <h5 class="mb-2 fw-bold">FastAPI: Веб-разработка</h5>
+                <p class="text-secondary small mb-4">Современный асинхронный фреймворк для API и веб-приложений.</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>16 уроков • 8 недель</span>
+                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card-ai card-glow h-100 animate-on-scroll">
+                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
+                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #6366f1 100%);">
+                        <i class="bi bi-database text-white" style="font-size: 4rem; opacity: 0.9;"></i>
+                    </div>
+                </div>
+                <h5 class="mb-2 fw-bold">Базы данных и SQL</h5>
+                <p class="text-secondary small mb-4">PostgreSQL, проектирование БД, оптимизация запросов.</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>14 уроков • 7 недель</span>
+                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

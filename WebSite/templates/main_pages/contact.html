@@ -1,0 +1,69 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}Контакты{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; color: var(--mp-accent);">LearnCentre</p>
+                <h1 class="section-title">Контакты</h1>
+                <p class="section-subtitle mb-4">Свяжитесь с нами по любому вопросу</p>
+                <div class="benefit-card mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-envelope" style="font-size: 1.5rem; color: var(--mp-accent);"></i>
+                        <div>
+                            <div class="fw-bold">Email</div>
+                            <a href="mailto:info@learncentre.ru" style="color: var(--mp-text-muted);">info@learncentre.ru</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="benefit-card mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-telephone" style="font-size: 1.5rem; color: var(--mp-accent);"></i>
+                        <div>
+                            <div class="fw-bold">Телефон</div>
+                            <a href="tel:+79990000000" style="color: var(--mp-text-muted);">+7 (999) 000-00-00</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="benefit-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-clock" style="font-size: 1.5rem; color: var(--mp-accent);"></i>
+                        <div>
+                            <div class="fw-bold">Время работы</div>
+                            <span class="text-muted">Пн–Пт: 9:00–18:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="benefit-card p-4">
+                    <h6 class="fw-bold mb-3">Написать нам</h6>
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-500">Имя</label>
+                            <input type="text" class="form-control" placeholder="Ваше имя" style="border: 1px solid var(--mp-border); border-radius: 8px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-500">Email</label>
+                            <input type="email" class="form-control" placeholder="email@example.com" style="border: 1px solid var(--mp-border); border-radius: 8px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-500">Тема</label>
+                            <input type="text" class="form-control" placeholder="Тема обращения" style="border: 1px solid var(--mp-border); border-radius: 8px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-500">Сообщение</label>
+                            <textarea class="form-control" rows="4" placeholder="Ваше сообщение..." style="border: 1px solid var(--mp-border); border-radius: 8px;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-hero">Отправить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

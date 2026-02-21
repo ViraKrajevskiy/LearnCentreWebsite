@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LearnCentre{% endblock %} | Обучаем с AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/main_pages.css' %}" rel="stylesheet">
+</head>
+<body>
+    <nav class="main-navbar" id="mainNavbar">
+        <div class="container">
+            <div class="navbar-inner">
+                <a href="{% url 'home' %}" class="navbar-logo">
+                    <span class="logo-icon">◇</span>
+                    <span class="logo-text">LearnCentre</span>
+                </a>
+                <ul class="navbar-menu">
+                    <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Главная</a></li>
+                    <li><a href="{% url 'courses' %}" class="{% if request.resolver_match.url_name == 'courses' %}active{% endif %}">Направления</a></li>
+                    <li><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">О нас</a></li>
+                    <li><a href="{% url 'contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Контакты</a></li>
+                    <li><a href="{% url 'faq' %}" class="{% if request.resolver_match.url_name == 'faq' %}active{% endif %}">FAQ</a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <div class="theme-switcher-public" title="Сменить тему">
+                        <button class="theme-switch-btn" id="themeTogglePublic" aria-label="Переключить тему">
+                            <span class="theme-switch-track"><span class="theme-switch-thumb">
+                                <i class="bi bi-sun-fill theme-icon-sun"></i>
+                                <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                            </span></span>
+                            <span class="theme-switch-label" id="themeLabelPublic">Тёмная</span>
+                        </button>
+                    </div>
+                    <a href="{% url 'register' %}" class="btn btn-outline-nav me-1" style="font-size: 0.875rem;">Регистрация</a>
+                    <a href="{% url 'login' %}" class="btn btn-login">Войти</a>
+                </div>
+                <button class="navbar-burger d-lg-none" id="navBurger" aria-label="Меню">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+        <div class="navbar-mobile" id="navMobile">
+            <a href="{% url 'home' %}">Главная</a>
+            <a href="{% url 'courses' %}">Направления</a>
+            <a href="{% url 'about' %}">О нас</a>
+            <a href="{% url 'contact' %}">Контакты</a>
+            <a href="{% url 'faq' %}">FAQ</a>
+            <a href="{% url 'invite' %}">Пригласить</a>
+            <a href="{% url 'register' %}">Регистрация</a>
+            <a href="{% url 'login' %}" class="btn btn-login">Войти</a>
+        </div>
+    </nav>
+
+    <main class="main-content-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="footer-logo">
+                        <span class="logo-icon">◇</span>
+                        <span class="logo-text">LearnCentre</span>
+                    </div>
+                    <p class="footer-desc">LearnCentre — обучаем с AI. Онлайн-курсы по программированию и искусственному интеллекту.</p>
+                </div>
+                <div class="col-md-2 col-6">
+                    <h6>Навигация</h6>
+                    <ul>
+                        <li><a href="{% url 'home' %}">Главная</a></li>
+                        <li><a href="{% url 'courses' %}">Направления</a></li>
+                        <li><a href="{% url 'about' %}">О нас</a></li>
+                        <li><a href="{% url 'contact' %}">Контакты</a></li>
+                        <li><a href="{% url 'faq' %}">FAQ</a></li>
+                        <li><a href="{% url 'invite' %}">Пригласить друзей</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-6">
+                    <h6>Контакты</h6>
+                    <ul>
+                        <li><a href="{% url 'contact' %}">Связаться с нами</a></li>
+                        <li>info@learncentre.ru</li>
+                        <li>+7 (999) 000-00-00</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 LearnCentre. Обучаем с AI.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main_pages.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

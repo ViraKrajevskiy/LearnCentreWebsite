@@ -1,0 +1,78 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}Мои задания{% endblock %}
+{% block page_title %}Мои задания{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Домашние работы</p>
+        <h1>Мои <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">задания</span></h1>
+        <p class="lead">Новые и выполненные</p>
+    </div>
+
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">Все</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Новые</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Выполненные</a>
+        </li>
+    </ul>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card-ai card-glow animate-on-scroll" style="border: 2px solid rgba(99,102,241,0.3);">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="badge-ai mb-2"><i class="bi bi-plus-circle me-1"></i>Новое</span>
+                        <h5 class="mb-1 fw-bold">Домашняя работа №6 — API клиент</h5>
+                        <p class="text-secondary small mb-0"><i class="bi bi-book me-1"></i>Программирование на Python • <i class="bi bi-calendar me-1"></i>Срок: 20 фев</p>
+                    </div>
+                    <a href="#" class="btn btn-ai px-4">Выполнить</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card-ai card-glow animate-on-scroll" style="border: 2px solid rgba(99,102,241,0.3);">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="badge-ai mb-2"><i class="bi bi-plus-circle me-1"></i>Новое</span>
+                        <h5 class="mb-1 fw-bold">Лабораторная — Линейная регрессия</h5>
+                        <p class="text-secondary small mb-0"><i class="bi bi-book me-1"></i>AI и ML • <i class="bi bi-calendar me-1"></i>Срок: 22 фев</p>
+                    </div>
+                    <a href="#" class="btn btn-ai px-4">Выполнить</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card-ai animate-on-scroll" style="opacity: 0.9;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="badge rounded-pill px-3 py-2 mb-2" style="background: var(--success); color: white;"><i class="bi bi-check2 me-1"></i>Сдано</span>
+                        <h5 class="mb-1 fw-bold">Домашняя работа №5 — Парсинг данных</h5>
+                        <p class="text-secondary small mb-0">Курс: Python • Оценка: <strong class="text-success">5</strong></p>
+                    </div>
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 2.5rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card-ai animate-on-scroll" style="opacity: 0.9;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="badge rounded-pill px-3 py-2 mb-2" style="background: var(--success); color: white;"><i class="bi bi-check2 me-1"></i>Сдано</span>
+                        <h5 class="mb-1 fw-bold">Тест по основам Python</h5>
+                        <p class="text-secondary small mb-0">Курс: Python • Оценка: <strong class="text-success">5</strong></p>
+                    </div>
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 2.5rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

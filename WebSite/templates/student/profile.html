@@ -1,0 +1,91 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}Профиль{% endblock %}
+{% block page_title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
+        <h1>Профиль</h1>
+        <p class="lead">Данные и оплата</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card-ai card-glow text-center animate-on-scroll">
+                <div class="avatar-profile mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: var(--ai-gradient); color: white; font-size: 2.5rem; font-weight: 700; box-shadow: 0 15px 40px rgba(99,102,241,0.4);">
+                    ИИ
+                </div>
+                <h4 class="mb-1 fw-bold">Иванов Иван</h4>
+                <p class="text-secondary small mb-4">ivan@example.com</p>
+                <a href="#" class="btn btn-ai w-100">Редактировать профиль</a>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card-ai card-glow mb-4 animate-on-scroll">
+                <h5 class="card-title-custom mb-4">
+                    <i class="bi bi-credit-card-2-front me-2" style="color: var(--accent);"></i>Оплата
+                </h5>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="p-4 rounded-4" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary d-block mb-1">Последняя оплата</small>
+                            <strong class="fs-5">15 января 2025</strong>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-4 rounded-4" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary d-block mb-1">Следующая оплата</small>
+                            <strong class="fs-5">15 февраля 2025</strong>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-4 rounded-4 d-flex align-items-center justify-content-between" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <span class="fw-medium">Статус подписки</span>
+                            <span class="badge rounded-pill px-4 py-2" style="background: var(--success); color: white;"><i class="bi bi-check-circle me-1"></i>Активна</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-ai card-glow animate-on-scroll">
+                <h5 class="card-title-custom mb-4">
+                    <i class="bi bi-person-vcard me-2" style="color: var(--accent);"></i>Данные профиля
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
+                            <small class="text-secondary">Имя</small>
+                            <div class="fw-medium">Иван</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
+                            <small class="text-secondary">Фамилия</small>
+                            <div class="fw-medium">Иванов</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
+                            <small class="text-secondary">Email</small>
+                            <div class="fw-medium">ivan@example.com</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
+                            <small class="text-secondary">Телефон</small>
+                            <div class="fw-medium">+7 (999) 123-45-67</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
+                            <small class="text-secondary">Дата регистрации</small>
+                            <div class="fw-medium">1 сентября 2024</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

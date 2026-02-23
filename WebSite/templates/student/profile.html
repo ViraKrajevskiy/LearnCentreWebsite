@@ -9,83 +9,153 @@
     <div class="page-hero anim-fade-up mb-4">
         <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
         <h1>Профиль</h1>
-        <p class="lead">Данные и оплата</p>
+        <p class="lead">Данные и смена пароля</p>
     </div>
-    <div class="row g-4">
+    <div id="profile-auth-required" class="alert alert-warning d-none">
+        <a href="{% url 'login' %}">Войдите</a>, чтобы просмотреть профиль.
+    </div>
+    <div id="profile-content" class="row g-4 d-none">
         <div class="col-lg-4">
             <div class="card-ai card-glow text-center animate-on-scroll">
-                <div class="avatar-profile mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: var(--ai-gradient); color: white; font-size: 2.5rem; font-weight: 700; box-shadow: 0 15px 40px rgba(99,102,241,0.4);">
-                    ИИ
+                <div id="avatar-initials" class="avatar-profile mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: var(--ai-gradient); color: white; font-size: 2.5rem; font-weight: 700; box-shadow: 0 15px 40px rgba(99,102,241,0.4);">
+                    —
                 </div>
-                <h4 class="mb-1 fw-bold">Иванов Иван</h4>
-                <p class="text-secondary small mb-4">ivan@example.com</p>
-                <a href="#" class="btn btn-ai w-100">Редактировать профиль</a>
+                <h4 id="profile-name" class="mb-1 fw-bold">—</h4>
+                <p id="profile-email" class="text-secondary small mb-4">—</p>
             </div>
         </div>
         <div class="col-lg-8">
             <div class="card-ai card-glow mb-4 animate-on-scroll">
                 <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-credit-card-2-front me-2" style="color: var(--accent);"></i>Оплата
+                    <i class="bi bi-person-vcard me-2" style="color: var(--accent);"></i>Данные профиля
                 </h5>
                 <div class="row g-3">
-                    <div class="col-sm-6">
-                        <div class="p-4 rounded-4" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary d-block mb-1">Последняя оплата</small>
-                            <strong class="fs-5">15 января 2025</strong>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary">Имя</small>
+                            <div id="profile-first-name" class="fw-medium">—</div>
                         </div>
                     </div>
-                    <div class="col-sm-6">
-                        <div class="p-4 rounded-4" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary d-block mb-1">Следующая оплата</small>
-                            <strong class="fs-5">15 февраля 2025</strong>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary">Фамилия</small>
+                            <div id="profile-surname" class="fw-medium">—</div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="p-4 rounded-4 d-flex align-items-center justify-content-between" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <span class="fw-medium">Статус подписки</span>
-                            <span class="badge rounded-pill px-4 py-2" style="background: var(--success); color: white;"><i class="bi bi-check-circle me-1"></i>Активна</span>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary">Email</small>
+                            <div id="profile-email-val" class="fw-medium">—</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary">Телефон</small>
+                            <div id="profile-phone" class="fw-medium">—</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary">Telegram</small>
+                            <div id="profile-telegram" class="fw-medium">—</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
+                            <small class="text-secondary">Дата регистрации</small>
+                            <div id="profile-created" class="fw-medium">—</div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="card-ai card-glow animate-on-scroll">
                 <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-person-vcard me-2" style="color: var(--accent);"></i>Данные профиля
+                    <i class="bi bi-key me-2" style="color: var(--accent);"></i>Смена пароля
                 </h5>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
-                            <small class="text-secondary">Имя</small>
-                            <div class="fw-medium">Иван</div>
-                        </div>
+                <p class="text-muted small mb-3">Изменить пароль можно здесь или в Telegram-боте командой /changepassword</p>
+                <form id="change-password-form">
+                    <div class="mb-3">
+                        <label class="form-label">Текущий пароль</label>
+                        <input type="password" name="old_password" class="form-control" required placeholder="••••••••">
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
-                            <small class="text-secondary">Фамилия</small>
-                            <div class="fw-medium">Иванов</div>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Новый пароль (не менее 8 символов)</label>
+                        <input type="password" name="new_password" class="form-control" required minlength="8" placeholder="••••••••">
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
-                            <small class="text-secondary">Email</small>
-                            <div class="fw-medium">ivan@example.com</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
-                            <small class="text-secondary">Телефон</small>
-                            <div class="fw-medium">+7 (999) 123-45-67</div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle);">
-                            <small class="text-secondary">Дата регистрации</small>
-                            <div class="fw-medium">1 сентября 2024</div>
-                        </div>
-                    </div>
-                </div>
+                    <div id="password-error" class="alert alert-danger d-none mb-3"></div>
+                    <button type="submit" class="btn btn-ai">Изменить пароль</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const token = localStorage.getItem('access');
+    if (!token) {
+        document.getElementById('profile-auth-required').classList.remove('d-none');
+        return;
+    }
+    document.getElementById('profile-content').classList.remove('d-none');
+
+    fetch('/api/v1/auth/me/', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    }).then(r => {
+        if (r.status === 401) {
+            localStorage.removeItem('access');
+            localStorage.removeItem('refresh');
+            document.getElementById('profile-auth-required').classList.remove('d-none');
+            document.getElementById('profile-content').classList.add('d-none');
+            return null;
+        }
+        return r.json();
+    }).then(data => {
+        if (!data) return;
+        const initials = (data.first_name?.[0] || '') + (data.surname?.[0] || '') || '?';
+        document.getElementById('avatar-initials').textContent = initials;
+        document.getElementById('profile-name').textContent = `${data.surname || ''} ${data.first_name || ''}`.trim() || '—';
+        document.getElementById('profile-email').textContent = data.email || '—';
+        document.getElementById('profile-first-name').textContent = data.first_name || '—';
+        document.getElementById('profile-surname').textContent = data.surname || '—';
+        document.getElementById('profile-email-val').textContent = data.email || '—';
+        document.getElementById('profile-phone').textContent = data.phone_number || '—';
+        document.getElementById('profile-telegram').textContent = data.telegram_username ? '@' + data.telegram_username : '—';
+        document.getElementById('profile-created').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('ru') : '—';
+    });
+
+    document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const errEl = document.getElementById('password-error');
+        errEl.classList.add('d-none');
+        const res = await fetch('/api/v1/auth/change-password/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access')
+            },
+            body: JSON.stringify({
+                old_password: form.old_password.value,
+                new_password: form.new_password.value
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            form.reset();
+            errEl.classList.remove('d-none');
+            errEl.classList.remove('alert-danger');
+            errEl.classList.add('alert-success');
+            errEl.textContent = 'Пароль успешно изменён.';
+        } else {
+            errEl.classList.remove('alert-success');
+            errEl.classList.add('alert-danger');
+            errEl.textContent = data.old_password?.[0] || data.new_password?.[0] || data.error || 'Ошибка';
+            errEl.classList.remove('d-none');
+        }
+    });
+})();
+</script>
 {% endblock %}

@@ -33,3 +33,35 @@ class RegistrationSerializer(serializers.ModelSerializer):
 class OTPVerifySerializer(serializers.Serializer):
     session_id = serializers.UUIDField()
     code = serializers.CharField(max_length=6)
+
+
+class LoginSerializer(serializers.Serializer):
+    """Логин по телефону и паролю."""
+    phone_number = serializers.CharField(help_text='Номер телефона')
+    password = serializers.CharField(write_only=True, help_text='Пароль')
+    login_type = serializers.ChoiceField(
+        choices=[('student', 'Студент'), ('staff', 'Сотрудник')],
+        required=False,
+        default='student',
+        help_text='student — вход для студентов, staff — для сотрудников (учителя, менторы, персонал)'
+    )
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('Неверный текущий пароль.')
+        return value
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    """Данные пользователя для просмотра после входа."""
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'surname', 'last_name', 'phone_number', 'telegram_username', 'role', 'created_at']
+        read_only_fields = fields

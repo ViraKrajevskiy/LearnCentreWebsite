@@ -19,7 +19,11 @@ def main_invite(request):
     return render(request, 'main_pages/invite.html')
 
 def main_login(request):
-    return render(request, 'main_pages/login.html')
+    return render(request, 'main_pages/login.html', {'login_type': 'student'})
+
+
+def main_staff_login(request):
+    return render(request, 'main_pages/login.html', {'login_type': 'staff'})
 
 def main_register(request):
     return render(request, 'main_pages/register.html')

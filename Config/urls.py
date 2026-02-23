@@ -2,13 +2,18 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from WebSite.view_sets.otp_register_views.register_verify import RegisterView, VerifyOTPView
+from WebSite.view_sets.otp_register_views.register_verify import (
+    RegisterView, VerifyOTPView, LoginView, ProfileView, ChangePasswordView
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # API auth — до include WebSite (иначе может 404)
     path('api/v1/auth/register/', RegisterView.as_view(), name='api_register'),
     path('api/v1/auth/verify-otp/', VerifyOTPView.as_view(), name='api_verify_otp'),
+    path('api/v1/auth/login/', LoginView.as_view(), name='api_login'),
+    path('api/v1/auth/me/', ProfileView.as_view(), name='api_profile'),
+    path('api/v1/auth/change-password/', ChangePasswordView.as_view(), name='api_change_password'),
     path('', include('WebSite.urls')),
 
     # Документация API

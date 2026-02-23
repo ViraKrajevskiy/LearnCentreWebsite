@@ -30,7 +30,8 @@ class User(AbstractBaseUser, PermissionsMixin, DateCreate):
     surname = models.CharField(max_length=50)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50, blank=True, null=True)
-    phone_number = PhoneNumberField(unique=True,db_index=True)
+    phone_number = PhoneNumberField(unique=True, db_index=True)
+    telegram_username = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     birth_date = models.DateField(null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='guest')
 

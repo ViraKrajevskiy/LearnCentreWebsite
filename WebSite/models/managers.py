@@ -7,7 +7,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Email должен быть указан')
 
         email = self.normalize_email(email)
-        extra_fields.setdefault('role', 'guest')
+        extra_fields.setdefault('role', 'guest')  # Роль по умолчанию — гость (веб/API/TG‑бот)
 
         user = self.model(email=email, **extra_fields)
         user.set_password(password)

@@ -10,6 +10,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
 DEBUG = os.getenv('DEBUG') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 
+
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+# Username бота БЕЗ @ (напр. SWIFT_INTEL_EDUCATION_bot). НЕ "Swift Intel bot" с пробелами!
+_raw = (os.getenv('TELEGRAM_BOT_USERNAME') or '').strip()
+TELEGRAM_BOT_USERNAME = _raw.lstrip('@') if _raw and ' ' not in _raw else 'SWIFT_INTEL_EDUCATION_bot'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -17,19 +23,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'WebSite',
+    'TelegramBot',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_swagger',
     'phonenumber_field',
+    'corsheaders',
     'drf_spectacular',
-    'TelegramBot',
-    'WebSite',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -94,7 +102,6 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_PATCH': True,
     'COMPONENT_SPLIT_REQUEST': True,
-    'SWAGGER_UI_DIST': 'SIDECAR',
     'SWAGGER_UI_CONFIG': {
         'deepLinking': True,
         'persistAuthorization': True,
@@ -132,6 +139,18 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 AUTH_USER_MODEL = 'WebSite.User'
 
 STATIC_URL = 'static/'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]

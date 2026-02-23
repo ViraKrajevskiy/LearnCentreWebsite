@@ -1,71 +1,115 @@
 import random
-from rest_framework import status, generics
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
+from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from drf_spectacular.utils import extend_schema
+from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+from rest_framework import serializers
 
 from WebSite.models.opt_model import UserOTP
 from WebSite.serializers.otp_register.otp_registration import RegistrationSerializer, OTPVerifySerializer
 
-
-class RegistrationView(generics.CreateAPIView):
-    serializer_class = RegistrationSerializer
-
-    @extend_schema(summary="1. Регистрация и запрос кода в Telegram")
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        # Генерируем код
-        otp_code = str(random.randint(100000, 999999))
-        otp_entry = UserOTP.objects.create(
-            identifier=user.phone_number,  # Или email
-            code=otp_code
-        )
-
-        # ТУТ ВЫЗОВ ФУНКЦИИ БОТА (отправка сообщения в телеграм)
-        # send_telegram_otp(user.phone_number, otp_code) 
-
-        return Response({
-            "session_id": otp_entry.session_id,
-            "message": "Код отправлен в Telegram бот"
-        }, status=status.HTTP_201_CREATED)
+User = get_user_model()
 
 
-class VerifyOTPView(generics.GenericAPIView):
-    serializer_class = OTPVerifySerializer
-
-    @extend_schema(summary="2. Подтверждение кода и активация аккаунта")
+class RegisterView(APIView):
+    @extend_schema(
+        tags=['Регистрация и Авторизация'],
+        summary="Шаг 1: Регистрация и получение ссылки на бота",
+        description="Принимает данные юзера. Возвращает session_id и ссылку-deep_link на Telegram бота.",
+        request=RegistrationSerializer,
+        responses={
+            201: inline_serializer(
+                name='RegisterSuccessResponse',
+                fields={
+                    'message': serializers.CharField(),
+                    'session_id': serializers.UUIDField(),
+                    'bot_link': serializers.URLField(),
+                }
+            ),
+            400: OpenApiResponse(description='Ошибка валидации (например, номер уже занят)'),
+        }
+    )
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = RegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
 
-        session_id = serializer.validated_data['session_id']
-        code = serializer.validated_data['code']
+            code = str(random.randint(100000, 999999))
 
-        try:
-            otp = UserOTP.objects.get(session_id=session_id, code=code)
+            otp_record = UserOTP.objects.create(
+                identifier=user.phone_number,
+                code=code
+            )
+
+            bot_link = f"https://t.me/{settings.TELEGRAM_BOT_USERNAME}?start={otp_record.session_id}"
+
+            return Response({
+                "message": "Пользователь создан. Перейдите в Telegram-бота для получения кода.",
+                "session_id": otp_record.session_id,
+                "bot_link": bot_link
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyOTPView(APIView):
+    @extend_schema(
+        tags=['Регистрация и Авторизация'],
+        summary="Шаг 2: Подтверждение OTP кода из бота",
+        description="Принимает session_id и 6-значный код. Если код верный, активирует аккаунт и выдает JWT токены (access/refresh).",
+        request=OTPVerifySerializer,
+        responses={
+            200: inline_serializer(
+                name='VerifyOTPSuccessResponse',
+                fields={
+                    'message': serializers.CharField(),
+                    'access': serializers.CharField(),
+                    'refresh': serializers.CharField(),
+                }
+            ),
+            400: OpenApiResponse(description='Неверный код или сессия истекла'),
+            404: OpenApiResponse(description='Сессия не найдена'),
+        }
+    )
+
+    def post(self, request):
+        serializer = OTPVerifySerializer(data=request.data)
+        if serializer.is_valid():
+            session_id = serializer.validated_data['session_id']
+            code = serializer.validated_data['code']
+
+            try:
+                otp = UserOTP.objects.get(session_id=session_id)
+            except UserOTP.DoesNotExist:
+                return Response({"error": "Сессия не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
             if not otp.is_valid:
-                return Response({"error": "Код просрочен или неверный"}, status=400)
+                return Response({"error": "Код истек или уже использован"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Активируем пользователя
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            user = User.objects.get(phone_number=otp.identifier)
-            user.is_active = True
-            user.save()
+            if otp.code != code:
+                otp.attempts += 1
+                otp.save()
+                return Response({"error": "Неверный код"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Помечаем код как использованный
             otp.is_used = True
             otp.save()
 
-            # Генерируем токены
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            })
+            try:
+                user = User.objects.get(phone_number=otp.identifier)
+                user.is_active = True
+                user.save()
 
-        except UserOTP.DoesNotExist:
-            return Response({"error": "Неверная сессия или код"}, status=400)
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    "message": "Регистрация успешно завершена",
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                }, status=status.HTTP_200_OK)
+
+            except User.DoesNotExist:
+                return Response({"error": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

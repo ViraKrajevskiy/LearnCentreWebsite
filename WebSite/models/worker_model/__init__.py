@@ -1,1 +1,1 @@
-from .workers import Teacher, Mentor
+from .workers import Teacher

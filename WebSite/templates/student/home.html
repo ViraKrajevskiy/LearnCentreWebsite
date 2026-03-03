@@ -1,131 +1,273 @@
 {% extends "student/base.html" %}
 {% load static %}
 
-{% block title %}Главная{% endblock %}
+{% block title %}Кабинет студента{% endblock %}
 {% block page_title %}Главная{% endblock %}
 
 {% block content %}
 <div class="student-page">
-    <div class="page-hero anim-fade-up">
-        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
-        <h1>Привет, <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Студент</span> 👋</h1>
-        <p class="lead">Уроки, оценки и новости в одном месте</p>
+
+  <!-- HERO -->
+  <div class="page-hero anim-fade-up" style="margin-bottom: 28px;">
+    <p class="text-uppercase mb-1" style="font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--accent)">Личный кабинет</p>
+    <h1 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;line-height:1.2;margin-bottom:6px">
+      Привет, <span style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">{{ request.user.first_name|default:"Студент" }}</span> 👋
+    </h1>
+    <p class="text-secondary" style="font-size:.9rem">{{ today_date|date:"d E Y" }} · Продолжай учиться — ты на верном пути</p>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-grid mb-4" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card animate-on-scroll stagger-1 stat-card-hover" style="position:relative;overflow:hidden">
+      <div class="stat-value">{{ progress.completed_lessons_count|default:"0" }}</div>
+      <div class="stat-label">Уроков пройдено</div>
+      <i class="bi bi-check2-circle" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
+    </div>
+    <div class="stat-card animate-on-scroll stagger-2 stat-card-hover" style="position:relative;overflow:hidden">
+      <div class="stat-value">{{ progress.average_grade|default:"—"|floatformat:1 }}</div>
+      <div class="stat-label">Средний балл</div>
+      <i class="bi bi-trophy" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
+    </div>
+    <div class="stat-card animate-on-scroll stagger-3 stat-card-hover" style="position:relative;overflow:hidden">
+      <div class="stat-value">{{ attendance_rate|default:"—" }}%</div>
+      <div class="stat-label">Посещаемость</div>
+      <i class="bi bi-person-check" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
+    </div>
+    <div class="stat-card animate-on-scroll stagger-4 stat-card-hover" style="position:relative;overflow:hidden">
+      <div class="stat-value">{{ pending_tasks|default:"0" }}</div>
+      <div class="stat-label">Заданий ждут</div>
+      <i class="bi bi-clipboard-check" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
+    </div>
+  </div>
+
+  <!-- COURSE PROGRESS -->
+  {% if progress %}
+  <div class="card-ai card-glow animate-on-scroll mb-4">
+    <div class="card-header-custom">
+      <h3 class="card-title-custom"><i class="bi bi-bar-chart-line me-2" style="color:var(--accent)"></i>Прогресс по курсу</h3>
+      <a href="{% url 'my-courses' %}" class="btn btn-sm btn-ai">Подробнее</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:.85rem;font-weight:600">{{ progress.course.title|default:"Курс" }}</span>
+          <span style="font-size:.85rem;font-weight:700;color:var(--accent)">{{ progress.completed_lessons_count }}/{{ total_lessons }} уроков</span>
+        </div>
+        <div class="progress-ai" style="height:10px;border-radius:8px">
+          <div class="progress-bar" role="progressbar" style="width:{{ course_percent|default:0 }}%;border-radius:8px"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <small class="text-secondary">Начато: {{ progress.created_at|date:"d.m.Y"|default:"—" }}</small>
+          <small style="color:var(--accent);font-weight:600">{{ course_percent|default:0 }}%</small>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;flex-shrink:0">
+        <div style="text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--accent)">{{ progress.average_grade|floatformat:0|default:"—" }}</div>
+          <div style="font-size:.72rem;color:var(--text-secondary)">Ср. балл</div>
+        </div>
+        <div style="text-align:center">
+          {% if progress.finished_course %}
+          <div style="font-size:1.4rem">✅</div>
+          <div style="font-size:.72rem;color:var(--text-secondary)">Завершён</div>
+          {% else %}
+          <div style="font-size:1.4rem">📚</div>
+          <div style="font-size:.72rem;color:var(--text-secondary)">В процессе</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- MAIN GRID -->
+  <div class="row g-4 mb-4">
+
+    <!-- UPCOMING LESSONS -->
+    <div class="col-lg-7">
+      <div class="card-ai card-glow h-100 animate-on-scroll">
+        <div class="card-header-custom">
+          <h3 class="card-title-custom"><i class="bi bi-calendar-event me-2" style="color:var(--accent)"></i>Ближайшие уроки</h3>
+          <a href="{% url 'my-courses' %}" class="btn btn-sm btn-ai">Все уроки</a>
+        </div>
+
+        {% if upcoming_lessons %}
+          {% for lesson in upcoming_lessons %}
+          <div class="lesson-card mb-3" style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:14px;background:var(--ai-subtle);border:1px solid var(--border);transition:all .2s;cursor:pointer" onclick="window.location='{% url 'lesson_detail' lesson.id %}'">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="width:60px;min-width:60px;text-align:center;padding:10px 6px;border-radius:10px;background:var(--ai-gradient);color:#fff">
+                <div style="font-size:1rem;font-weight:800;line-height:1">{{ lesson.scheduled_at|date:"d" }}</div>
+                <div style="font-size:.65rem;opacity:.9">{{ lesson.scheduled_at|date:"M" }}</div>
+                <div style="font-size:.7rem;font-weight:700">{{ lesson.scheduled_at|date:"H:i" }}</div>
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:.92rem;margin-bottom:3px">{{ lesson.title }}</div>
+                <div class="text-secondary" style="font-size:.78rem">{{ lesson.course.title }} · Группа: {{ lesson.group.name }}</div>
+                <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+                  <span style="font-size:.68rem;padding:2px 8px;border-radius:50px;background:rgba(99,102,241,.15);color:var(--accent);font-weight:600">
+                    {{ lesson.sub_lessons.count }} подурок{{ lesson.sub_lessons.count|pluralize:",а,ов" }}
+                  </span>
+                  {% with att=lesson.attendances.all %}
+                  {% if att %}
+                  <span style="font-size:.68rem;padding:2px 8px;border-radius:50px;background:rgba(16,185,129,.15);color:#10b981;font-weight:600">✓ Записан</span>
+                  {% endif %}
+                  {% endwith %}
+                </div>
+              </div>
+            </div>
+            <div style="flex-shrink:0;margin-left:12px">
+              <a href="{% url 'lesson_detail' lesson.id %}" class="btn btn-sm btn-ai" style="font-size:.78rem;padding:8px 16px">Открыть</a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <!-- FALLBACK -->
+          {% for item in fallback_lessons %}
+          <div class="lesson-card mb-3" style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:14px;background:var(--ai-subtle);border:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="width:60px;min-width:60px;text-align:center;padding:10px 6px;border-radius:10px;background:{{ item.color }};color:#fff">
+                <div style="font-size:.85rem;font-weight:800;line-height:1">{{ item.time }}</div>
+                <div style="font-size:.65rem;opacity:.9">{{ item.day }}</div>
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:.92rem;margin-bottom:3px">{{ item.title }}</div>
+                <div class="text-secondary" style="font-size:.78rem">{{ item.course }}</div>
+              </div>
+            </div>
+            <span class="badge-ai"><i class="bi bi-broadcast me-1"></i>Онлайн</span>
+          </div>
+          {% empty %}
+          <div style="text-align:center;padding:40px 20px;color:var(--text-secondary)">
+            <i class="bi bi-calendar-x" style="font-size:2.5rem;opacity:.4;display:block;margin-bottom:10px"></i>
+            <p style="font-size:.88rem">Нет запланированных уроков</p>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
     </div>
 
-    <div class="stats-grid mb-5">
-        <div class="stat-card animate-on-scroll stagger-1 stat-card-hover">
-            <div class="stat-value">12</div>
-            <div class="stat-label">Уроков пройдено</div>
-            <i class="bi bi-check2-circle position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
+    <!-- RIGHT COL -->
+    <div class="col-lg-5">
+      <!-- LAST GRADES -->
+      <div class="card-ai card-glow animate-on-scroll mb-4">
+        <div class="card-header-custom">
+          <h3 class="card-title-custom"><i class="bi bi-trophy me-2" style="color:var(--accent)"></i>Последние оценки</h3>
         </div>
-        <div class="stat-card animate-on-scroll stagger-2 stat-card-hover">
-            <div class="stat-value">4.8</div>
-            <div class="stat-label">Средний балл</div>
-            <i class="bi bi-trophy position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
-        </div>
-        <div class="stat-card animate-on-scroll stagger-3 stat-card-hover">
-            <div class="stat-value">3</div>
-            <div class="stat-label">Активных курса</div>
-            <i class="bi bi-book position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
-        </div>
-        <div class="stat-card animate-on-scroll stagger-4 stat-card-hover">
-            <div class="stat-value">2</div>
-            <div class="stat-label">Новых задания</div>
-            <i class="bi bi-clipboard-check position-absolute top-0 end-0 m-3 text-accent opacity-25" style="font-size: 2rem;"></i>
-        </div>
-    </div>
+        {% if recent_grades %}
+          {% for grade in recent_grades %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:.85rem;font-weight:600">{{ grade.get_grade_display }}</div>
+              <div class="text-secondary" style="font-size:.73rem">{{ grade.created_at|date:"d.m.Y" }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              {% with v=grade.grade_value %}
+              <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;
+                {% if v >= 80 %}background:rgba(16,185,129,.15);color:#10b981
+                {% elif v >= 60 %}background:rgba(245,158,11,.15);color:#f59e0b
+                {% else %}background:rgba(239,68,68,.15);color:#ef4444{% endif %}">
+                {{ v }}
+              </div>
+              {% endwith %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <!-- FALLBACK -->
+          {% for g in fallback_grades %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:.85rem;font-weight:600">{{ g.label }}</div>
+              <div class="text-secondary" style="font-size:.73rem">{{ g.date }}</div>
+            </div>
+            <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;background:{{ g.bg }};color:{{ g.color }}">
+              {{ g.value }}
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-secondary" style="font-size:.85rem;padding:20px 0">Оценок пока нет</p>
+          {% endfor %}
+        {% endif %}
+      </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card-ai card-glow h-100 animate-on-scroll">
-                <div class="card-header-custom">
-                    <h3 class="card-title-custom">
-                        <i class="bi bi-calendar-event me-2" style="color: var(--accent);"></i>Ближайшие уроки
-                    </h3>
-                    <a href="{% url 'my-courses' %}" class="btn btn-sm btn-ai">Все уроки</a>
-                </div>
-                <div class="lesson-list">
-                    <div class="lesson-item d-flex align-items-center justify-content-between p-4 rounded-3 mb-3 lesson-card">
-                        <div class="d-flex align-items-center gap-4">
-                            <div class="lesson-time text-center rounded-3 p-2" style="min-width: 70px; background: var(--ai-gradient); color: white;">
-                                <div class="fw-bold" style="font-size: 1.1rem;">14:00</div>
-                                <small style="opacity: 0.9;">Сегодня</small>
-                            </div>
-                            <div>
-                                <div class="fw-semibold mb-1">Python: Работа с API</div>
-                                <small class="text-secondary">Курс «Программирование на Python»</small>
-                            </div>
-                        </div>
-                        <span class="badge-ai"><i class="bi bi-broadcast me-1"></i>Онлайн</span>
-                    </div>
-                    <div class="lesson-item d-flex align-items-center justify-content-between p-4 rounded-3 mb-2 lesson-card">
-                        <div class="d-flex align-items-center gap-4">
-                            <div class="lesson-time text-center rounded-3 p-2" style="min-width: 70px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
-                                <div class="fw-bold" style="font-size: 1.1rem;">10:00</div>
-                                <small style="opacity: 0.9;">Завтра</small>
-                            </div>
-                            <div>
-                                <div class="fw-semibold mb-1">Машинное обучение: Введение</div>
-                                <small class="text-secondary">Курс «AI и ML»</small>
-                            </div>
-                        </div>
-                        <span class="badge-ai"><i class="bi bi-broadcast me-1"></i>Онлайн</span>
-                    </div>
-                </div>
-            </div>
+      <!-- ATTENDANCE MINI -->
+      <div class="card-ai card-glow animate-on-scroll">
+        <div class="card-header-custom">
+          <h3 class="card-title-custom"><i class="bi bi-calendar-check me-2" style="color:var(--accent)"></i>Посещаемость</h3>
         </div>
-
-        <div class="col-lg-4">
-            <div class="card-ai card-glow h-100 animate-on-scroll">
-                <div class="card-header-custom">
-                    <h3 class="card-title-custom">
-                        <i class="bi bi-trophy me-2" style="color: var(--accent);"></i>Последние оценки
-                    </h3>
-                </div>
-                <div class="grades-list">
-                    <div class="grade-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom" style="border-color: var(--border) !important;">
-                        <span class="fw-medium">Домашняя работа №5</span>
-                        <span class="badge rounded-pill px-3 py-2" style="background: var(--success); color: white;">5</span>
-                    </div>
-                    <div class="grade-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom" style="border-color: var(--border) !important;">
-                        <span class="fw-medium">Тест по Python</span>
-                        <span class="badge rounded-pill px-3 py-2" style="background: var(--success); color: white;">5</span>
-                    </div>
-                    <div class="grade-item d-flex justify-content-between align-items-center py-3 px-0">
-                        <span class="fw-medium">Проект API</span>
-                        <span class="badge rounded-pill px-3 py-2" style="background: var(--accent); color: white;">4</span>
-                    </div>
-                </div>
-            </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px">
+          {% for day in attendance_calendar %}
+          <div title="{{ day.label }}" style="width:100%;aspect-ratio:1;border-radius:5px;
+            {% if day.status == 'present' %}background:rgba(16,185,129,.7)
+            {% elif day.status == 'absent' %}background:rgba(239,68,68,.5)
+            {% elif day.status == 'today' %}background:var(--accent)
+            {% else %}background:var(--border){% endif %}">
+          </div>
+          {% empty %}
+          <!-- Fallback calendar dots -->
+          {% for i in "1234567890123456789012345678" %}
+          <div style="width:100%;aspect-ratio:1;border-radius:5px;background:{% cycle 'rgba(16,185,129,.7)' 'rgba(16,185,129,.7)' 'rgba(16,185,129,.7)' 'rgba(239,68,68,.4)' 'rgba(16,185,129,.7)' 'var(--border)' 'var(--border)' %}"></div>
+          {% endfor %}
+          {% endfor %}
         </div>
+        <div style="display:flex;gap:14px;font-size:.72rem;color:var(--text-secondary)">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,.7);margin-right:4px"></span>Присутствовал</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,.5);margin-right:4px"></span>Пропустил</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--border);margin-right:4px"></span>Нет урока</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="mt-5">
-        <h3 class="section-title mb-4">
-            <i class="bi bi-newspaper"></i> Свежие новости
-        </h3>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="card-ai card-glow h-100 animate-on-scroll">
-                    <span class="badge-ai mb-3"><i class="bi bi-sparkles me-1"></i>Новое</span>
-                    <h5 class="mb-2 fw-bold">Запуск AI-ассистента</h5>
-                    <p class="text-secondary small mb-0">Теперь вы можете задавать вопросы по курсу нашему AI. Попробуйте в разделе «AI Чат»!</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card-ai card-glow h-100 animate-on-scroll">
-                    <span class="badge-ai mb-3"><i class="bi bi-arrow-up-circle me-1"></i>Обновление</span>
-                    <h5 class="mb-2 fw-bold">Новый курс: FastAPI</h5>
-                    <p class="text-secondary small mb-0">Добавлен курс по современному веб-фреймворку для Python.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card-ai card-glow h-100 animate-on-scroll">
-                    <h5 class="mb-2 fw-bold">Расписание на март</h5>
-                    <p class="text-secondary small mb-0">Опубликовано расписание занятий на следующий месяц.</p>
-                </div>
-            </div>
-        </div>
+  <!-- PENDING TASKS -->
+  {% if tasks %}
+  <div class="card-ai card-glow animate-on-scroll mb-4">
+    <div class="card-header-custom">
+      <h3 class="card-title-custom"><i class="bi bi-clipboard-check me-2" style="color:var(--accent)"></i>Задания к выполнению</h3>
+      <a href="{% url 'assignments' %}" class="btn btn-sm btn-ai">Все задания</a>
     </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+      {% for task in tasks %}
+      <div style="padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--ai-subtle);transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);background:rgba(99,102,241,.12);padding:3px 8px;border-radius:50px">
+            {{ task.sub_lesson.lesson.course.title|truncatechars:20 }}
+          </span>
+          <span style="font-size:.72rem;color:var(--text-secondary)">Макс: {{ task.max_score }}</span>
+        </div>
+        <div style="font-weight:600;font-size:.88rem;margin-bottom:6px;line-height:1.4">{{ task.description|truncatechars:80 }}</div>
+        <div style="font-size:.75rem;color:var(--text-secondary)">Урок: {{ task.sub_lesson.lesson.title }}</div>
+        <a href="{% url 'lesson_detail' task.sub_lesson.lesson.id %}" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:.78rem;font-weight:600;color:var(--accent)">
+          Открыть урок <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate stat counters
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.stat-value').forEach(el => {
+    const raw = el.textContent.trim();
+    const num = parseFloat(raw);
+    if (isNaN(num) || raw === '—') return;
+    const isFloat = raw.includes('.');
+    const dur = 1200;
+    const start = performance.now();
+    (function step(now) {
+      const p = Math.min((now - start) / dur, 1);
+      const v = p * num;
+      el.textContent = isFloat ? v.toFixed(1) : Math.floor(v);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = raw;
+    })(start);
+  });
+});
+</script>
 {% endblock %}

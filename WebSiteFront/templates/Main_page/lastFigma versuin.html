@@ -108,6 +108,7 @@ nav {
   background: var(--pu); color: #fff; border-radius: 50px;
   padding: 10px 24px; font-weight: 700; font-size: .82rem;
   transition: all .25s; box-shadow: 0 0 20px var(--pu-g);
+  text-decoration: none; border: none; cursor: pointer;
 }
 .btn-nav:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
@@ -327,6 +328,7 @@ nav {
   padding: 13px 28px; font-weight: 700; font-size: .9rem; cursor: pointer;
   transition: all .25s; box-shadow: 0 4px 20px var(--pu-g);
   display: inline-flex; align-items: center; gap: 7px;
+  text-decoration: none; border: none;
 }
 .btn-p:hover { transform: translateY(-3px); box-shadow: 0 8px 30px var(--pu-g); filter: brightness(1.08); }
 .btn-o {
@@ -744,7 +746,7 @@ footer { background: var(--sur); border-top: 1px solid var(--brd); padding: 68px
     <button class="theme-btn" id="themeToggle">
       <div class="theme-ball" id="themeBall">🌙</div>
     </button>
-    <button class="btn-nav" onclick="document.querySelector('.form-box').scrollIntoView({behavior:'smooth'})">Записаться</button>
+    <a href="/register/" class="btn-nav">Записаться</a>
   </div>
 </nav>
 
@@ -786,7 +788,7 @@ footer { background: var(--sur); border-top: 1px solid var(--brd); padding: 68px
       </div>
     </div>
     <div style="display:flex;gap:11px;margin-bottom:44px;flex-wrap:wrap">
-      <button class="btn-p" onclick="document.querySelector('.form-box').scrollIntoView({behavior:'smooth'})">Записаться со скидкой</button>
+      <a href="/register/" class="btn-p">Записаться со скидкой</a>
       <button class="btn-o" onclick="document.getElementById('courses').scrollIntoView({behavior:'smooth'})">Смотреть курсы →</button>
     </div>
     <div class="hero-stats">
@@ -839,7 +841,7 @@ footer { background: var(--sur); border-top: 1px solid var(--brd); padding: 68px
         <button class="flag-sel">🇺🇿 +998 ▾</button>
         <input type="tel" placeholder="Номер телефона">
       </div>
-      <button class="sub-btn">Записаться со скидкой</button>
+      <a href="/register/" class="sub-btn" style="display:block;text-align:center;text-decoration:none">Записаться со скидкой</a>
       <label class="agree-row">
         <input type="checkbox" checked>
         <span>Даю согласие на обработку персональных данных, в том числе с целью получения информации о новых продуктах, скидках и вебинарах на <a href="#">следующих условиях</a></span>
@@ -1432,7 +1434,7 @@ footer { background: var(--sur); border-top: 1px solid var(--brd); padding: 68px
     <h2 class="cta-h">Готовы изменить<br>свою карьеру?</h2>
     <p class="cta-s">Присоединяйтесь к первым студентам Swift Intell и освойте AI раньше других</p>
     <div class="cta-btns">
-      <button class="btn-p" style="font-size:.97rem;padding:16px 40px">Записаться сейчас →</button>
+      <a href="/register/" class="btn-p" style="font-size:.97rem;padding:16px 40px;text-decoration:none">Записаться сейчас →</a>
       <button class="btn-o" style="font-size:.97rem;padding:16px 30px">Задать вопрос</button>
     </div>
   </div>
@@ -1551,7 +1553,7 @@ function nextQ(){
     const btn=document.getElementById('ptNext');
     btn.textContent='Узнать результат';
     btn.onclick=()=>{
-      document.querySelector('.pt-r').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:48px 36px"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px">🎯</div><h3 style="font-family:Unbounded,sans-serif;font-weight:900;font-size:1.25rem;margin-bottom:12px;letter-spacing:-.5px">Ваша ниша — AI для бизнеса</h3><p style="color:var(--tx2);font-size:.85rem;line-height:1.7;margin-bottom:24px;max-width:320px">Вам подойдут курсы по автоматизации, ChatGPT, Midjourney и AI-инструментам для повышения эффективности</p><button class="btn-p" onclick="document.querySelector(\'.form-box\').scrollIntoView({behavior:\'smooth\'})">Записаться на курс →</button></div>';
+      document.querySelector('.pt-r').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:48px 36px"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px">🎯</div><h3 style="font-family:Unbounded,sans-serif;font-weight:900;font-size:1.25rem;margin-bottom:12px;letter-spacing:-.5px">Ваша ниша — AI для бизнеса</h3><p style="color:var(--tx2);font-size:.85rem;line-height:1.7;margin-bottom:24px;max-width:320px">Вам подойдут курсы по автоматизации, ChatGPT, Midjourney и AI-инструментам для повышения эффективности</p><a href="/register/" class="btn-p" style="text-decoration:none">Записаться на курс →</a></div>';
     };
   }
 }

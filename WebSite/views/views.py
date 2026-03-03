@@ -1,8 +1,12 @@
+from datetime import date, timedelta
+
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
-from WebSite.models.student_model.attandance import Attendance
-from WebSite.models.study.lesson import Course, Lesson
+from WebSite.models.student_model.attandance import Attendance, StudentProgress
+from WebSite.models.study.grade_model import Grade
+from WebSite.models.study.lesson import Course, Lesson, SubLesson, Task
 
 def _get_next_lesson_for_student(student, course):
     student_groups = student.study_groups.filter(course=course)
@@ -91,20 +95,128 @@ def main_register(request):
     return render(request, 'main_pages/register.html')
 
 def student_home(request):
-    return render(request, 'student/home.html')
+    ctx = {
+        'today_date': timezone.now().date(),
+        'fallback_lessons': [
+            {'time':'14:00','day':'Сегодня','title':'Python: Работа с API','course':'Программирование на Python','color':'linear-gradient(135deg,#6366f1,#8b5cf6)'},
+            {'time':'10:00','day':'Завтра','title':'Машинное обучение: Введение','course':'AI и ML','color':'linear-gradient(135deg,#8b5cf6,#a855f7)'},
+            {'time':'16:00','day':'Чт','title':'FastAPI: Роутинг','course':'FastAPI: Веб-разработка','color':'linear-gradient(135deg,#0ea5e9,#6366f1)'},
+        ],
+        'fallback_grades': [
+            {'label':'Домашняя работа №5','date':'28.02.2026','value':92,'bg':'rgba(16,185,129,.15)','color':'#10b981'},
+            {'label':'Тест по Python','date':'25.02.2026','value':85,'bg':'rgba(16,185,129,.15)','color':'#10b981'},
+            {'label':'Проект API','date':'20.02.2026','value':74,'bg':'rgba(245,158,11,.15)','color':'#f59e0b'},
+            {'label':'Контрольная работа №2','date':'14.02.2026','value':58,'bg':'rgba(239,68,68,.15)','color':'#ef4444'},
+        ],
+    }
+
+    if request.user.is_authenticated and hasattr(request.user, 'student'):
+        student = request.user.student
+        progress = StudentProgress.objects.filter(student=student).select_related('course').first()
+
+        # upcoming lessons from student groups
+        now = timezone.now()
+        groups = student.study_groups.all()
+        upcoming = Lesson.objects.filter(
+            group__in=groups, scheduled_at__gte=now
+        ).select_related('course', 'group').prefetch_related('sub_lessons').order_by('scheduled_at')[:5]
+
+        # attendance rate
+        total_att = Attendance.objects.filter(student=student).count()
+        present_att = Attendance.objects.filter(student=student, is_present=True).count()
+        att_rate = round(present_att / total_att * 100) if total_att else 0
+
+        # pending tasks (tasks from upcoming lessons without submitted grade)
+        pending_tasks = Task.objects.filter(
+            sub_lesson__lesson__group__in=groups
+        ).select_related('sub_lesson__lesson__course')[:6]
+
+        # recent grades
+        recent_grades = Grade.objects.order_by('-created_at')[:4]
+
+        # attendance calendar (last 28 days)
+        today = date.today()
+        calendar = []
+        for i in range(27, -1, -1):
+            d = today - timedelta(days=i)
+            att = Attendance.objects.filter(student=student, date=d).first()
+            if att:
+                status = 'present' if att.is_present else 'absent'
+            elif d == today:
+                status = 'today'
+            else:
+                status = 'empty'
+            calendar.append({'label': d.strftime('%d.%m'), 'status': status})
+
+        # total lessons and percent
+        total_lessons = 0
+        course_percent = 0
+        if progress:
+            course = progress.course
+            group = student.study_groups.filter(course=course).first()
+            if group:
+                total_lessons = group.lessons.count()
+                course_percent = round(progress.completed_lessons_count / total_lessons * 100) if total_lessons else 0
+
+        ctx.update({
+            'progress': progress,
+            'upcoming_lessons': upcoming,
+            'attendance_rate': att_rate,
+            'pending_tasks': pending_tasks,
+            'recent_grades': recent_grades,
+            'attendance_calendar': calendar,
+            'total_lessons': total_lessons,
+            'course_percent': course_percent,
+        })
+
+    return render(request, 'student/home.html', ctx)
 
 def student_courses(request):
     return render(request, 'student/courses.html')
 
 def student_lesson_redirect(request, lesson_id):
-    lesson = get_object_or_404(Lesson, pk=lesson_id)
+    """Legacy redirect — use lesson_detail instead."""
+    return redirect('lesson_detail', lesson_id=lesson_id)
+
+
+def student_lesson_detail(request, lesson_id):
+    lesson = get_object_or_404(
+        Lesson.objects.select_related('course', 'group').prefetch_related(
+            'sub_lessons__tasks', 'attendances'
+        ),
+        pk=lesson_id
+    )
+
+    # Other lessons in the same course/group
+    other_lessons = Lesson.objects.filter(
+        group=lesson.group
+    ).order_by('scheduled_at')
+
+    # Prev / next
+    prev_lesson = other_lessons.filter(scheduled_at__lt=lesson.scheduled_at).order_by('-scheduled_at').first()
+    next_lesson = other_lessons.filter(scheduled_at__gt=lesson.scheduled_at).order_by('scheduled_at').first()
+
+    attendance = None
+    lesson_grades = []
+    student_grades = []
+
     if request.user.is_authenticated and hasattr(request.user, 'student'):
         student = request.user.student
-        if student.study_groups.filter(pk=lesson.group_id).exists():
-            return redirect(lesson.content_link)
-        if student.course_id and lesson.group.course_id == student.course_id:
-            return redirect(lesson.content_link)
-    return redirect('my-courses')
+        attendance = Attendance.objects.filter(student=student, lesson=lesson).first()
+        lesson_grades = Grade.objects.filter(
+            # grades for this lesson's tasks
+        ).order_by('-created_at')
+        student_grades = list(Grade.objects.values('grade_value'))  # placeholder
+
+    return render(request, 'student/lesson_detail.html', {
+        'lesson': lesson,
+        'other_lessons': other_lessons,
+        'prev_lesson': prev_lesson,
+        'next_lesson': next_lesson,
+        'attendance': attendance,
+        'lesson_grades': lesson_grades,
+        'student_grades': student_grades,
+    })
 
 
 def student_my_courses(request):

@@ -9,70 +9,41 @@
     <div class="page-hero anim-fade-up">
         <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Домашние работы</p>
         <h1>Мои <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">задания</span></h1>
-        <p class="lead">Новые и выполненные</p>
+        <p class="lead">Задания по вашим курсам</p>
     </div>
 
-    <ul class="nav nav-pills mb-4">
-        <li class="nav-item">
-            <a class="nav-link active" href="#">Все</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#">Новые</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#">Выполненные</a>
-        </li>
-    </ul>
-
     <div class="row g-4">
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll" style="border: 2px solid rgba(99,102,241,0.3);">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div>
-                        <span class="badge-ai mb-2"><i class="bi bi-plus-circle me-1"></i>Новое</span>
-                        <h5 class="mb-1 fw-bold">Домашняя работа №6 — API клиент</h5>
-                        <p class="text-secondary small mb-0"><i class="bi bi-book me-1"></i>Программирование на Python • <i class="bi bi-calendar me-1"></i>Срок: 20 фев</p>
+        {% if tasks_data %}
+            {% for task in tasks_data %}
+            <div class="col-12">
+                <div class="card-ai card-glow animate-on-scroll" style="border: 2px solid rgba(99,102,241,0.3);">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <span class="badge-ai mb-2"><i class="bi bi-journal-text me-1"></i>Задание</span>
+                            <h5 class="mb-1 fw-bold">{{ task.description|truncatewords:12 }}</h5>
+                            <p class="text-secondary small mb-0">
+                                <i class="bi bi-book me-1"></i>{{ task.sub_lesson.lesson.course.title }}
+                                {% if task.sub_lesson.lesson.group %}
+                                · <i class="bi bi-people me-1"></i>Группа: {{ task.sub_lesson.lesson.group.name }} (№ {{ task.sub_lesson.lesson.group.id }})
+                                {% endif %}
+                                · Макс. балл: <strong>{{ task.max_score }}</strong>
+                            </p>
+                            <p class="text-secondary small mb-0 mt-1"><i class="bi bi-play-circle me-1"></i>Урок: {{ task.sub_lesson.lesson.title }}</p>
+                        </div>
+                        <a href="{% url 'lesson_detail' task.sub_lesson.lesson.id %}" class="btn btn-ai px-4">Открыть урок</a>
                     </div>
-                    <a href="#" class="btn btn-ai px-4">Выполнить</a>
                 </div>
             </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll" style="border: 2px solid rgba(99,102,241,0.3);">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div>
-                        <span class="badge-ai mb-2"><i class="bi bi-plus-circle me-1"></i>Новое</span>
-                        <h5 class="mb-1 fw-bold">Лабораторная — Линейная регрессия</h5>
-                        <p class="text-secondary small mb-0"><i class="bi bi-book me-1"></i>AI и ML • <i class="bi bi-calendar me-1"></i>Срок: 22 фев</p>
-                    </div>
-                    <a href="#" class="btn btn-ai px-4">Выполнить</a>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card-ai card-glow animate-on-scroll text-center py-5">
+                    <i class="bi bi-clipboard-x text-secondary" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 mb-2">Заданий пока нет</h5>
+                    <p class="text-secondary mb-0">Здесь появятся задания по вашим курсам.</p>
                 </div>
             </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai animate-on-scroll" style="opacity: 0.9;">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div>
-                        <span class="badge rounded-pill px-3 py-2 mb-2" style="background: var(--success); color: white;"><i class="bi bi-check2 me-1"></i>Сдано</span>
-                        <h5 class="mb-1 fw-bold">Домашняя работа №5 — Парсинг данных</h5>
-                        <p class="text-secondary small mb-0">Курс: Python • Оценка: <strong class="text-success">5</strong></p>
-                    </div>
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 2.5rem;"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai animate-on-scroll" style="opacity: 0.9;">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div>
-                        <span class="badge rounded-pill px-3 py-2 mb-2" style="background: var(--success); color: white;"><i class="bi bi-check2 me-1"></i>Сдано</span>
-                        <h5 class="mb-1 fw-bold">Тест по основам Python</h5>
-                        <p class="text-secondary small mb-0">Курс: Python • Оценка: <strong class="text-success">5</strong></p>
-                    </div>
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 2.5rem;"></i>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

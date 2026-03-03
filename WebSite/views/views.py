@@ -7,6 +7,7 @@ from django.utils import timezone
 from WebSite.models.student_model.attandance import Attendance, StudentProgress
 from WebSite.models.study.grade_model import Grade
 from WebSite.models.study.lesson import Course, Lesson, SubLesson, Task
+from WebSite.models.pay_system.payment import StudentSubscription
 
 def _get_next_lesson_for_student(student, course):
     student_groups = student.study_groups.filter(course=course)
@@ -21,38 +22,34 @@ def _get_next_lesson_for_student(student, course):
 
 
 def _get_my_courses_data(student):
-    seen_course_ids = set()
+    """
+    Возвращает только купленные курсы студента — по подпискам (StudentSubscription).
+    Студент видит в личном кабинете только те курсы, на которые у него есть подписка.
+    """
     result = []
-    for group in student.study_groups.select_related('course').prefetch_related('lessons'):
-        course = group.course
+    subscriptions = (
+        StudentSubscription.objects
+        .filter(student=student)
+        .select_related('tariff__course')
+        .order_by('-start_date')
+    )
+    seen_course_ids = set()
+    for sub in subscriptions:
+        course = sub.tariff.course
         if course.id in seen_course_ids:
             continue
         seen_course_ids.add(course.id)
-        total = group.lessons.count()
-        attended = Attendance.objects.filter(student=student, lesson__group=group).count()
-        next_lesson = _get_next_lesson_for_student(student, course)
-        first_lesson = group.lessons.order_by('scheduled_at').first()
-        continue_url = reverse('lesson', args=[next_lesson.id]) if next_lesson else (
-            reverse('lesson', args=[first_lesson.id]) if first_lesson else None
-        )
-        result.append({
-            'course': course,
-            'group': group,
-            'total_lessons': total,
-            'completed': attended,
-            'percent': round(100 * attended / total) if total else 0,
-            'next_lesson': next_lesson,
-            'continue_url': continue_url,
-        })
-    if student.course and student.course.id not in seen_course_ids:
-        course = student.course
         group = student.study_groups.filter(course=course).first() or course.groups.first()
         total = group.lessons.count() if group else 0
-        attended = Attendance.objects.filter(student=student, lesson__group__course=course).count()
+        attended = (
+            Attendance.objects.filter(student=student, lesson__group__course=course).count()
+            if group else 0
+        )
         next_lesson = _get_next_lesson_for_student(student, course)
         first_lesson = group.lessons.order_by('scheduled_at').first() if group else None
-        continue_url = reverse('lesson', args=[next_lesson.id]) if next_lesson else (
-            reverse('lesson', args=[first_lesson.id]) if first_lesson else None
+        continue_url = (
+            reverse('lesson', args=[next_lesson.id]) if next_lesson else
+            (reverse('lesson', args=[first_lesson.id]) if first_lesson else None)
         )
         result.append({
             'course': course,
@@ -62,6 +59,7 @@ def _get_my_courses_data(student):
             'percent': round(100 * attended / total) if total else 0,
             'next_lesson': next_lesson,
             'continue_url': continue_url,
+            'subscription': sub,
         })
     return result
 
@@ -95,38 +93,41 @@ def main_register(request):
     return render(request, 'main_pages/register.html')
 
 def student_home(request):
+    today = date.today()
     ctx = {
         'today_date': timezone.now().date(),
-        'fallback_lessons': [
-            {'time':'14:00','day':'Сегодня','title':'Python: Работа с API','course':'Программирование на Python','color':'linear-gradient(135deg,#6366f1,#8b5cf6)'},
-            {'time':'10:00','day':'Завтра','title':'Машинное обучение: Введение','course':'AI и ML','color':'linear-gradient(135deg,#8b5cf6,#a855f7)'},
-            {'time':'16:00','day':'Чт','title':'FastAPI: Роутинг','course':'FastAPI: Веб-разработка','color':'linear-gradient(135deg,#0ea5e9,#6366f1)'},
-        ],
-        'fallback_grades': [
-            {'label':'Домашняя работа №5','date':'28.02.2026','value':92,'bg':'rgba(16,185,129,.15)','color':'#10b981'},
-            {'label':'Тест по Python','date':'25.02.2026','value':85,'bg':'rgba(16,185,129,.15)','color':'#10b981'},
-            {'label':'Проект API','date':'20.02.2026','value':74,'bg':'rgba(245,158,11,.15)','color':'#f59e0b'},
-            {'label':'Контрольная работа №2','date':'14.02.2026','value':58,'bg':'rgba(239,68,68,.15)','color':'#ef4444'},
-        ],
+        'progress': None,
+        'progress_group': None,
+        'upcoming_lessons': [],
+        'attendance_rate': None,
+        'pending_tasks': [],
+        'recent_grades': [],
+        'attendance_calendar': [{'label': (today - timedelta(days=i)).strftime('%d.%m'), 'status': 'empty'} for i in range(27, -1, -1)],
+        'total_lessons': 0,
+        'course_percent': 0,
     }
 
     if request.user.is_authenticated and hasattr(request.user, 'student'):
         student = request.user.student
-        progress = StudentProgress.objects.filter(student=student).select_related('course').first()
+        purchased_course_ids = StudentSubscription.objects.filter(
+            student=student
+        ).values_list('tariff__course_id', flat=True).distinct()
 
-        # upcoming lessons from student groups
+        progress = StudentProgress.objects.filter(
+            student=student, course_id__in=purchased_course_ids
+        ).select_related('course').first()
+
+        groups = student.study_groups.filter(course_id__in=purchased_course_ids)
+
         now = timezone.now()
-        groups = student.study_groups.all()
         upcoming = Lesson.objects.filter(
             group__in=groups, scheduled_at__gte=now
         ).select_related('course', 'group').prefetch_related('sub_lessons').order_by('scheduled_at')[:5]
 
-        # attendance rate
         total_att = Attendance.objects.filter(student=student).count()
         present_att = Attendance.objects.filter(student=student, is_present=True).count()
         att_rate = round(present_att / total_att * 100) if total_att else 0
 
-        # pending tasks (tasks from upcoming lessons without submitted grade)
         pending_tasks = Task.objects.filter(
             sub_lesson__lesson__group__in=groups
         ).select_related('sub_lesson__lesson__course')[:6]
@@ -148,18 +149,19 @@ def student_home(request):
                 status = 'empty'
             calendar.append({'label': d.strftime('%d.%m'), 'status': status})
 
-        # total lessons and percent
         total_lessons = 0
         course_percent = 0
+        progress_group = None
         if progress:
             course = progress.course
-            group = student.study_groups.filter(course=course).first()
-            if group:
-                total_lessons = group.lessons.count()
+            progress_group = student.study_groups.filter(course=course).first()
+            if progress_group:
+                total_lessons = progress_group.lessons.count()
                 course_percent = round(progress.completed_lessons_count / total_lessons * 100) if total_lessons else 0
 
         ctx.update({
             'progress': progress,
+            'progress_group': progress_group,
             'upcoming_lessons': upcoming,
             'attendance_rate': att_rate,
             'pending_tasks': pending_tasks,
@@ -187,12 +189,18 @@ def student_lesson_detail(request, lesson_id):
         pk=lesson_id
     )
 
-    # Other lessons in the same course/group
+    if request.user.is_authenticated and hasattr(request.user, 'student'):
+        student = request.user.student
+        has_access = StudentSubscription.objects.filter(
+            student=student, tariff__course=lesson.course
+        ).exists()
+        if not has_access:
+            return redirect('my-courses')
+
     other_lessons = Lesson.objects.filter(
         group=lesson.group
     ).order_by('scheduled_at')
 
-    # Prev / next
     prev_lesson = other_lessons.filter(scheduled_at__lt=lesson.scheduled_at).order_by('-scheduled_at').first()
     next_lesson = other_lessons.filter(scheduled_at__gt=lesson.scheduled_at).order_by('scheduled_at').first()
 
@@ -227,7 +235,19 @@ def student_my_courses(request):
     return render(request, 'student/my_courses.html', {'courses_data': courses_data})
 
 def student_assignments(request):
-    return render(request, 'student/assignments.html')
+    tasks_data = []
+    if request.user.is_authenticated and hasattr(request.user, 'student'):
+        student = request.user.student
+        purchased_course_ids = StudentSubscription.objects.filter(
+            student=student
+        ).values_list('tariff__course_id', flat=True).distinct()
+        groups = student.study_groups.filter(course_id__in=purchased_course_ids)
+        tasks_data = list(
+            Task.objects.filter(sub_lesson__lesson__group__in=groups)
+            .select_related('sub_lesson__lesson__course', 'sub_lesson__lesson__group')
+            .order_by('-sub_lesson__lesson__scheduled_at')
+        )
+    return render(request, 'student/assignments.html', {'tasks_data': tasks_data})
 
 def student_profile(request):
     return render(request, 'student/profile.html')

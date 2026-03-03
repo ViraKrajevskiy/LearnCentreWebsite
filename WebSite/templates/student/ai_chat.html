@@ -35,8 +35,8 @@
                     </div>
                 </div>
                 <div class="chat-input p-4 border-top" style="border-color: var(--border) !important;">
-                    <form class="d-flex gap-2">
-                        <input type="text" class="form-control form-control-lg rounded-4" placeholder="Напишите сообщение..." style="border: 2px solid var(--border);">
+                    <form class="d-flex gap-2" id="chatForm">
+                        <input type="text" class="form-control form-control-lg rounded-4" placeholder="Напишите сообщение..." style="border: 2px solid var(--border);" name="message">
                         <button type="submit" class="btn btn-ai px-4">
                             <i class="bi bi-send-fill"></i>
                         </button>
@@ -46,4 +46,11 @@
         </div>
     </div>
 </div>
+{% block extra_js %}
+<script>
+document.getElementById('chatForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    // AI-чат пока без бэкенда — заглушка
+});
+</script>
 {% endblock %}

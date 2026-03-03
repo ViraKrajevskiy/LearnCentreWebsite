@@ -2,7 +2,6 @@ from django.db import models
 from WebSite.models.models import DateCreate
 from WebSite.models.study import Course
 
-
 class Tariff(DateCreate):
     title = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)

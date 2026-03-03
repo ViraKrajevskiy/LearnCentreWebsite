@@ -12,7 +12,7 @@
         <p class="lead">Данные и смена пароля</p>
     </div>
     <div id="profile-auth-required" class="alert alert-warning d-none">
-        <a href="{% url 'login' %}">Войдите</a>, чтобы просмотреть профиль.
+        <a href="{% url 'login' %}" class="alert-link">Войдите</a>, чтобы просмотреть профиль.
     </div>
     <div id="profile-content" class="row g-4 d-none">
         <div class="col-lg-4">
@@ -95,11 +95,15 @@
 <script>
 (function() {
     const token = localStorage.getItem('access');
+    const authRequired = document.getElementById('profile-auth-required');
+    const profileContent = document.getElementById('profile-content');
+    const changeForm = document.getElementById('change-password-form');
+
     if (!token) {
-        document.getElementById('profile-auth-required').classList.remove('d-none');
+        authRequired?.classList.remove('d-none');
         return;
     }
-    document.getElementById('profile-content').classList.remove('d-none');
+    profileContent?.classList.remove('d-none');
 
     fetch('/api/v1/auth/me/', {
         headers: { 'Authorization': 'Bearer ' + token }
@@ -107,26 +111,30 @@
         if (r.status === 401) {
             localStorage.removeItem('access');
             localStorage.removeItem('refresh');
-            document.getElementById('profile-auth-required').classList.remove('d-none');
-            document.getElementById('profile-content').classList.add('d-none');
+            authRequired?.classList.remove('d-none');
+            profileContent?.classList.add('d-none');
             return null;
         }
         return r.json();
     }).then(data => {
         if (!data) return;
         const initials = (data.first_name?.[0] || '') + (data.surname?.[0] || '') || '?';
-        document.getElementById('avatar-initials').textContent = initials;
-        document.getElementById('profile-name').textContent = `${data.surname || ''} ${data.first_name || ''}`.trim() || '—';
-        document.getElementById('profile-email').textContent = data.email || '—';
-        document.getElementById('profile-first-name').textContent = data.first_name || '—';
-        document.getElementById('profile-surname').textContent = data.surname || '—';
-        document.getElementById('profile-email-val').textContent = data.email || '—';
-        document.getElementById('profile-phone').textContent = data.phone_number || '—';
-        document.getElementById('profile-telegram').textContent = data.telegram_username ? '@' + data.telegram_username : '—';
-        document.getElementById('profile-created').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('ru') : '—';
+        const el = id => document.getElementById(id);
+        if (el('avatar-initials')) el('avatar-initials').textContent = initials;
+        if (el('profile-name')) el('profile-name').textContent = `${data.surname || ''} ${data.first_name || ''}`.trim() || '—';
+        if (el('profile-email')) el('profile-email').textContent = data.email || '—';
+        if (el('profile-first-name')) el('profile-first-name').textContent = data.first_name || '—';
+        if (el('profile-surname')) el('profile-surname').textContent = data.surname || '—';
+        if (el('profile-email-val')) el('profile-email-val').textContent = data.email || '—';
+        if (el('profile-phone')) el('profile-phone').textContent = data.phone_number || '—';
+        if (el('profile-telegram')) el('profile-telegram').textContent = data.telegram_username ? '@' + data.telegram_username : '—';
+        if (el('profile-created')) el('profile-created').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('ru') : '—';
+    }).catch(() => {
+        authRequired?.classList.remove('d-none');
+        profileContent?.classList.add('d-none');
     });
 
-    document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+    changeForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
         const errEl = document.getElementById('password-error');
@@ -138,11 +146,12 @@
                 'Authorization': 'Bearer ' + localStorage.getItem('access')
             },
             body: JSON.stringify({
-                old_password: form.old_password.value,
-                new_password: form.new_password.value
+                old_password: form.querySelector('[name="old_password"]')?.value || '',
+                new_password: form.querySelector('[name="new_password"]')?.value || ''
             })
         });
-        const data = await res.json();
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
         if (res.ok) {
             form.reset();
             errEl.classList.remove('d-none');
@@ -152,7 +161,8 @@
         } else {
             errEl.classList.remove('alert-success');
             errEl.classList.add('alert-danger');
-            errEl.textContent = data.old_password?.[0] || data.new_password?.[0] || data.error || 'Ошибка';
+            const msg = (data.old_password && data.old_password[0]) || (data.new_password && data.new_password[0]) || data.error || 'Ошибка';
+            errEl.textContent = typeof msg === 'string' ? msg : 'Ошибка';
             errEl.classList.remove('d-none');
         }
     });

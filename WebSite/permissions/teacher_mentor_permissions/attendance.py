@@ -3,7 +3,6 @@ from rest_framework import viewsets
 from WebSite.models.student_model import Attendance
 from WebSite.permissions.roles_permissions import IsTeacherOrMentor, IsStudentOwner
 
-
 class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
 

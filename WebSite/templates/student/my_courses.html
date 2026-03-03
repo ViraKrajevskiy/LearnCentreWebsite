@@ -13,78 +13,112 @@
     </div>
 
     <div class="row g-4">
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="row align-items-center g-4">
-                    <div class="col-auto">
-                        <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 10px 30px rgba(99,102,241,0.3);">
-                            <i class="bi bi-code-slash text-white" style="font-size: 2.5rem;"></i>
+        {% if courses_data %}
+            {% for item in courses_data %}
+            <div class="col-12">
+                <div class="card-ai card-glow animate-on-scroll">
+                    <div class="row align-items-center g-4">
+                        <div class="col-auto">
+                            <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 10px 30px rgba(99,102,241,0.3);">
+                                <i class="bi bi-code-slash text-white" style="font-size: 2.5rem;"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <h5 class="mb-2 fw-bold">Программирование на Python</h5>
-                        <p class="text-secondary small mb-2">12 из 24 уроков пройдено</p>
-                        <div class="progress-ai mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: 50%;"></div>
+                        <div class="col">
+                            <h5 class="mb-2 fw-bold">{{ item.course.title }}</h5>
+                            <p class="text-secondary small mb-2">{{ item.completed }} из {{ item.total_lessons }} уроков пройдено</p>
+                            <div class="progress-ai mb-2">
+                                <div class="progress-bar" role="progressbar" style="width: {{ item.percent }}%;"></div>
+                            </div>
+                            <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>{% if item.next_lesson %}Актуальный урок: {{ item.next_lesson.title }}{% else %}Курс пройден{% endif %}</small>
                         </div>
-                        <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Осталось ~6 недель</small>
-                    </div>
-                    <div class="col-auto text-end">
-                        <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">50%</span>
-                        <br>
-                        <a href="#" class="btn btn-ai">Продолжить</a>
+                        <div class="col-auto text-end">
+                            <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">{{ item.percent }}%</span>
+                            <br>
+                            {% if item.continue_url %}
+                                <a href="{{ item.continue_url }}" class="btn btn-ai">{% if item.next_lesson %}Продолжить{% else %}Повторить{% endif %}</a>
+                            {% else %}
+                                <span class="btn btn-outline-secondary disabled">Уроков пока нет</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="row align-items-center g-4">
-                    <div class="col-auto">
-                        <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #8b5cf6, #ec4899); box-shadow: 0 10px 30px rgba(139,92,246,0.3);">
-                            <i class="bi bi-robot text-white" style="font-size: 2.5rem;"></i>
+            {% endfor %}
+        {% else %}
+            {# Статический фоллбек для неавторизованных или без курсов #}
+            <div class="col-12">
+                <div class="card-ai card-glow animate-on-scroll">
+                    <div class="row align-items-center g-4">
+                        <div class="col-auto">
+                            <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 10px 30px rgba(99,102,241,0.3);">
+                                <i class="bi bi-code-slash text-white" style="font-size: 2.5rem;"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <h5 class="mb-2 fw-bold">Искусственный интеллект и ML</h5>
-                        <p class="text-secondary small mb-2">5 из 18 уроков пройдено</p>
-                        <div class="progress-ai mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: 28%;"></div>
+                        <div class="col">
+                            <h5 class="mb-2 fw-bold">Программирование на Python</h5>
+                            <p class="text-secondary small mb-2">12 из 24 уроков пройдено</p>
+                            <div class="progress-ai mb-2">
+                                <div class="progress-bar" role="progressbar" style="width: 50%;"></div>
+                            </div>
+                            <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Осталось ~6 недель</small>
                         </div>
-                        <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Осталось ~8 недель</small>
-                    </div>
-                    <div class="col-auto text-end">
-                        <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">28%</span>
-                        <br>
-                        <a href="#" class="btn btn-ai">Продолжить</a>
+                        <div class="col-auto text-end">
+                            <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">50%</span>
+                            <br>
+                            <a href="{% url 'student_courses' %}" class="btn btn-ai">Выбрать курс</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="row align-items-center g-4">
-                    <div class="col-auto">
-                        <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #0ea5e9, #6366f1); box-shadow: 0 10px 30px rgba(14,165,233,0.3);">
-                            <i class="bi bi-globe2 text-white" style="font-size: 2.5rem;"></i>
+            <div class="col-12">
+                <div class="card-ai card-glow animate-on-scroll">
+                    <div class="row align-items-center g-4">
+                        <div class="col-auto">
+                            <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #8b5cf6, #ec4899); box-shadow: 0 10px 30px rgba(139,92,246,0.3);">
+                                <i class="bi bi-robot text-white" style="font-size: 2.5rem;"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <h5 class="mb-2 fw-bold">FastAPI: Веб-разработка</h5>
-                        <p class="text-secondary small mb-2">2 из 16 уроков пройдено</p>
-                        <div class="progress-ai mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: 12%;"></div>
+                        <div class="col">
+                            <h5 class="mb-2 fw-bold">Искусственный интеллект и ML</h5>
+                            <p class="text-secondary small mb-2">5 из 18 уроков пройдено</p>
+                            <div class="progress-ai mb-2">
+                                <div class="progress-bar" role="progressbar" style="width: 28%;"></div>
+                            </div>
+                            <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Осталось ~8 недель</small>
                         </div>
-                        <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Осталось ~7 недель</small>
-                    </div>
-                    <div class="col-auto text-end">
-                        <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">12%</span>
-                        <br>
-                        <a href="#" class="btn btn-ai">Продолжить</a>
+                        <div class="col-auto text-end">
+                            <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">28%</span>
+                            <br>
+                            <a href="{% url 'student_courses' %}" class="btn btn-ai">Выбрать курс</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="col-12">
+                <div class="card-ai card-glow animate-on-scroll">
+                    <div class="row align-items-center g-4">
+                        <div class="col-auto">
+                            <div class="rounded-4 d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; background: linear-gradient(135deg, #0ea5e9, #6366f1); box-shadow: 0 10px 30px rgba(14,165,233,0.3);">
+                                <i class="bi bi-globe2 text-white" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h5 class="mb-2 fw-bold">FastAPI: Веб-разработка</h5>
+                            <p class="text-secondary small mb-2">2 из 16 уроков пройдено</p>
+                            <div class="progress-ai mb-2">
+                                <div class="progress-bar" role="progressbar" style="width: 12%;"></div>
+                            </div>
+                            <small class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Осталось ~7 недель</small>
+                        </div>
+                        <div class="col-auto text-end">
+                            <span class="badge-ai d-inline-block mb-3 px-3 py-2" style="font-size: 1rem;">12%</span>
+                            <br>
+                            <a href="{% url 'student_courses' %}" class="btn btn-ai">Выбрать курс</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

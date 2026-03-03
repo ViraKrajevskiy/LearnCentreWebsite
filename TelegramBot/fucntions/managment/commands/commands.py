@@ -10,7 +10,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Запуск Telegram-бота...'))
         try:
-
             asyncio.run(dp.start_polling(bot))
         except (KeyboardInterrupt, SystemExit):
             self.stdout.write(self.style.WARNING('Бот остановлен.'))

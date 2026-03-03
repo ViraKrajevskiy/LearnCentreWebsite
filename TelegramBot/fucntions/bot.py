@@ -1,4 +1,4 @@
-# TelegramBot/bot.py
+
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart, CommandObject
@@ -9,10 +9,9 @@ from django.conf import settings
 
 from WebSite.models.opt_model import UserOTP
 
-# Настраиваем логирование
+
 logging.basicConfig(level=logging.INFO)
 
-# Инициализируем бота
 bot = Bot(
     token=settings.TELEGRAM_BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -20,7 +19,7 @@ bot = Bot(
 dp = Dispatcher()
 
 
-# Функция для асинхронного похода в БД Django
+
 @sync_to_async
 def get_otp_by_session(session_id: str):
     try:
@@ -32,7 +31,7 @@ def get_otp_by_session(session_id: str):
     return None
 
 
-# Обработка команды, когда юзер перешел по ссылке /start <session_id>
+
 @dp.message(CommandStart(deep_link=True))
 async def command_start_with_link(message: types.Message, command: CommandObject):
     session_id = command.args
@@ -41,18 +40,17 @@ async def command_start_with_link(message: types.Message, command: CommandObject
         code = await get_otp_by_session(session_id)
         if code:
             await message.answer(
-                f"Здравствуйте, <b>{message.from_user.first_name}</b>! 👋\n\n"
+                f"Здравствуйте, <b>{message.from_user.first_name}</b>! \n\n"
                 f"Ваш код для подтверждения регистрации на сайте:\n"
                 f"<code>{code}</code>\n\n"
                 f"Вернитесь на сайт и введите этот код."
             )
         else:
-            await message.answer("❌ Ошибка: Сессия истекла, недействительна или уже использована.")
+            await message.answer(" Ошибка: Сессия истекла, недействительна или уже использована.")
     else:
         await message.answer("Добро пожаловать!")
 
 
-# Обычный старт (без ссылки)
 @dp.message(CommandStart())
 async def standard_start(message: types.Message):
     await message.answer("Привет! Перейди на сайт, чтобы зарегистрироваться.")

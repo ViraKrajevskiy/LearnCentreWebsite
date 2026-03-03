@@ -3,7 +3,6 @@ from WebSite.models.models import DateCreate
 from WebSite.models.group.groups import Group
 from WebSite.models.worker_model.workers import Teacher
 
-
 class Course(DateCreate):
     title = models.CharField(max_length=255)
     description = models.TextField()

@@ -2,336 +2,410 @@
 {% load static %}
 
 {% block title %}Главная{% endblock %}
+{% block body_class %}home-page{% endblock %}
 
 {% block content %}
-<div class="promo-banner">
-    <div class="container promo-banner-inner">
-        <i class="bi bi-gift promo-banner-icon"></i>
-        <span class="promo-text">Начало новой карьеры — 2026. Скидка до 60% + 3 курса в подарок</span>
-        <span class="promo-badge">60%</span>
-        <a href="{% url 'courses' %}" class="btn btn-promo">Выбрать курс</a>
-        <i class="bi bi-snowflake promo-banner-icon promo-banner-icon-right"></i>
-    </div>
-</div>
-
-<section class="main-section about-block" id="about">
+<!-- Hero — тёмная секция с формой справа -->
+<section class="home-hero">
     <div class="container">
-        <div class="about-card">
-            <div class="about-card-bg">
-                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=400&fit=crop" alt="" loading="lazy">
-                <div class="about-card-overlay"></div>
+        <div class="row align-items-center g-4">
+            <div class="col-lg-5">
+                <h1 class="home-hero-title">Освойте нейросети с 0 до PRO</h1>
+                <p class="home-hero-desc">Практические курсы с AI-ассистентом. От основ к продвинутым проектам — структурированные программы и экспертная поддержка 24/7.</p>
+                <div class="home-hero-benefits">
+                    <div class="home-benefit-pill"><i class="bi bi-award"></i> Сертификат</div>
+                    <div class="home-benefit-pill"><i class="bi bi-folder2-open"></i> Проекты</div>
+                    <div class="home-benefit-pill"><i class="bi bi-briefcase"></i> Трудоустройство</div>
+                </div>
             </div>
-            <div class="about-card-content">
-                <div class="row align-items-center g-4">
-                    <div class="col-lg-7">
-                        <span class="about-badge">LearnCentre</span>
-                        <h2 class="about-title">Обучаем программированию и ИИ с поддержкой нейросетей</h2>
-                        <p class="about-desc">Персональный AI-ассистент 24/7, практика с первого дня. От основ к продвинутому — структурированные программы и экспертная поддержка.</p>
-                        <a href="{% url 'about' %}" class="btn-about-link">
-                            <span>Подробнее о школе</span>
-                            <i class="bi bi-arrow-right"></i>
-                        </a>
-                    </div>
-                    <div class="col-lg-5 d-none d-lg-block">
-                        <div class="about-stats-inline">
-                            <div class="about-stat"><span class="num">500+</span><span class="lbl">студентов</span></div>
-                            <div class="about-stat"><span class="num">12</span><span class="lbl">курсов</span></div>
-                            <div class="about-stat"><span class="num">98%</span><span class="lbl">рекомендуют</span></div>
+            <div class="col-lg-4 d-none d-lg-block text-center">
+                <div class="home-hero-visual">
+                    <div class="hero-glow"></div>
+                    <div class="hero-brain">🧠</div>
+                    <div class="hero-rating">5</div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="home-form-card">
+                    <div class="home-form-header">Запишитесь</div>
+                    <form id="home-enroll-form" class="home-form-body">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small">Имя</label>
+                            <input type="text" name="name" class="form-control" placeholder="Ваше имя" required>
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Телефон</label>
+                            <input type="tel" name="phone" class="form-control" placeholder="+7 (999) 000-00-00" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="email@example.com">
+                        </div>
+                        <button type="submit" class="btn btn-home-form w-100">Отправить</button>
+                        <p class="home-form-disclaimer small mt-3 mb-0 text-muted">Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности</p>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="main-section section-alt">
+<!-- Курсы — карусель -->
+<section class="home-section home-section-light">
     <div class="container">
-        <div class="section-header mb-3">
-            <div class="section-accent-line"></div>
-            <h2 class="section-title">Наши преимущества</h2>
-            <p class="section-subtitle">Принципы нашей методологии</p>
-        </div>
-        <div class="advantages-control-row">
-            <div class="scroll-control-pill">
-                <button class="scroll-zone scroll-zone-prev" id="advantagesPrev" aria-label="Назад">
-                    <i class="bi bi-arrow-left"></i>
-                </button>
-                <span class="scroll-divider"></span>
-                <button class="scroll-zone scroll-zone-next" id="advantagesNext" aria-label="Вперёд">
-                    <i class="bi bi-arrow-right"></i>
-                </button>
+        <h2 class="home-section-title text-center">Создайте карьеру с нами, освойте новые навыки</h2>
+        <div class="home-courses-carousel-wrap">
+            <div class="home-courses-carousel" id="coursesCarousel">
+                <a href="{% url 'courses' %}" class="home-course-card" style="--card-color: #0d9488;">
+                    <span class="home-course-tag">Курс</span>
+                    <div class="home-course-bg" style="background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);"></div>
+                    <img src="https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=250&fit=crop" alt="Python" loading="lazy">
+                    <h4 class="home-course-title">Программирование на Python</h4>
+                </a>
+                <a href="{% url 'courses' %}" class="home-course-card" style="--card-color: #0284c7;">
+                    <span class="home-course-tag">Курс</span>
+                    <div class="home-course-bg" style="background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);"></div>
+                    <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop" alt="AI" loading="lazy">
+                    <h4 class="home-course-title">ИИ и машинное обучение</h4>
+                </a>
+                <a href="{% url 'courses' %}" class="home-course-card" style="--card-color: #c026d3;">
+                    <span class="home-course-tag">Курс</span>
+                    <div class="home-course-bg" style="background: linear-gradient(135deg, #c026d3 0%, #e879f9 100%);"></div>
+                    <img src="https://images.unsplash.com/photo-1633356122544-f134324a6ced?w=400&h=250&fit=crop" alt="Дизайн" loading="lazy">
+                    <h4 class="home-course-title">UX/UI Дизайн</h4>
+                </a>
+                <a href="{% url 'courses' %}" class="home-course-card" style="--card-color: #ea580c;">
+                    <span class="home-course-tag">Курс</span>
+                    <div class="home-course-bg" style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);"></div>
+                    <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=250&fit=crop" alt="Веб" loading="lazy">
+                    <h4 class="home-course-title">Веб-разработка</h4>
+                </a>
             </div>
         </div>
-        <div class="advantages-carousel-wrap">
-            <div class="advantages-carousel" id="advantagesCarousel">
-                <div class="advantage-card-strict">
-                    <div class="advantage-card-image">
-                        <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=220&fit=crop" alt="AI" loading="lazy">
-                        <i class="bi bi-robot advantage-card-icon"></i>
-                    </div>
-                    <div class="advantage-card-body">
-                        <h6 class="fw-bold mb-2">AI-ассистент</h6>
-                        <p class="text-muted small mb-0">Персональная помощь 24/7. Ответы на вопросы, разбор кода.</p>
+        <div class="home-carousel-dots" id="coursesDots"></div>
+    </div>
+</section>
+
+<!-- Сотрудничество -->
+<section class="home-section home-section-light">
+    <div class="container">
+        <div class="home-partnership-card">
+            <div class="row align-items-center g-0">
+                <div class="col-lg-6 p-4 p-lg-5">
+                    <h2 class="home-section-title mb-3">Станьте частью нашего успеха</h2>
+                    <p class="text-muted mb-4">Партнёрство с ведущими компаниями. Выпускники строят карьеру в IT. Присоединяйтесь к программам стажировок и нетворкинга.</p>
+                    <a href="{% url 'about' %}" class="btn btn-home-primary">Узнать больше</a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="home-partnership-visual">
+                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=400&fit=crop" alt="Сотрудничество" loading="lazy">
                     </div>
                 </div>
-                <div class="advantage-card-strict">
-                    <div class="advantage-card-image">
-                        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=220&fit=crop" alt="Программа" loading="lazy">
-                        <i class="bi bi-diagram-3 advantage-card-icon"></i>
-                    </div>
-                    <div class="advantage-card-body">
-                        <h6 class="fw-bold mb-2">Структурированная программа</h6>
-                        <p class="text-muted small mb-0">От основ к сложному. Практические задачи на каждом этапе.</p>
-                    </div>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="home-feature-card">
+                    <i class="bi bi-laptop"></i>
+                    <h6>Онлайн-формат</h6>
+                    <p class="small mb-0 text-muted">Учитесь из любой точки мира в удобное время</p>
                 </div>
-                <div class="advantage-card-strict">
-                    <div class="advantage-card-image">
-                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop" alt="Поддержка" loading="lazy">
-                        <i class="bi bi-person-gear advantage-card-icon"></i>
-                    </div>
-                    <div class="advantage-card-body">
-                        <h6 class="fw-bold mb-2">Экспертная поддержка</h6>
-                        <p class="text-muted small mb-0">Преподаватели и кураторы контролируют прогресс.</p>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="home-feature-card">
+                    <i class="bi bi-infinity"></i>
+                    <h6>Доступ к материалам</h6>
+                    <p class="small mb-0 text-muted">Пожизненный доступ к курсам после окончания</p>
                 </div>
-                <div class="advantage-card-strict">
-                    <div class="advantage-card-image">
-                        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=220&fit=crop" alt="Практика" loading="lazy">
-                        <i class="bi bi-code-square advantage-card-icon"></i>
-                    </div>
-                    <div class="advantage-card-body">
-                        <h6 class="fw-bold mb-2">Практика с первого дня</h6>
-                        <p class="text-muted small mb-0">Реальные проекты и задачи. Без воды — только полезные навыки.</p>
-                    </div>
-                </div>
-                <div class="advantage-card-strict">
-                    <div class="advantage-card-image">
-                        <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=220&fit=crop" alt="Сообщество" loading="lazy">
-                        <i class="bi bi-people-fill advantage-card-icon"></i>
-                    </div>
-                    <div class="advantage-card-body">
-                        <h6 class="fw-bold mb-2">Сообщество выпускников</h6>
-                        <p class="text-muted small mb-0">Обмен опытом, вакансии и нетворкинг с единомышленниками.</p>
-                    </div>
-                </div>
-                <div class="advantage-card-strict">
-                    <div class="advantage-card-image">
-                        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=220&fit=crop" alt="Карьера" loading="lazy">
-                        <i class="bi bi-graph-up-arrow advantage-card-icon"></i>
-                    </div>
-                    <div class="advantage-card-body">
-                        <h6 class="fw-bold mb-2">Карьерный рост</h6>
-                        <p class="text-muted small mb-0">Помощь с резюме и подготовка к собеседованиям в IT-компании.</p>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="home-feature-card">
+                    <i class="bi bi-shield-check"></i>
+                    <h6>Гарантия качества</h6>
+                    <p class="small mb-0 text-muted">Сертификат и помощь с трудоустройством</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="main-section section-dark">
+<!-- Почему мы — тёмная -->
+<section class="home-section home-section-dark">
     <div class="container">
-        <div class="section-header">
-            <div class="section-accent-line" style="background: rgba(255,255,255,0.5);"></div>
-            <h2 class="section-title">LearnCentre в цифрах</h2>
-            <p class="section-subtitle">Статистика нашей образовательной платформы</p>
-        </div>
-        <div class="stats-row justify-content-center gap-4 stats-row-skillbox">
-            <div class="stat-item stat-item-skillbox">
-                <div class="num">500+</div>
-                <div class="label">Студентов</div>
+        <h2 class="home-section-title text-white text-center mb-5">Почему нас выбирают?</h2>
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <p class="text-white-50 mb-0" style="line-height: 1.7;">Практический подход с первого дня. AI-ассистент отвечает на вопросы 24/7. Реальные проекты в портфолио. Поддержка кураторов и сообщество выпускников. Помощь с резюме и собеседованиями.</p>
             </div>
-            <div class="stat-item stat-item-skillbox">
-                <div class="num">12</div>
-                <div class="label">Курсов</div>
-            </div>
-            <div class="stat-item stat-item-skillbox">
-                <div class="num">98%</div>
-                <div class="label">Рекомендуют</div>
+            <div class="col-lg-6">
+                <div class="home-why-list">
+                    <div class="home-why-item"><i class="bi bi-check-circle-fill text-success"></i> Структурированная программа</div>
+                    <div class="home-why-item"><i class="bi bi-check-circle-fill text-success"></i> AI-ассистент 24/7</div>
+                    <div class="home-why-item"><i class="bi bi-check-circle-fill text-success"></i> Реальные проекты</div>
+                    <div class="home-why-item"><i class="bi bi-check-circle-fill text-success"></i> Сертификат</div>
+                    <div class="home-why-item"><i class="bi bi-check-circle-fill text-success"></i> Трудоустройство</div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="main-section section-alt">
+<!-- Программы — тёмно-фиолетовые блоки -->
+<section class="home-section home-section-dark">
     <div class="container">
-        <div class="section-header">
-            <div class="section-accent-line"></div>
-            <h2 class="section-title">Направления обучения</h2>
-            <p class="section-subtitle">Программы с поддержкой AI-ассистента. Практика с первого дня.</p>
-        </div>
-        <div class="direction-blocks row g-4 mb-5">
-            <div class="col-md-4">
-                <a href="{% url 'courses' %}" class="direction-block direction-block-1">
-                    <span class="direction-badge">5 курсов</span>
-                    <h3 class="direction-title">Программирование</h3>
-                    <p class="direction-desc">Python, веб, бэкенд</p>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{% url 'courses' %}" class="direction-block direction-block-2">
-                    <span class="direction-badge">4 курса</span>
-                    <h3 class="direction-title">AI и машинное обучение</h3>
-                    <p class="direction-desc">Нейросети, ML, NLP</p>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{% url 'courses' %}" class="direction-block direction-block-3">
-                    <span class="direction-badge">3 курса</span>
-                    <h3 class="direction-title">Веб-разработка</h3>
-                    <p class="direction-desc">FastAPI, Django, фронтенд</p>
-                </a>
+        <h2 class="home-section-title text-white text-center mb-5">Программа обучения для каждого</h2>
+        <div class="home-program-card mb-4">
+            <div class="row align-items-center g-0">
+                <div class="col-lg-6 p-4 p-lg-5">
+                    <h3 class="text-white mb-3">IT ПРОФЕССИИ</h3>
+                    <p class="text-white-50 mb-4">Программирование, веб-разработка, DevOps. С нуля до junior-разработчика.</p>
+                    <ul class="home-program-list text-white-50 mb-4">
+                        <li>Python, JavaScript</li>
+                        <li>FastAPI, React</li>
+                        <li>Базы данных</li>
+                    </ul>
+                    <a href="{% url 'courses' %}" class="btn btn-outline-light">Узнать подробнее</a>
+                </div>
+                <div class="col-lg-6">
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop" alt="IT" class="img-fluid" loading="lazy" style="border-radius: 0 12px 12px 0;">
+                </div>
             </div>
         </div>
-        <div class="section-header mb-4">
-            <h3 class="section-title" style="font-size: 1.25rem;">Популярные курсы</h3>
+        <div class="home-program-card">
+            <div class="row align-items-center g-0 flex-lg-row-reverse">
+                <div class="col-lg-6 p-4 p-lg-5">
+                    <h3 class="text-white mb-3">АКАДЕМИЯ ЮНЫХ ДИЗАЙНЕРОВ</h3>
+                    <p class="text-white-50 mb-4">Графический дизайн, UX/UI, Figma. Для школьников и начинающих.</p>
+                    <ul class="home-program-list text-white-50 mb-4">
+                        <li>Figma, Adobe</li>
+                        <li>Веб-дизайн</li>
+                        <li>Портфолио</li>
+                    </ul>
+                    <a href="{% url 'courses' %}" class="btn btn-outline-light me-2">Узнать подробнее</a>
+                    <a href="{% url 'register' %}" class="btn btn-home-lime">Записаться</a>
+                </div>
+                <div class="col-lg-6">
+                    <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop" alt="Дизайн" class="img-fluid" loading="lazy" style="border-radius: 12px 0 0 12px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Тарифы -->
+<section class="home-section home-section-light">
+    <div class="container">
+        <h2 class="home-section-title text-center mb-4">Различные тарифы оплаты для каждого</h2>
+        <div class="d-flex justify-content-center mb-4">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary active">Ежемесячно</button>
+                <button type="button" class="btn btn-outline-secondary">Ежегодно</button>
+            </div>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="home-price-card">
+                    <h5>Пакет 1</h5>
+                    <div class="home-price-value">6 000 <span class="small">руб/мес</span></div>
+                    <ul class="home-price-list">
+                        <li><i class="bi bi-check text-success"></i> Доступ к материалам</li>
+                        <li><i class="bi bi-check text-success"></i> Практические задания</li>
+                        <li><i class="bi bi-check text-success"></i> Сертификат</li>
+                    </ul>
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary w-100">Выбрать</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="home-price-card home-price-featured">
+                    <div class="home-price-badge">Популярный</div>
+                    <h5>Пакет 2</h5>
+                    <div class="home-price-value">10 000 <span class="small">руб/мес</span></div>
+                    <ul class="home-price-list">
+                        <li><i class="bi bi-check text-success"></i> Всё из Пакета 1</li>
+                        <li><i class="bi bi-check text-success"></i> AI-ассистент</li>
+                        <li><i class="bi bi-check text-success"></i> Куратор</li>
+                        <li><i class="bi bi-check text-success"></i> Проекты в портфолио</li>
+                    </ul>
+                    <a href="{% url 'register' %}" class="btn btn-home-lime w-100">Выбрать</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="home-price-card">
+                    <h5>Пакет 3</h5>
+                    <div class="home-price-value">15 000 <span class="small">руб/мес</span></div>
+                    <ul class="home-price-list">
+                        <li><i class="bi bi-check text-success"></i> Всё из Пакета 2</li>
+                        <li><i class="bi bi-check text-success"></i> 1-on-1 с ментором</li>
+                        <li><i class="bi bi-check text-success"></i> Трудоустройство</li>
+                    </ul>
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary w-100">Выбрать</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Наставники — тёмная -->
+<section class="home-section home-section-dark">
+    <div class="container">
+        <h2 class="home-section-title text-white text-center mb-5">Наши наставники и кураторы</h2>
+        <div class="home-mentors-carousel-wrap">
+            <div class="home-mentors-carousel" id="mentorsCarousel">
+                <div class="home-mentor-card">
+                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop" alt="" loading="lazy">
+                    <h6 class="text-white mb-1">Алексей Петров</h6>
+                    <span class="text-white-50 small">Ведущий преподаватель</span>
+                </div>
+                <div class="home-mentor-card">
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop" alt="" loading="lazy">
+                    <h6 class="text-white mb-1">Мария Смирнова</h6>
+                    <span class="text-white-50 small">Куратор ML</span>
+                </div>
+                <div class="home-mentor-card">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop" alt="" loading="lazy">
+                    <h6 class="text-white mb-1">Дмитрий Козлов</h6>
+                    <span class="text-white-50 small">Преподаватель веба</span>
+                </div>
+                <div class="home-mentor-card">
+                    <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop" alt="" loading="lazy">
+                    <h6 class="text-white mb-1">Елена Васнецова</h6>
+                    <span class="text-white-50 small">Эксперт по AI</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Работы студентов -->
+<section class="home-section home-section-light">
+    <div class="container">
+        <h2 class="home-section-title text-center mb-4">Примеры работ наших студентов</h2>
+        <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+            <button class="btn btn-primary btn-sm">Все работы</button>
+            <button class="btn btn-outline-secondary btn-sm">Веб-дизайн</button>
+            <button class="btn btn-outline-secondary btn-sm">Графический дизайн</button>
+            <button class="btn btn-outline-secondary btn-sm">UX/UI Дизайн</button>
         </div>
         <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <a href="{% url 'courses' %}" class="course-card-public course-card-skillbox">
-                    <div class="course-image">
-                        <img src="https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=200&fit=crop" alt="Python" loading="lazy">
-                        <span class="course-badge-overlay">AI</span>
-                    </div>
-                    <div class="course-body">
-                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Программирование на Python</h5>
-                        <p class="text-muted small mb-3">С нуля до профессионального уровня</p>
-                        <div class="course-meta">
-                            <span><i class="bi bi-clock me-1"></i>12 недель</span>
-                            <span><i class="bi bi-collection me-1"></i>24 урока</span>
-                        </div>
-                        <div class="course-price mb-2">24 900 ₽</div>
-                        <span class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Подробнее</span>
-                    </div>
-                </a>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="home-project-card">
+                    <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=400&h=300&fit=crop" alt="" loading="lazy">
+                    <span class="home-project-tag">Веб</span>
+                    <h6 class="mt-2 mb-0">Лендинг</h6>
+                </div>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <a href="{% url 'courses' %}" class="course-card-public course-card-skillbox">
-                    <div class="course-image">
-                        <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=200&fit=crop" alt="AI" loading="lazy">
-                        <span class="course-badge-overlay">AI</span>
-                    </div>
-                    <div class="course-body">
-                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">Искусственный интеллект и ML</h5>
-                        <p class="text-muted small mb-3">Машинное обучение и нейросети</p>
-                        <div class="course-meta">
-                            <span><i class="bi bi-clock me-1"></i>10 недель</span>
-                            <span><i class="bi bi-collection me-1"></i>18 уроков</span>
-                        </div>
-                        <div class="course-price mb-2">29 900 ₽</div>
-                        <span class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Подробнее</span>
-                    </div>
-                </a>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="home-project-card">
+                    <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&h=300&fit=crop" alt="" loading="lazy">
+                    <span class="home-project-tag home-project-tag-new">New</span>
+                    <h6 class="mt-2 mb-0">Мобильное приложение</h6>
+                </div>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <a href="{% url 'courses' %}" class="course-card-public course-card-skillbox">
-                    <div class="course-image">
-                        <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=200&fit=crop" alt="Веб" loading="lazy">
-                        <span class="course-badge-overlay course-badge-new">Новый</span>
-                    </div>
-                    <div class="course-body">
-                        <h5 class="fw-bold mb-2" style="font-size: 1rem;">FastAPI: Веб-разработка</h5>
-                        <p class="text-muted small mb-3">Современный асинхронный API</p>
-                        <div class="course-meta">
-                            <span><i class="bi bi-clock me-1"></i>8 недель</span>
-                            <span><i class="bi bi-collection me-1"></i>16 уроков</span>
-                        </div>
-                        <div class="course-price mb-2">19 900 ₽</div>
-                        <span class="btn btn-hero w-100" style="font-size: 0.875rem; padding: 0.5rem;">Подробнее</span>
-                    </div>
-                </a>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="home-project-card">
+                    <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop" alt="" loading="lazy">
+                    <h6 class="mt-2 mb-0">UI Kit</h6>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="home-project-card">
+                    <img src="https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=400&h=300&fit=crop" alt="" loading="lazy">
+                    <h6 class="mt-2 mb-0">Дашборд</h6>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="main-section">
+<!-- Партнёры -->
+<section class="home-section home-section-light">
     <div class="container">
-        <div class="section-header mb-4">
-            <div class="section-accent-line"></div>
-            <h2 class="section-title">Преподаватели</h2>
-            <p class="section-subtitle">Опытные специалисты с практикой в индустрии</p>
+        <h2 class="home-section-title text-center mb-5">Наши выпускники строят карьеру в ведущих компаниях</h2>
+        <div class="home-partners-logos d-flex flex-wrap justify-content-center align-items-center gap-4">
+            <span class="home-partner-logo">Яндекс</span>
+            <span class="home-partner-logo">VK</span>
+            <span class="home-partner-logo">Сбер</span>
+            <span class="home-partner-logo">Тинькофф</span>
+            <span class="home-partner-logo">Ozon</span>
+            <span class="home-partner-logo">Wildberries</span>
         </div>
+    </div>
+</section>
+
+<!-- Бесплатные материалы -->
+<section class="home-section home-section-light">
+    <div class="container">
+        <h2 class="home-section-title text-center mb-5">Бесплатные материалы, чтобы погрузиться в IT</h2>
         <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="benefit-card h-100 text-center teacher-card">
-                    <div class="teacher-photo mb-3 mx-auto">
-                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop" alt="Алексей Петров" loading="lazy">
-                    </div>
-                    <h6 class="fw-bold mb-1">Алексей Петров</h6>
-                    <p class="text-muted small mb-2">Python, Backend</p>
-                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">10+ лет в разработке. Ex-Yandex, руководил командой из 12 человек.</p>
-                </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'courses' %}" class="home-article-card">
+                    <img src="https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=220&fit=crop" alt="" loading="lazy">
+                    <h6 class="mt-3 mb-2">Зачем учиться на программиста</h6>
+                    <span class="btn btn-success btn-sm">Читать статью</span>
+                </a>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="benefit-card h-100 text-center teacher-card">
-                    <div class="teacher-photo mb-3 mx-auto">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop" alt="Мария Смирнова" loading="lazy">
-                    </div>
-                    <h6 class="fw-bold mb-1">Мария Смирнова</h6>
-                    <p class="text-muted small mb-2">ML, Data Science</p>
-                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">Кандидат наук. 8 лет в ML-проектах, 4 года преподавания.</p>
-                </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'courses' %}" class="home-article-card">
+                    <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=220&fit=crop" alt="" loading="lazy">
+                    <h6 class="mt-3 mb-2">ИИ в 2025: что нужно знать</h6>
+                    <span class="btn btn-success btn-sm">Читать статью</span>
+                </a>
             </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="benefit-card h-100 text-center teacher-card">
-                    <div class="teacher-photo mb-3 mx-auto">
-                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop" alt="Дмитрий Козлов" loading="lazy">
-                    </div>
-                    <h6 class="fw-bold mb-1">Дмитрий Козлов</h6>
-                    <p class="text-muted small mb-2">FastAPI, DevOps</p>
-                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">Fullstack-разработчик. 6+ лет коммерческой разработки.</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="benefit-card h-100 text-center teacher-card">
-                    <div class="teacher-photo mb-3 mx-auto">
-                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop" alt="Елена Васнецова" loading="lazy">
-                    </div>
-                    <h6 class="fw-bold mb-1">Елена Васнецова</h6>
-                    <p class="text-muted small mb-2">AI, NLP</p>
-                    <p class="text-muted small mb-0" style="font-size: 0.8125rem;">PhD в NLP. Работала в исследовательском отделе крупного банка.</p>
-                </div>
+            <div class="col-md-6 col-lg-4">
+                <a href="{% url 'courses' %}" class="home-article-card">
+                    <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=220&fit=crop" alt="" loading="lazy">
+                    <h6 class="mt-3 mb-2">Как выбрать первый язык</h6>
+                    <span class="btn btn-success btn-sm">Читать статью</span>
+                </a>
             </div>
         </div>
     </div>
 </section>
 
-<section class="main-section section-alt">
+<!-- FAQ -->
+<section class="home-section home-section-light">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <div class="section-header">
-                    <div class="section-accent-line"></div>
-                    <h2 class="section-title">Как начать обучение</h2>
+        <h2 class="home-section-title text-center mb-5">Ответы на часто задаваемые вопросы</h2>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion faq-accordion" id="homeFaq">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">Как проходит обучение?</button>
+                        </h3>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#homeFaq">
+                            <div class="accordion-body">Онлайн-формат с доступом к видеоурокам, практическим заданиям и AI-ассистенту. Кураторы проверяют работы и отвечают на вопросы.</div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">Нужны ли начальные знания?</button>
+                        </h3>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#homeFaq">
+                            <div class="accordion-body">Нет, большинство курсов рассчитаны на начинающих. Программы структурированы от основ к сложному.</div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">Помогаете ли с трудоустройством?</button>
+                        </h3>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#homeFaq">
+                            <div class="accordion-body">Да, мы помогаем с резюме, проводим симуляции собеседований и делимся вакансиями от партнёров.</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row g-3 mt-2 justify-content-center">
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--mp-accent); color: white; font-weight: 600; font-size: 0.875rem;">1</span>
-                            <span class="fw-medium">Регистрация</span>
-                        </div>
-                        <p class="text-muted small mb-0">Создайте аккаунт и выберите курс</p>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--mp-accent); color: white; font-weight: 600; font-size: 0.875rem;">2</span>
-                            <span class="fw-medium">Оплата</span>
-                        </div>
-                        <p class="text-muted small mb-0">Оплатите курс онлайн</p>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--mp-accent); color: white; font-weight: 600; font-size: 0.875rem;">3</span>
-                            <span class="fw-medium">Обучение</span>
-                        </div>
-                        <p class="text-muted small mb-0">Доступ открыт сразу после оплаты</p>
-                    </div>
-                </div>
-                <a href="{% url 'register' %}" class="btn btn-hero btn-hero-lg mt-4">Начать обучение</a>
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('home-enroll-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    window.location.href = '{% url "register" %}';
+});
+</script>
 {% endblock %}

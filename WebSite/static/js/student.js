@@ -56,10 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Mark active nav item based on current page
-    const currentPath = window.location.pathname;
+    const currentPath = (window.location.pathname || '').replace(/\/$/, '') || '/';
     document.querySelectorAll('.nav-item').forEach(item => {
-        const href = item.getAttribute('href') || '';
-        if (href && (currentPath === href || currentPath.startsWith(href.replace(/\/$/, '') + '/'))) {
+        const href = (item.getAttribute('href') || '').replace(/\/$/, '') || '';
+        if (href && (currentPath === href || (href !== '/' && currentPath.startsWith(href + '/')))) {
             item.classList.add('active');
         } else {
             item.classList.remove('active');

@@ -24,10 +24,10 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo">
+            <a href="{% url 'student_home' %}" class="logo">
                 <span class="logo-icon">◇</span>
                 <span class="logo-text">LearnCentre</span>
-            </div>
+            </a>
             <button class="sidebar-toggle d-lg-none" id="sidebarClose" aria-label="Закрыть меню">
                 <i class="bi bi-x-lg"></i>
             </button>
@@ -106,8 +106,8 @@
                         <span class="theme-switch-label" id="themeLabel">Тёмная</span>
                     </button>
                 </div>
-                <a href="{% url 'profile' %}" class="user-avatar" title="Профиль">
-                    <span class="avatar-initials">ИИ</span>
+                <a href="{% url 'profile' %}" class="user-avatar" title="Профиль" id="userAvatarLink">
+                    <span class="avatar-initials" id="topbarAvatarInitials">—</span>
                 </a>
             </div>
         </header>
@@ -119,6 +119,24 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/student.js' %}"></script>
+    <script>
+    (function() {
+        const token = localStorage.getItem('access');
+        const avatarEl = document.getElementById('topbarAvatarInitials');
+        if (token && avatarEl) {
+            fetch('/api/v1/auth/me/', { headers: { 'Authorization': 'Bearer ' + token } })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (data) {
+                        const i = (data.first_name?.[0] || '') + (data.surname?.[0] || '');
+                        avatarEl.textContent = i || '?';
+                    }
+                }).catch(() => {});
+        } else if (avatarEl) {
+            avatarEl.textContent = '—';
+        }
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,4 +1,3 @@
-# WebSite/api/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -23,10 +22,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['role'] = 'guest'
-        # Генерируем фейковый email для совместимости
         validated_data['email'] = f"{validated_data['phone_number']}@learncentre.local"
         user = User.objects.create_user(**validated_data)
-        user.is_active = False # Ждем подтверждения OTP
+        user.is_active = False
         user.save()
         return user
 
@@ -59,8 +57,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """Данные пользователя для просмотра после входа."""
-
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'surname', 'last_name', 'phone_number', 'telegram_username', 'role', 'created_at']

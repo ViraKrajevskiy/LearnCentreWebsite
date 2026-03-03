@@ -158,6 +158,12 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.logo:hover {
+    color: inherit;
 }
 
 .logo-icon {
@@ -471,6 +477,18 @@ body {
     background: rgba(26, 31, 46, 0.9);
 }
 
+[data-theme="dark"] .form-control {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .form-control:focus {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+
 .topbar-title {
     font-weight: 700;
     font-size: 1.35rem;
@@ -503,6 +521,8 @@ body {
     justify-content: center;
     width: 100%;
     height: 100%;
+    min-width: 100%;
+    min-height: 100%;
     background: var(--ai-gradient);
     color: white;
     font-weight: 700;

@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="{% static 'css/main_pages.css' %}" rel="stylesheet">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <nav class="main-navbar" id="mainNavbar">
         <div class="container">
             <div class="navbar-inner">
@@ -38,6 +38,7 @@
                         </button>
                     </div>
                     <a href="{% url 'register' %}" class="btn btn-outline-nav me-1" style="font-size: 0.875rem;">Регистрация</a>
+                    <a href="{% url 'register' %}" class="btn btn-nav-enroll">Записаться</a>
                     <a href="{% url 'login' %}" class="btn btn-login">Войти</a>
                 </div>
                 <button class="navbar-burger d-lg-none" id="navBurger" aria-label="Меню">
@@ -53,6 +54,7 @@
             <a href="{% url 'faq' %}">FAQ</a>
             <a href="{% url 'invite' %}">Пригласить</a>
             <a href="{% url 'register' %}">Регистрация</a>
+            <a href="{% url 'register' %}" class="btn btn-nav-enroll">Записаться</a>
             <a href="{% url 'login' %}" class="btn btn-login">Войти</a>
         </div>
     </nav>

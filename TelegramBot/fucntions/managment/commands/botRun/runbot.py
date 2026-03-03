@@ -1,8 +1,6 @@
 import asyncio
 from django.core.management.base import BaseCommand
-
 from TelegramBot.fucntions.bot import dp, bot
-
 
 class Command(BaseCommand):
     help = 'Запуск Telegram-бота (Long Polling)'

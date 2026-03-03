@@ -5,6 +5,24 @@ from WebSite.models.study.tarif_system import Tariff
 from django.utils import timezone
 from datetime import timedelta
 
+class StudentSubscription(DateCreate):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    tariff = models.ForeignKey(Tariff, on_delete=models.PROTECT)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+
+        if not self.end_date:
+            self.end_date = timezone.now() + timedelta(days=self.tariff.duration_days)
+        super().save(*args, **kwargs)
+
+    def check_status(self):
+        if self.end_date and self.end_date < timezone.now():
+            self.is_active = False
+            self.save()
+        return self.is_active
 
 class Payment(DateCreate):
     PAYMENT_METHODS = [
@@ -27,21 +45,3 @@ class Payment(DateCreate):
             self.subscription.save()
         super().save(*args, **kwargs)
 
-class StudentSubscription(DateCreate):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    tariff = models.ForeignKey(Tariff, on_delete=models.PROTECT)
-    start_date = models.DateTimeField(auto_now_add=True)
-    end_date = models.DateTimeField(null=True, blank=True)
-    is_active = models.BooleanField(default=False)
-
-    def save(self, *args, **kwargs):
-        # Автоматический расчет даты окончания при создании
-        if not self.end_date:
-            self.end_date = timezone.now() + timedelta(days=self.tariff.duration_days)
-        super().save(*args, **kwargs)
-
-    def check_status(self):
-        if self.end_date and self.end_date < timezone.now():
-            self.is_active = False
-            self.save()
-        return self.is_active

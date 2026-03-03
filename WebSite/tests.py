@@ -13,15 +13,12 @@ User = get_user_model()
 
 @override_settings(CELERY_TASK_EAGER_PROPAGATION=True)  # на случай celery
 class RegistrationAPITests(TestCase):
-    """Автотесты регистрации и верификации OTP."""
-
     def setUp(self):
         self.client = APIClient()
         self.registration_url = reverse('api_register')
         self.verify_url = reverse('api_verify_otp')
 
     def test_registration_get_returns_fields_info(self):
-        """GET /api/v1/auth/registration/ возвращает описание полей."""
         response = self.client.get(self.registration_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -33,7 +30,6 @@ class RegistrationAPITests(TestCase):
 
     @patch('WebSite.utils.telegram_bot.send_otp_to_telegram')
     def test_registration_post_creates_user_with_guest_role(self, mock_send):
-        """POST регистрации создаёт пользователя с ролью guest."""
         mock_send.return_value = True
 
         payload = {
@@ -65,7 +61,6 @@ class RegistrationAPITests(TestCase):
 
     @patch('WebSite.utils.telegram_bot.send_otp_to_telegram')
     def test_registration_post_creates_otp(self, mock_send):
-        """После регистрации создаётся OTP запись."""
         mock_send.return_value = True
 
         payload = {
@@ -87,7 +82,6 @@ class RegistrationAPITests(TestCase):
 
     @patch('WebSite.utils.telegram_bot.send_otp_to_telegram')
     def test_registration_validation_requires_fields(self, mock_send):
-        """Регистрация без обязательных полей возвращает 400."""
         response = self.client.post(self.registration_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -98,7 +92,6 @@ class RegistrationAPITests(TestCase):
 
     @patch('WebSite.utils.telegram_bot.send_otp_to_telegram')
     def test_registration_duplicate_phone_fails(self, mock_send):
-        """Повторная регистрация с тем же телефоном — ошибка."""
         mock_send.return_value = True
 
         payload = {
@@ -118,15 +111,12 @@ class RegistrationAPITests(TestCase):
 
 @override_settings(CELERY_TASK_EAGER_PROPAGATION=True)
 class VerifyOTPAPITests(TestCase):
-    """Тесты верификации OTP."""
-
     def setUp(self):
         self.client = APIClient()
         self.verify_url = reverse('api_verify_otp')
 
     @patch('WebSite.utils.telegram_bot.send_otp_to_telegram')
     def test_verify_otp_activates_user_and_returns_tokens(self, mock_send):
-        """Корректный OTP активирует пользователя и возвращает JWT."""
         mock_send.return_value = True
 
         user = User.objects.create_user(
@@ -162,7 +152,6 @@ class VerifyOTPAPITests(TestCase):
         self.assertTrue(otp.is_used)
 
     def test_verify_otp_invalid_code_returns_400(self):
-        """Неверный код возвращает 400."""
         response = self.client.post(self.verify_url, {
             'session_id': '00000000-0000-0000-0000-000000000000',
             'code': '000000',

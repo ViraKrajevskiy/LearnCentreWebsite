@@ -1,16 +1,12 @@
-"""Отправка сообщений в Telegram из Django."""
 import json
 import logging
 import urllib.request
 import urllib.error
-
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-
 def send_telegram_message(chat_id: int, text: str, parse_mode: str = "HTML") -> bool:
-    """Отправить сообщение в Telegram. Возвращает True при успехе."""
     if not chat_id or not settings.TELEGRAM_BOT_TOKEN:
         return False
     try:

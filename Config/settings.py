@@ -12,7 +12,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-# Username бота БЕЗ @ (напр. SWIFT_INTEL_EDUCATION_bot). НЕ "Swift Intel bot" с пробелами!
+
 _raw = (os.getenv('TELEGRAM_BOT_USERNAME') or '').strip()
 TELEGRAM_BOT_USERNAME = _raw.lstrip('@') if _raw and ' ' not in _raw else 'SWIFT_INTEL_EDUCATION_bot'
 
@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'WebSite',
+    'WebSiteFront',
     'TelegramBot',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'corsheaders',
     'drf_spectacular',
+
 ]
 
 MIDDLEWARE = [
@@ -109,7 +111,7 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-# Database
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -117,7 +119,7 @@ DATABASES = {
     }
 }
 
-# Password validation
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -133,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True

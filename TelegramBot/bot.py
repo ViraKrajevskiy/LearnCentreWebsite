@@ -14,7 +14,6 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# Инициализируем бота
 bot = Bot(
     token=settings.TELEGRAM_BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -50,7 +49,6 @@ def save_otp_chat_id(session_id: str, chat_id: int):
 
 @sync_to_async
 def get_user_by_telegram(chat_id: int, username: str = None):
-    """Найти пользователя по chat_id или telegram_username."""
     try:
         user = User.objects.get(telegram_chat_id=chat_id)
         return user
@@ -70,7 +68,6 @@ def get_user_by_telegram(chat_id: int, username: str = None):
 
 @sync_to_async
 def change_password(user, old_password: str, new_password: str) -> tuple[bool, str]:
-    """Сменить пароль. Возвращает (успех, сообщение)."""
     if not user.check_password(old_password):
         return False, "Неверный текущий пароль."
     if len(new_password) < 8:
@@ -118,7 +115,7 @@ async def cmd_profile(message: types.Message):
     user = await get_user_by_telegram(message.chat.id, username)
     if not user:
         await message.answer(
-            "❌ Аккаунт не найден.\n\n"
+            " Аккаунт не найден.\n\n"
             "Привяжите Telegram: укажите ваш @username при регистрации на сайте и получите код через этого бота."
         )
         return
@@ -139,7 +136,7 @@ async def cmd_changepassword_start(message: types.Message, state: FSMContext):
     username = message.from_user.username if message.from_user else None
     user = await get_user_by_telegram(message.chat.id, username)
     if not user:
-        await message.answer("❌ Аккаунт не найден. Зарегистрируйтесь на сайте и привяжите Telegram.")
+        await message.answer(" Аккаунт не найден. Зарегистрируйтесь на сайте и привяжите Telegram.")
         return
     await state.set_state(ChangePasswordStates.waiting_old)
     await state.update_data(user_id=user.pk)
@@ -157,7 +154,7 @@ async def changepassword_old(message: types.Message, state: FSMContext):
         user = await sync_to_async(User.objects.get)(pk=user_id)
     except User.DoesNotExist:
         await state.clear()
-        await message.answer("❌ Ошибка. Начните заново: /changepassword")
+        await message.answer(" Ошибка. Начните заново: /changepassword")
         return
     old_password = message.text
     if not old_password:
@@ -185,25 +182,25 @@ async def changepassword_new(message: types.Message, state: FSMContext):
         user = await sync_to_async(User.objects.get)(pk=user_id)
     except User.DoesNotExist:
         await state.clear()
-        await message.answer("❌ Ошибка.")
+        await message.answer(" Ошибка.")
         return
     ok, msg = await change_password(user, old_password, new_password)
     await state.clear()
     if ok:
-        await message.answer(f"✅ {msg}")
+        await message.answer(f" {msg}")
     else:
-        await message.answer(f"❌ {msg}\n\nПопробуйте снова: /changepassword")
+        await message.answer(f" {msg}\n\nПопробуйте снова: /changepassword")
 
 
 async def _send_welcome(message: types.Message):
     await message.answer(
-        "👋 Привет! Я бот учебного центра LearnCentre.\n\n"
-        "📱 <b>Как получить код подтверждения:</b>\n"
+        " Привет! Я бот учебного центра LearnCentre.\n\n"
+        " <b>Как получить код подтверждения:</b>\n"
         "1. Зарегистрируйся на нашем сайте\n"
         "2. После регистрации тебе придёт ссылка на этот бот\n"
         "3. Нажми на ссылку — я сразу пришлю тебе 6-значный код\n"
         "4. Введи код на сайте для завершения регистрации\n\n"
-        "📋 <b>Команды:</b>\n"
+        " <b>Команды:</b>\n"
         "/profile — просмотр профиля\n"
         "/changepassword — смена пароля\n\n"
         "⚡ Код приходит только по ссылке с сайта."

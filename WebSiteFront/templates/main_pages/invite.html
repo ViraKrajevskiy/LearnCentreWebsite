@@ -1,0 +1,54 @@
+{% extends "main_pages/base_invite.html" %}
+{% load static %}
+
+{% block title %}Приглашение{% endblock %}
+
+{% block content %}
+<button class="invite-bg-toggle" id="inviteBgToggle" aria-label="Сменить фон" title="Белый фон">
+    <i class="bi bi-sun" id="inviteBgIcon"></i>
+</button>
+<section class="invite-hero invite-strict">
+    <div class="container">
+        <div class="invite-content text-center">
+            <h1 class="invite-title-strict">Обучаем с AI</h1>
+            <p class="invite-subtitle-strict">
+                Учебный центр по программированию, веб-разработке и искусственному интеллекту.
+                Персональный AI-ассистент 24/7, практика с первого дня.
+            </p>
+            <div class="invite-buttons mt-4">
+                <a href="{% url 'register' %}" class="btn btn-invite-strict">Присоединиться</a>
+                <a href="{% url 'about' %}" class="btn btn-invite-outline-strict ms-3">Подробнее о нас</a>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('inviteBgToggle');
+    var icon = document.getElementById('inviteBgIcon');
+    if (btn) {
+        var saved = localStorage.getItem('inviteBg') || 'default';
+        if (saved === 'white') {
+            document.documentElement.setAttribute('data-invite-bg', 'white');
+            icon.className = 'bi bi-moon-stars';
+            btn.title = 'Тёмный фон';
+        }
+        btn.addEventListener('click', function() {
+            var html = document.documentElement;
+            var isWhite = html.getAttribute('data-invite-bg') === 'white';
+            if (isWhite) {
+                html.removeAttribute('data-invite-bg');
+                localStorage.setItem('inviteBg', 'default');
+                icon.className = 'bi bi-sun';
+                btn.title = 'Белый фон';
+            } else {
+                html.setAttribute('data-invite-bg', 'white');
+                localStorage.setItem('inviteBg', 'white');
+                icon.className = 'bi bi-moon-stars';
+                btn.title = 'Тёмный фон';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -22,8 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'WebSiteFront',
     'WebSite',
+    'WebSiteFront',
     'TelegramBot',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -151,8 +151,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-    BASE_DIR / 'WebSiteFront' / 'static',
-    BASE_DIR / 'WebSite' / 'static',
 ]
 
 MEDIA_URL = '/media/'

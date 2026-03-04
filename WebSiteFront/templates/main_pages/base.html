@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+{% load static %}
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Swift Intell{% endblock %} | Обучаем с AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main_pages.css' %}?v=20260304">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <style>
+        .blobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(120px); }
+        .b1 { width:800px;height:800px;background:#8b5cf6;top:-300px;left:-300px;opacity:.06; }
+        .b2 { width:600px;height:600px;background:#06b6d4;bottom:-200px;right:-200px;opacity:.05; }
+        .b3 { width:400px;height:400px;background:#22c55e;top:50%;left:55%;opacity:.03; }
+        
+        @media (max-width: 1100px) {
+            .main-navbar { padding: 0 5% !important; }
+        }
+
+        @media (max-width: 991px) {
+            .main-navbar { padding: 0 1.5rem !important; height: 64px; }
+            .nav-links { display: none !important; }
+            .nav-burger { display: flex !important; }
+            .nav-mobile { position: absolute; top: 64px; left: 0; width: 100%; display: none; flex-direction: column; padding: 1.5rem; background: var(--sur); border-top: 1px solid var(--brd); z-index: 1000; }
+            .nav-mobile.open { display: flex !important; }
+        }
+    </style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <div class="blobs">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+    </div>
+
+    <nav class="main-navbar" id="mainNavbar">
+        <a href="{% url 'home' %}" class="nav-logo">
+            <span class="nav-logo-mark">SI</span>
+            <span class="nav-logo-text">Swift<em>Intell</em></span>
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'about' %}" class="nl {% if request.resolver_match.url_name == 'about' %}active{% endif %}">О нас</a>
+            <a href="{% url 'courses' %}" class="nl {% if request.resolver_match.url_name == 'courses' %}active{% endif %}">Курсы</a>
+            <a href="{% url 'home' %}#proftest" class="nl">Профтест</a>
+            <a href="{% url 'faq' %}" class="nl {% if request.resolver_match.url_name == 'faq' %}active{% endif %}">FAQ</a>
+            <a href="{% url 'login' %}" class="nl">Платформа</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-btn" id="themeToggle" aria-label="Переключить тему" title="Светлая / Тёмная тема">
+                <span class="theme-ball" id="themeBall" aria-hidden="true">☀️</span>
+            </button>
+            <a href="{% url 'register' %}" class="btn-nav d-none d-md-inline-block">Записаться</a>
+            <a href="{% url 'login' %}" class="btn-nav-outline d-none d-md-inline-block">Войти</a>
+            <button class="nav-burger" id="navBurger" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <div class="nav-mobile" id="navMobile">
+            <a href="{% url 'home' %}">Главная</a>
+            <a href="{% url 'about' %}">О нас</a>
+            <a href="{% url 'courses' %}">Курсы</a>
+            <a href="{% url 'home' %}#proftest">Профтест</a>
+            <a href="{% url 'faq' %}">FAQ</a>
+            <a href="{% url 'login' %}">Платформа</a>
+            <hr style="opacity: 0.1; margin: 8px 0;">
+            <a href="{% url 'register' %}" style="color: var(--pu); font-weight: 700;">Записаться</a>
+            <a href="{% url 'login' %}">Войти</a>
+        </div>
+    </nav>
+
+    <main class="main-content-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-logo">
+                    <span class="nav-logo-mark" style="width:28px;height:28px;font-size:.7rem;border-radius:7px">SI</span>
+                    <span class="footer-logo-text">Swift<em>Intell</em></span>
+                </div>
+                <p class="footer-desc">Молодая AI-образовательная компания нового поколения. Обучаем работе с искусственным интеллектом — с нуля до профессионального уровня.</p>
+            </div>
+            <div class="footer-col">
+                <h6>Курсы</h6>
+                <a href="{% url 'courses' %}">AI для бизнеса</a>
+                <a href="{% url 'courses' %}">Нейросети и ML</a>
+                <a href="{% url 'courses' %}">Computer Vision</a>
+                <a href="{% url 'courses' %}">LLM и NLP</a>
+            </div>
+            <div class="footer-col">
+                <h6>Компания</h6>
+                <a href="{% url 'about' %}">О нас</a>
+                <a href="{% url 'courses' %}">Программы</a>
+                <a href="{% url 'faq' %}">FAQ</a>
+                <a href="{% url 'login' %}">Платформа</a>
+            </div>
+            <div class="footer-col">
+                <h6>Контакты</h6>
+                <a href="#">Telegram</a>
+                <a href="#">Instagram</a>
+                <span>info@swiftintell.ru</span>
+                <span>+998 XX XXX XX XX</span>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 Swift Intell. Все права защищены.</span>
+            <span style="float: right;">Политика конфиденциальности · Условия использования</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main_pages.js' %}?v=20260304"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+

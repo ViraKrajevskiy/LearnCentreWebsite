@@ -1,0 +1,81 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}Вопросы и ответы{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <p class="text-uppercase mb-2 text-center" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; color: var(--mp-accent);">FAQ</p>
+                <h1 class="section-title text-center">Вопросы и ответы</h1>
+                <p class="section-subtitle text-center mb-5">Часто задаваемые вопросы об обучении с AI</p>
+
+                <div class="accordion faq-accordion" id="faqAccordion">
+                    <div class="accordion-item benefit-card border-0 mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Что такое AI-ассистент и как он помогает?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                AI-ассистент — это интеллектуальный помощник, встроенный в платформу. Он отвечает на вопросы по курсу, помогает разобрать код, объясняет теорию. Доступен 24/7.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item benefit-card border-0 mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                В каком формате проходят занятия?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Занятия проходят онлайн. Вы смотрите видеоуроки, выполняете практические задания и получаете обратную связь от преподавателей и AI-ассистента.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item benefit-card border-0 mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Нужна ли подготовка для начала обучения?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Большинство курсов рассчитаны на начальный уровень. Для продвинутых курсов (например, ML) требуется знание основ программирования.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item benefit-card border-0 mb-2">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                Как оплатить курс?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Оплата производится онлайн банковской картой после регистрации. Доступ к курсу открывается сразу после подтверждения платежа.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item benefit-card border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                Выдаётся ли сертификат?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Да. После успешного завершения курса и сдачи всех заданий вы получаете сертификат Swift Intell.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

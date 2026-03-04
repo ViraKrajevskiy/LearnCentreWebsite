@@ -38,7 +38,8 @@
                 <span></span><span></span><span></span>
             </button>
         </div>
-        <div class="nav-mobile" id="navMobile">
+        <!-- Мобильное меню: показывается только на узких экранах по клику на бургер -->
+        <div class="nav-mobile d-lg-none" id="navMobile" aria-hidden="true">
             <a href="{% url 'home' %}">Главная</a>
             <a href="{% url 'courses' %}">Курсы</a>
             <a href="{% url 'about' %}">О нас</a>

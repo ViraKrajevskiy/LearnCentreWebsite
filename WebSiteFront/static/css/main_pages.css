@@ -1,0 +1,284 @@
+/* LearnCentre — стили страниц Направления, О нас, Контакты, FAQ (совместимо с lastFigma) */
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Сброс влияния Bootstrap на наши блоки */
+.main-navbar a,
+.main-navbar button,
+.main-content-wrapper .container { font-family: 'Inter', -apple-system, sans-serif; }
+.main-content-wrapper .btn { font-family: inherit; }
+
+:root {
+    --pu: #8b5cf6;
+    --pu-d: #7c3aed;
+    --pu-g: rgba(139,92,246,0.3);
+    --cy: #06b6d4;
+    --gn: #22c55e;
+    --lime: #84cc16;
+    --or: #f97316;
+    --tr: 0.35s cubic-bezier(.4,0,.2,1);
+    --side-padding: 18%;
+}
+
+[data-theme="dark"] {
+    --bg:   #09090f;
+    --bg2:  #0e0e18;
+    --bg3:  #131320;
+    --sur:  #15152a;
+    --su2:  #1a1a2e;
+    --brd:  rgba(255,255,255,0.08);
+    --brd2: rgba(255,255,255,0.15);
+    --txt:  #f0f0ff;
+    --tx2:  #8888b8;
+    --tx3:  #3a3a58;
+    --shd:  rgba(0,0,0,0.6);
+    --nav:  rgba(9,9,15,0.92);
+    --inv:  invert(0);
+    
+    /* Aliases for main_pages.css compatibility */
+    --nav-bg: var(--nav);
+    --mp-card: var(--sur);
+    --mp-text: var(--txt);
+    --mp-text-muted: var(--tx2);
+    --mp-accent: var(--pu);
+    --mp-border: var(--brd);
+    --mp-subtle: rgba(139,92,246,0.1);
+    --side-padding: 18%;
+}
+
+:root {
+    --side-padding: 18%;
+}
+
+@media (max-width: 1400px) { :root { --side-padding: 12%; } }
+@media (max-width: 1200px) { :root { --side-padding: 8%; } }
+@media (max-width: 991px)  { :root { --side-padding: 1.5rem; } }
+
+[data-theme="light"] {
+    --bg:   #f5f5ff;
+    --bg2:  #eeeeff;
+    --bg3:  #e8e8fa;
+    --sur:  #ffffff;
+    --su2:  #f2f2fe;
+    --brd:  rgba(0,0,0,0.07);
+    --brd2: rgba(0,0,0,0.14);
+    --txt:  #0a0a20;
+    --tx2:  #55557a;
+    --tx3:  #aaaacc;
+    --shd:  rgba(100,80,200,0.10);
+    --nav:  rgba(245,245,255,0.94);
+    --inv:  invert(1) hue-rotate(180deg) brightness(0.6);
+
+    /* Aliases for main_pages.css compatibility */
+    --nav-bg: var(--nav);
+    --mp-card: var(--sur);
+    --mp-text: var(--txt);
+    --mp-text-muted: var(--tx2);
+    --mp-accent: var(--pu);
+    --mp-border: var(--brd);
+    --mp-subtle: rgba(139,92,246,0.08);
+    --side-padding: 18%;
+}
+
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--txt); transition: background var(--tr), color var(--tr); }
+.text-muted { color: var(--tx2) !important; }
+
+.main-content-wrapper { position: relative; z-index: 1; min-height: calc(100vh - 200px); padding: 3rem 1.5rem 4rem; }
+.main-content-wrapper .section-title,
+.main-content-wrapper h1.section-title { font-family: 'Unbounded', sans-serif; font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 0.5rem; color: var(--txt); }
+.main-content-wrapper .section-subtitle { font-size: 0.96rem; color: var(--tx2); line-height: 1.6; margin-bottom: 1.5rem; }
+.main-content-wrapper .course-card-public { background: var(--sur); border: 1px solid var(--brd); border-radius: 18px; overflow: hidden; transition: all 0.25s; }
+.main-content-wrapper .course-card-public:hover { border-color: rgba(139,92,246,0.35); transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.15); }
+
+/* Navbar — синхронизировано с Figma */
+.main-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 9000;
+    background: var(--nav);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--brd);
+    height: 68px;
+    padding: 0 var(--side-padding);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background var(--tr);
+}
+
+.main-navbar .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    color: var(--txt);
+    text-decoration: none;
+    letter-spacing: -.3px;
+}
+
+.main-navbar .nav-logo-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--pu), var(--cy));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 900;
+}
+
+.main-navbar .nav-logo-text {
+    color: inherit;
+}
+
+.main-navbar .nav-logo em {
+    font-style: normal;
+    color: var(--pu);
+}
+
+.main-navbar .nav-links {
+    display: flex;
+    gap: 2px;
+}
+
+.main-navbar .nav-links .nl {
+    color: var(--tx2);
+    font-size: 0.83rem;
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: 50px;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.main-navbar .nav-links .nl:hover,
+.main-navbar .nav-links .nl.active {
+    background: var(--su2);
+    color: var(--txt);
+}
+
+.main-navbar .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.main-navbar .theme-btn {
+    width: 50px;
+    height: 27px;
+    border-radius: 50px;
+    background: var(--su2);
+    border: 1px solid var(--brd2);
+    position: relative;
+    cursor: pointer;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+}
+
+.main-navbar .theme-ball {
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pu), var(--cy));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: #fff;
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="light"] .main-navbar .theme-ball {
+    transform: translateX(23px);
+}
+
+.main-navbar .btn-nav {
+    background: var(--pu);
+    color: #fff;
+    border-radius: 50px;
+    padding: 10px 24px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-decoration: none;
+    box-shadow: 0 0 20px var(--pu-g);
+    transition: all .25s;
+}
+
+.main-navbar .btn-nav:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    color: #fff;
+}
+
+.main-navbar .btn-nav-outline {
+    background: transparent;
+    color: var(--tx2);
+    border: 1px solid var(--brd2);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: all .25s;
+}
+
+.main-navbar .btn-nav-outline:hover {
+    border-color: var(--pu);
+    color: var(--txt);
+    background: rgba(139,92,246,0.07);
+}
+
+.main-navbar .nav-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; }
+.main-navbar .nav-burger span { width: 22px; height: 2px; background: var(--txt); border-radius: 1px; }
+
+.main-navbar .nav-mobile { display: none !important; flex-direction: column; width: 100%; padding: 1rem; background: var(--sur); border-top: 1px solid var(--brd); gap: 4px; }
+.main-navbar .nav-mobile.open { display: flex !important; }
+.main-navbar .nav-mobile a { padding: 12px 16px; color: var(--txt); text-decoration: none; font-weight: 500; font-size: 0.9rem; border-radius: 10px; }
+.main-navbar .nav-mobile a:hover { background: var(--su2); }
+
+@media (max-width: 991px) {
+    .main-navbar .nav-links { display: none; }
+    .main-navbar .nav-burger { display: flex; }
+    .main-navbar .nav-mobile { display: none; }
+    .main-navbar .nav-mobile.open { display: flex !important; }
+}
+
+.section-title { font-size: 1.625rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+.section-subtitle { color: var(--mp-text-muted); font-size: 0.9375rem; margin-bottom: 2.5rem; }
+.course-card-public { background: var(--mp-card); border: 1px solid var(--mp-border); border-radius: 8px; overflow: hidden; height: 100%; }
+.course-card-public .course-image { height: 140px; display: flex; align-items: center; justify-content: center; background: var(--mp-subtle) !important; }
+.course-card-public .course-image i { font-size: 3rem; color: var(--mp-accent); }
+.course-card-public .course-body { padding: 1.25rem; }
+.course-price { font-size: 1.5rem; font-weight: 700; color: var(--mp-accent); }
+.course-meta { display: flex; gap: 1rem; margin: 0.5rem 0; font-size: 0.8125rem; color: var(--mp-text-muted); }
+.btn-hero { padding: 0.75rem 1.5rem; background: var(--mp-accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9375rem; text-decoration: none; }
+.btn-hero:hover { background: var(--pu-d); color: white; }
+
+.main-footer { background: var(--sur); border-top: 1px solid var(--brd); padding: 68px 1.5rem 32px; }
+.main-footer .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 52px; }
+.main-footer .footer-logo { display: flex; align-items: center; gap: 8px; font-family: 'Unbounded', sans-serif; font-size: 1rem; font-weight: 900; margin-bottom: 12px; }
+.main-footer .footer-desc { font-size: 0.79rem; color: var(--tx2); line-height: 1.75; max-width: 280px; }
+.main-footer .footer-col h6 { font-size: 0.7rem; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; color: var(--tx3); }
+.main-footer .footer-col a, .main-footer .footer-col span { display: block; font-size: 0.79rem; color: var(--tx2); margin-bottom: 9px; text-decoration: none; }
+.main-footer .footer-col a:hover { color: var(--pu); }
+.main-footer .footer-bottom { border-top: 1px solid var(--brd); padding-top: 22px; font-size: 0.72rem; color: var(--tx3); }
+@media (max-width: 991px) { .main-footer .footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 576px) { .main-footer .footer-grid { grid-template-columns: 1fr; } }
+
+.benefit-card { background: var(--mp-card); border: 1px solid var(--mp-border); border-radius: 12px; padding: 1.5rem; }
+.faq-accordion .accordion-item { background: var(--sur); border: 1px solid var(--brd); border-radius: 14px; margin-bottom: 12px; }
+.faq-accordion .accordion-button { background: var(--sur); border: none; font-weight: 600; color: var(--txt); }
+.main-content-wrapper .form-control { background: var(--bg2); border: 1px solid var(--brd); color: var(--txt); border-radius: 10px; }
+
+.invite-hero { min-height: 100vh; display: flex; align-items: center; padding: 4rem 0; background: var(--bg); }
+.invite-title-strict { font-size: 2rem; font-weight: 700; color: var(--mp-text); margin-bottom: 1rem; }
+.invite-subtitle-strict { font-size: 1.0625rem; color: var(--mp-text-muted); max-width: 520px; margin: 0 auto; }
+.btn-invite-strict { padding: 0.75rem 1.75rem; background: var(--mp-accent); color: white; border: none; border-radius: 8px; font-weight: 600; text-decoration: none; }
+.btn-invite-strict:hover { background: var(--pu-d); color: white; }
+.btn-invite-outline-strict { padding: 0.75rem 1.75rem; background: transparent; color: var(--mp-text); border: 1px solid var(--mp-border); border-radius: 8px; font-weight: 600; text-decoration: none; }
+.btn-invite-outline-strict:hover { border-color: var(--mp-accent); color: var(--mp-accent); }
+.invite-bg-toggle { position: fixed; top: 1rem; right: 1rem; z-index: 100; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--brd); background: var(--sur); color: var(--txt); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }

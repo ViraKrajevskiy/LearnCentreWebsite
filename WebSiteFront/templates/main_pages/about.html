@@ -1,0 +1,93 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}О нас{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center mb-5">
+            <div class="col-lg-6">
+                <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; color: var(--mp-accent);">Swift Intell</p>
+                <h1 class="section-title">О нас</h1>
+                <p class="section-subtitle mb-4">Обучаем с AI — профессиональное онлайн-обучение</p>
+                <p class="mb-3" style="color: var(--mp-text-muted); font-size: 0.9375rem;">
+                    Swift Intell — платформа для обучения программированию и искусственному интеллекту.
+                    Мы интегрируем AI-ассистента в учебный процесс: каждый студент получает персональную
+                    поддержку и ускоряет освоение материала.
+                </p>
+                <p class="mb-0" style="color: var(--mp-text-muted); font-size: 0.9375rem;">
+                    Курсы структурированы от основ к продвинутым темам. Практические задания,
+                    обратная связь от преподавателей и AI-помощник на каждом этапе.
+                </p>
+            </div>
+            <div class="col-lg-6 text-center mt-4 mt-lg-0">
+                <div class="rounded-3 p-5 benefit-card">
+                    <i class="bi bi-cpu" style="font-size: 5rem; color: var(--mp-accent);"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="benefit-card h-100 text-center">
+                    <div class="mb-2" style="font-size: 2rem; font-weight: 700; color: var(--mp-accent);">500+</div>
+                    <h6 class="fw-bold mb-1">Студентов</h6>
+                    <p class="text-muted small mb-0">Прошли обучение</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="benefit-card h-100 text-center">
+                    <div class="mb-2" style="font-size: 2rem; font-weight: 700; color: var(--mp-accent);">12</div>
+                    <h6 class="fw-bold mb-1">Курсов</h6>
+                    <p class="text-muted small mb-0">По программированию и AI</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="benefit-card h-100 text-center">
+                    <div class="mb-2" style="font-size: 2rem; font-weight: 700; color: var(--mp-accent);">98%</div>
+                    <h6 class="fw-bold mb-1">Рекомендуют</h6>
+                    <p class="text-muted small mb-0">Нас выпускникам</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title text-center mb-4">Обучаем с AI</h2>
+        <p class="section-subtitle text-center mb-4">Методология и преимущества</p>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100">
+                    <i class="bi bi-robot mb-2"></i>
+                    <h6 class="fw-bold">AI-ассистент</h6>
+                    <p class="text-muted small mb-0">Ответы на вопросы 24/7</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100">
+                    <i class="bi bi-person-workspace mb-2"></i>
+                    <h6 class="fw-bold">Онлайн-формат</h6>
+                    <p class="text-muted small mb-0">Учитесь из любой точки</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100">
+                    <i class="bi bi-person-gear mb-2"></i>
+                    <h6 class="fw-bold">Поддержка</h6>
+                    <p class="text-muted small mb-0">Преподаватели на связи</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="benefit-card h-100">
+                    <i class="bi bi-award mb-2"></i>
+                    <h6 class="fw-bold">Сертификат</h6>
+                    <p class="text-muted small mb-0">По завершении курса</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="{% url 'courses' %}" class="btn btn-hero">Курсы</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

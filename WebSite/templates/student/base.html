@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}LearnCentre{% endblock %} | Обучаем с AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -28,7 +29,7 @@
                 <span class="logo-icon">◇</span>
                 <span class="logo-text">LearnCentre</span>
             </a>
-            <button class="sidebar-toggle d-lg-none" id="sidebarClose" aria-label="Закрыть меню">
+            <button class="sidebar-toggle sidebar-toggle-close d-lg-none" id="sidebarClose" aria-label="Закрыть меню">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -48,7 +49,11 @@
             </a>
             <a href="{% url 'assignments' %}" class="nav-item" data-page="assignments">
                 <i class="bi bi-clipboard-check-fill"></i>
-                <span>Мои задания</span>
+                <span>Домашняя работа</span>
+            </a>
+            <a href="{% url 'attendance' %}" class="nav-item" data-page="attendance">
+                <i class="bi bi-calendar-check"></i>
+                <span>Посещаемость</span>
             </a>
             <a href="{% url 'profile' %}" class="nav-item" data-page="profile">
                 <i class="bi bi-person-circle"></i>
@@ -88,13 +93,29 @@
     <!-- Main Content -->
     <main class="main-content">
         <header class="topbar">
-            <button class="sidebar-toggle d-lg-none" id="sidebarOpen" aria-label="Открыть меню">
-                <i class="bi bi-list"></i>
+            <button class="sidebar-toggle sidebar-toggle-btn" id="sidebarToggle" aria-label="Скрыть/показать меню" title="Скрыть меню">
+                <i class="bi bi-chevron-double-left sidebar-icon-hide"></i>
+                <i class="bi bi-list sidebar-icon-show" style="display:none"></i>
             </button>
             <div class="topbar-title">
                 {% block page_title %}Главная{% endblock %}
             </div>
             <div class="topbar-actions d-flex align-items-center gap-3">
+                <div class="notifications-wrap position-relative">
+                    <button type="button" class="btn btn-link p-0 text-secondary notifications-btn" id="notificationsBtn" aria-label="Уведомления" title="Уведомления">
+                        <i class="bi bi-bell-fill fs-5"></i>
+                        <span class="notifications-badge" id="notificationsBadge" style="display:none">0</span>
+                    </button>
+                    <div class="notifications-dropdown dropdown-menu shadow" id="notificationsDropdown">
+                        <div class="notifications-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                            <strong class="small">Уведомления</strong>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-secondary" id="notificationsMarkAllRead" title="Прочитать все">Прочитать все</button>
+                        </div>
+                        <div class="notifications-list" id="notificationsList">
+                            <div class="text-center text-secondary py-4 small" id="notificationsEmpty">Загрузка…</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="theme-switcher-topbar" title="Сменить тему (Светлая ↔ Тёмная)">
                     <button class="theme-switch-btn" id="themeToggleTopbar" aria-label="Переключить тему">
                         <span class="theme-switch-track">

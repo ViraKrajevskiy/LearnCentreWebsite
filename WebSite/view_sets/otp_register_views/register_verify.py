@@ -5,15 +5,16 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
 from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
 from rest_framework import serializers
 
 from WebSite.models.opt_model import UserOTP
+from WebSite.models.student_model.student import Student
 from WebSite.utils.telegram import send_telegram_message
 from WebSite.serializers.otp_register.otp_registration import (
     RegistrationSerializer, OTPVerifySerializer, LoginSerializer,
-    ProfileSerializer, ChangePasswordSerializer
+    ProfileSerializer, ChangePasswordSerializer, UpdateProfileSerializer
 )
 
 User = get_user_model()
@@ -116,6 +117,8 @@ class VerifyOTPView(APIView):
                         "Ваш аккаунт активирован. Теперь вы можете войти на сайт.",
                     )
 
+                Student.objects.get_or_create(user=user, defaults={'course': None})
+                login(request, user)
                 refresh = RefreshToken.for_user(user)
                 return Response({
                     "message": "Регистрация успешно завершена",
@@ -179,6 +182,9 @@ class LoginView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        if login_type == 'student':
+            Student.objects.get_or_create(user=user, defaults={'course': None})
+        login(request, user)
         refresh = RefreshToken.for_user(user)
         return Response({
             "message": "Вход выполнен",
@@ -188,7 +194,7 @@ class LoginView(APIView):
 
 
 class ProfileView(APIView):
-    """Просмотр своих данных после входа (по JWT)."""
+    """Просмотр и обновление своих данных (по JWT)."""
 
     permission_classes = [IsAuthenticated]
 
@@ -201,6 +207,22 @@ class ProfileView(APIView):
     def get(self, request):
         serializer = ProfileSerializer(request.user)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=['Регистрация и Авторизация'],
+        summary='Обновить профиль',
+        description='Изменить email, телефон, Telegram, имя, фамилию. Требует Bearer токен.',
+        request=UpdateProfileSerializer,
+        responses={200: ProfileSerializer, 400: OpenApiResponse(description='Ошибка валидации')},
+    )
+    def put(self, request):
+        serializer = UpdateProfileSerializer(instance=request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(ProfileSerializer(request.user).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    patch = put
 
 
 class ChangePasswordView(APIView):

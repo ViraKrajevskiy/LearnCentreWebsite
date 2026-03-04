@@ -7,9 +7,17 @@
 {% block content %}
 <div class="student-page">
     <div class="page-hero anim-fade-up mb-4">
-        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
-        <h1>Профиль</h1>
-        <p class="lead">Данные и смена пароля</p>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
+                <h1>Профиль</h1>
+                <p class="lead mb-0">Данные и смена пароля</p>
+            </div>
+            <button type="button" id="logout-btn" class="btn btn-outline-danger d-flex align-items-center gap-2">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Выйти</span>
+            </button>
+        </div>
     </div>
     <div id="profile-auth-required" class="alert alert-warning d-none">
         <a href="{% url 'login' %}" class="alert-link">Войдите</a>, чтобы просмотреть профиль.
@@ -27,46 +35,39 @@
         <div class="col-lg-8">
             <div class="card-ai card-glow mb-4 animate-on-scroll">
                 <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-person-vcard me-2" style="color: var(--accent);"></i>Данные профиля
+                    <i class="bi bi-person-vcard me-2" style="color: var(--accent);"></i>Личные данные
                 </h5>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary">Имя</small>
-                            <div id="profile-first-name" class="fw-medium">—</div>
+                <form id="profile-edit-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Имя</label>
+                            <input type="text" name="first_name" id="profile-edit-first-name" class="form-control" placeholder="Имя" maxlength="50">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Фамилия</label>
+                            <input type="text" name="surname" id="profile-edit-surname" class="form-control" placeholder="Фамилия" maxlength="50">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Email</label>
+                            <input type="email" name="email" id="profile-edit-email" class="form-control" placeholder="email@example.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Телефон</label>
+                            <input type="tel" name="phone_number" id="profile-edit-phone" class="form-control" placeholder="+7 999 123-45-67" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Telegram (без @)</label>
+                            <input type="text" name="telegram_username" id="profile-edit-telegram" class="form-control" placeholder="username" maxlength="100">
+                        </div>
+                        <div class="col-12">
+                            <div id="profile-edit-error" class="alert alert-danger d-none mb-2"></div>
+                            <div id="profile-edit-success" class="alert alert-success d-none mb-2">Данные сохранены.</div>
+                            <button type="submit" class="btn btn-ai" id="profile-edit-submit">
+                                <i class="bi bi-check-lg me-1"></i>Сохранить изменения
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary">Фамилия</small>
-                            <div id="profile-surname" class="fw-medium">—</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary">Email</small>
-                            <div id="profile-email-val" class="fw-medium">—</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary">Телефон</small>
-                            <div id="profile-phone" class="fw-medium">—</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary">Telegram</small>
-                            <div id="profile-telegram" class="fw-medium">—</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="p-3 rounded-3" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2);">
-                            <small class="text-secondary">Дата регистрации</small>
-                            <div id="profile-created" class="fw-medium">—</div>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
             <div class="card-ai card-glow animate-on-scroll">
                 <h5 class="card-title-custom mb-4">
@@ -98,6 +99,13 @@
     const authRequired = document.getElementById('profile-auth-required');
     const profileContent = document.getElementById('profile-content');
     const changeForm = document.getElementById('change-password-form');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    logoutBtn?.addEventListener('click', function () {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        window.location.href = '/login/';
+    });
 
     if (!token) {
         authRequired?.classList.remove('d-none');
@@ -123,12 +131,12 @@
         if (el('avatar-initials')) el('avatar-initials').textContent = initials;
         if (el('profile-name')) el('profile-name').textContent = `${data.surname || ''} ${data.first_name || ''}`.trim() || '—';
         if (el('profile-email')) el('profile-email').textContent = data.email || '—';
-        if (el('profile-first-name')) el('profile-first-name').textContent = data.first_name || '—';
-        if (el('profile-surname')) el('profile-surname').textContent = data.surname || '—';
-        if (el('profile-email-val')) el('profile-email-val').textContent = data.email || '—';
-        if (el('profile-phone')) el('profile-phone').textContent = data.phone_number || '—';
-        if (el('profile-telegram')) el('profile-telegram').textContent = data.telegram_username ? '@' + data.telegram_username : '—';
-        if (el('profile-created')) el('profile-created').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('ru') : '—';
+        // Форма редактирования
+        if (el('profile-edit-first-name')) el('profile-edit-first-name').value = data.first_name || '';
+        if (el('profile-edit-surname')) el('profile-edit-surname').value = data.surname || '';
+        if (el('profile-edit-email')) el('profile-edit-email').value = data.email || '';
+        if (el('profile-edit-phone')) el('profile-edit-phone').value = data.phone_number || '';
+        if (el('profile-edit-telegram')) el('profile-edit-telegram').value = (data.telegram_username || '').replace(/^@/, '');
     }).catch(() => {
         authRequired?.classList.remove('d-none');
         profileContent?.classList.add('d-none');
@@ -164,6 +172,50 @@
             const msg = (data.old_password && data.old_password[0]) || (data.new_password && data.new_password[0]) || data.error || 'Ошибка';
             errEl.textContent = typeof msg === 'string' ? msg : 'Ошибка';
             errEl.classList.remove('d-none');
+        }
+    });
+
+    // Сохранение личных данных (email, телефон, Telegram, имя, фамилия)
+    const profileEditForm = document.getElementById('profile-edit-form');
+    const profileEditError = document.getElementById('profile-edit-error');
+    const profileEditSuccess = document.getElementById('profile-edit-success');
+    const profileEditSubmit = document.getElementById('profile-edit-submit');
+    profileEditForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        profileEditError.classList.add('d-none');
+        profileEditSuccess.classList.add('d-none');
+        if (profileEditSubmit) profileEditSubmit.disabled = true;
+        const payload = {
+            first_name: document.getElementById('profile-edit-first-name')?.value?.trim() || '',
+            surname: document.getElementById('profile-edit-surname')?.value?.trim() || '',
+            email: document.getElementById('profile-edit-email')?.value?.trim() || '',
+            phone_number: document.getElementById('profile-edit-phone')?.value?.trim() || '',
+            telegram_username: document.getElementById('profile-edit-telegram')?.value?.trim()?.replace(/^@/, '') || ''
+        };
+        const res = await fetch('/api/v1/auth/me/', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access')
+            },
+            body: JSON.stringify(payload)
+        });
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (profileEditSubmit) profileEditSubmit.disabled = false;
+        if (res.ok) {
+            profileEditSuccess.classList.remove('d-none');
+            const initials = (data.first_name?.[0] || '') + (data.surname?.[0] || '') || '?';
+            const avatarEl = document.getElementById('avatar-initials');
+            const nameEl = document.getElementById('profile-name');
+            const emailEl = document.getElementById('profile-email');
+            if (avatarEl) avatarEl.textContent = initials;
+            if (nameEl) nameEl.textContent = ((data.surname || '') + ' ' + (data.first_name || '')).trim() || '—';
+            if (emailEl) emailEl.textContent = data.email || '—';
+        } else {
+            profileEditError.classList.remove('d-none');
+            const msg = (data.email && data.email[0]) || (data.phone_number && data.phone_number[0]) || (data.telegram_username && data.telegram_username[0]) || (data.error || 'Ошибка сохранения');
+            profileEditError.textContent = Array.isArray(msg) ? msg[0] : msg;
         }
     });
 })();

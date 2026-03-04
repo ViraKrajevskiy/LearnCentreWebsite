@@ -3,17 +3,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     const html = document.documentElement;
     const themeBtn = document.getElementById('themeTogglePublic');
-    const themeLabel = document.getElementById('themeLabelPublic');
+    const themeBall = document.getElementById('themeBallPublic');
 
     function setTheme(theme, showToast) {
         html.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-        if (themeLabel) themeLabel.textContent = theme === 'light' ? 'Тёмная' : 'Светлая';
+        if (themeBall) themeBall.textContent = theme === 'dark' ? '🌙' : '☀️';
         if (showToast) {
             const toast = document.createElement('div');
             toast.className = 'theme-toast-main';
             toast.textContent = theme === 'dark' ? 'Тёмная тема' : 'Светлая тема';
-            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--mp-card);border:1px solid var(--mp-border);border-radius:12px;z-index:9999;font-size:0.9rem;animation:fadeIn 0.3s ease;';
+            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--sur);border:1px solid var(--brd);border-radius:12px;z-index:9999;font-size:0.9rem;color:var(--txt);';
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
         }

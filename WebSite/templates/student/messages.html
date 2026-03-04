@@ -22,53 +22,18 @@
                     </div>
                 </div>
                 <div class="conversation-list">
-                    <div class="conversation-item p-4 d-flex align-items-center gap-3" style="background: var(--ai-subtle); cursor: pointer; border-left: 4px solid var(--accent);">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; background: var(--ai-gradient); color: white; font-weight: 600;">АП</div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <div class="d-flex justify-content-between mb-1">
-                                <strong>Алексей Петров</strong>
-                                <small class="text-secondary">Вчера</small>
-                            </div>
-                            <small class="text-secondary text-truncate d-block">Спасибо за ответ по домашнему заданию!</small>
-                        </div>
-                        <span class="badge rounded-pill px-2 py-1" style="background: var(--accent); color: white;">1</span>
-                    </div>
-                    <div class="conversation-item p-4 d-flex align-items-center gap-3" style="cursor: pointer;">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; background: var(--border); color: var(--text-secondary); font-weight: 600;">ПС</div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <div class="d-flex justify-content-between mb-1">
-                                <strong>Поддержка</strong>
-                                <small class="text-secondary">2 дня</small>
-                            </div>
-                            <small class="text-secondary text-truncate d-block">Ваш вопрос по оплате обработан</small>
-                        </div>
+                    <div class="p-4 text-center text-secondary" style="min-height: 200px;">
+                        <p class="mb-0">Нет диалогов</p>
+                        <small>Переписка с преподавателями и поддержкой появится здесь</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-8 d-flex flex-column">
-                <div class="p-4 border-bottom d-flex align-items-center gap-3" style="border-color: var(--border) !important;">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; background: var(--ai-gradient); color: white; font-weight: 600;">АП</div>
-                    <strong class="fs-5">Алексей Петров</strong>
+                <div class="p-4 border-bottom" style="border-color: var(--border) !important;">
+                    <strong class="fs-5 text-secondary">Выберите диалог</strong>
                 </div>
-                <div class="flex-grow-1 p-4 overflow-auto" style="min-height: 280px;">
-                    <div class="message mb-4 text-end">
-                        <div class="d-inline-block p-4 rounded-4 text-start" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2); max-width: 75%;">
-                            <p class="mb-2">Здравствуйте! У меня вопрос по заданию №5 — как лучше парсить JSON?</p>
-                            <small class="text-secondary">14 фев, 10:30</small>
-                        </div>
-                    </div>
-                    <div class="message mb-4">
-                        <div class="d-inline-block p-4 rounded-4" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2); max-width: 75%;">
-                            <p class="mb-2">Используйте модуль json: json.loads() для строки или json.load() для файла. Можно также попробовать orjson для скорости.</p>
-                            <small class="text-secondary">14 фев, 11:45</small>
-                        </div>
-                    </div>
-                    <div class="message mb-4 text-end">
-                        <div class="d-inline-block p-4 rounded-4 text-start" style="background: var(--ai-subtle); border: 1px solid rgba(99,102,241,0.2); max-width: 75%;">
-                            <p class="mb-2">Спасибо за ответ по домашнему заданию!</p>
-                            <small class="text-secondary">15 фев, 09:20</small>
-                        </div>
-                    </div>
+                <div class="flex-grow-1 p-4 overflow-auto d-flex align-items-center justify-content-center" style="min-height: 280px;">
+                    <p class="text-secondary mb-0">Выберите диалог слева или начните переписку с преподавателем из курса</p>
                 </div>
                 <div class="p-4 border-top" style="border-color: var(--border) !important;">
                     <form class="d-flex gap-2">

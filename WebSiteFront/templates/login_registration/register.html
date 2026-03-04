@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Регистрация — Swift Intell</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: 'Inter', sans-serif; overflow-x: hidden; line-height: 1.6; }
+img { display: block; max-width: 100%; }
+button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; }
+a { text-decoration: none; }
+
+:root {
+  --pu: #8b5cf6;
+  --pu-d: #7c3aed;
+  --pu-g: rgba(139,92,246,0.3);
+  --cy: #06b6d4;
+  --gn: #22c55e;
+  --or: #f97316;
+  --tr: 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="dark"] {
+  --bg:   #09090f;
+  --bg2:  #0e0e18;
+  --bg3:  #131320;
+  --sur:  #15152a;
+  --su2:  #1a1a2e;
+  --brd:  rgba(255,255,255,0.08);
+  --brd2: rgba(255,255,255,0.15);
+  --txt:  #f0f0ff;
+  --tx2:  #8888b8;
+  --tx3:  #3a3a58;
+  --shd:  rgba(0,0,0,0.6);
+  --nav:  rgba(9,9,15,0.92);
+  --inv:  invert(0);
+}
+
+[data-theme="light"] {
+  --bg:   #f5f5ff;
+  --bg2:  #eeeeff;
+  --bg3:  #e8e8fa;
+  --sur:  #ffffff;
+  --su2:  #f2f2fe;
+  --brd:  rgba(0,0,0,0.07);
+  --brd2: rgba(0,0,0,0.14);
+  --txt:  #0a0a20;
+  --tx2:  #55557a;
+  --tx3:  #aaaacc;
+  --shd:  rgba(100,80,200,0.10);
+  --nav:  rgba(245,245,255,0.94);
+  --inv:  invert(1) hue-rotate(180deg) brightness(0.6);
+}
+
+body { background: var(--bg); color: var(--txt); transition: background var(--tr), color var(--tr); min-height: 100vh; }
+
+.blobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(120px); }
+.b1 { width:800px;height:800px;background:#8b5cf6;top:-300px;left:-300px;opacity:.07; }
+.b2 { width:600px;height:600px;background:#06b6d4;bottom:-200px;right:-200px;opacity:.06; }
+.b3 { width:400px;height:400px;background:#22c55e;top:40%;left:60%;opacity:.04; }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9000;
+  background: var(--nav); backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--brd);
+  height: 64px; padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 1.05rem;
+  color: var(--txt);
+}
+.nav-logo-mark {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--pu), var(--cy));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: .72rem; font-weight: 900;
+}
+.nav-logo em { font-style: normal; color: var(--pu); }
+.nav-right { display: flex; align-items: center; gap: 12px; font-size: .83rem; color: var(--tx2); }
+.nav-right a { color: var(--tx2); transition: color .2s; }
+.nav-right a:hover { color: var(--pu); }
+.nav-right strong { color: var(--txt); }
+.theme-btn {
+  width: 48px; height: 26px; border-radius: 50px;
+  background: var(--su2); border: 1px solid var(--brd2);
+  position: relative; cursor: pointer; padding: 3px;
+  display: flex; align-items: center;
+}
+.theme-ball {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--pu), var(--cy));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; transition: transform .35s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"] .theme-ball { transform: translateX(22px); }
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  padding-top: 64px;
+  position: relative; z-index: 1;
+}
+
+.left-panel {
+  width: 45%;
+  background: linear-gradient(145deg, var(--bg) 0%, var(--bg2) 40%, var(--bg3) 100%);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 64px;
+  position: relative; overflow: hidden;
+}
+.left-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,.2), transparent 65%),
+              radial-gradient(ellipse at 80% 20%, rgba(6,182,212,.12), transparent 50%);
+  pointer-events: none;
+}
+.left-panel::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(139,92,246,.4), transparent);
+}
+
+.lp-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.3);
+  color: #a78bfa; border-radius: 50px; padding: 7px 18px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .7px; text-transform: uppercase;
+  margin-bottom: 32px; width: fit-content; position: relative; z-index: 1;
+}
+.badge-dot { width: 6px; height: 6px; background: var(--pu); border-radius: 50%; animation: ping 2s infinite; }
+@keyframes ping { 0%,100%{opacity:1}50%{opacity:.4} }
+
+.lp-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 900; line-height: 1.1; letter-spacing: -1.5px;
+  margin-bottom: 18px; position: relative; z-index: 1;
+  color: var(--txt);
+}
+.lp-title .grd {
+  background: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 40%, #06b6d4 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.lp-desc {
+  font-size: .92rem; color: var(--tx2); line-height: 1.8;
+  max-width: 380px; margin-bottom: 44px; position: relative; z-index: 1;
+}
+
+.lp-features { display: flex; flex-direction: column; gap: 18px; position: relative; z-index: 1; }
+.lp-feat {
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.lp-feat-ico {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+.ico-pu { background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.25); }
+.ico-cy { background: rgba(6,182,212,.12); border: 1px solid rgba(6,182,212,.2); }
+.ico-gn { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.2); }
+.lp-feat-body h5 { font-size: .87rem; font-weight: 700; color: var(--txt); margin-bottom: 3px; }
+.lp-feat-body p { font-size: .77rem; color: var(--tx2); line-height: 1.5; }
+
+.lp-grid {
+  position: absolute; inset: 0; opacity: .04;
+  background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.lp-stats {
+  display: flex; gap: 28px; margin-top: 48px; position: relative; z-index: 1;
+}
+.lp-stat { }
+.lp-stat-n {
+  font-family: 'Unbounded', sans-serif; font-size: 1.4rem; font-weight: 900; color: var(--txt);
+}
+.lp-stat-n em { font-style: normal; color: var(--pu); }
+.lp-stat-l { font-size: .72rem; color: var(--tx2); margin-top: 2px; }
+
+.right-panel {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 64px;
+}
+
+.form-container {
+  width: 100%; max-width: 460px;
+}
+
+.form-header { margin-bottom: 36px; }
+.form-eyebrow { font-size: .75rem; font-weight: 700; color: var(--pu); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 10px; }
+.form-title { font-family: 'Unbounded', sans-serif; font-size: 1.7rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px; }
+.form-sub { font-size: .86rem; color: var(--tx2); }
+.form-sub a { color: var(--pu); font-weight: 600; }
+.form-sub a:hover { text-decoration: underline; }
+
+.social-btns { display: flex; gap: 10px; margin-bottom: 28px; }
+.soc-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 12px; border-radius: 11px; font-size: .83rem; font-weight: 600;
+  border: 1px solid var(--brd2); background: var(--sur); color: var(--txt);
+  cursor: pointer; transition: all .2s;
+}
+.soc-btn:hover { border-color: var(--pu); background: rgba(139,92,246,.06); }
+.soc-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.divider {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+}
+.divider span { font-size: .75rem; color: var(--tx3); white-space: nowrap; }
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--brd);
+}
+
+.field { margin-bottom: 18px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.flbl { font-size: .72rem; font-weight: 700; color: var(--tx2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; display: block; }
+.finput {
+  width: 100%; background: var(--bg2); border: 1.5px solid var(--brd);
+  border-radius: 11px; padding: 13px 15px; font-size: .9rem;
+  color: var(--txt); outline: none; transition: all .2s;
+  font-family: 'Inter', sans-serif;
+}
+.finput::placeholder { color: var(--tx3); }
+.finput:focus { border-color: var(--pu); box-shadow: 0 0 0 3px rgba(139,92,246,.12); background: var(--bg3); }
+.finput.error { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,.12); }
+
+.input-wrap { position: relative; }
+.input-wrap .finput { padding-right: 44px; }
+.eye-btn {
+  position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--tx3);
+  padding: 4px; display: flex; align-items: center; justify-content: center;
+  transition: color .2s;
+}
+.eye-btn:hover { color: var(--tx2); }
+.eye-btn svg { width: 18px; height: 18px; }
+
+.field-hint { font-size: .71rem; color: var(--tx3); margin-top: 6px; }
+.field-hint.err { color: #f87171; }
+
+.pwd-strength { margin-top: 8px; }
+.pwd-bars { display: flex; gap: 4px; margin-bottom: 5px; }
+.pwd-bar { flex: 1; height: 3px; border-radius: 4px; background: var(--brd); transition: background .3s; }
+.pwd-bar.s1 { background: #f87171; }
+.pwd-bar.s2 { background: #fb923c; }
+.pwd-bar.s3 { background: #facc15; }
+.pwd-bar.s4 { background: #4ade80; }
+.pwd-lbl { font-size: .7rem; color: var(--tx3); }
+
+.phone-wrap {
+  display: flex; background: var(--bg2); border: 1.5px solid var(--brd);
+  border-radius: 11px; overflow: hidden; transition: all .2s;
+}
+.phone-wrap:focus-within { border-color: var(--pu); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+.flag-sel {
+  background: transparent; border: none; border-right: 1px solid var(--brd);
+  padding: 0 14px; color: var(--tx2); font-size: .82rem;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  font-family: 'Inter', sans-serif; white-space: nowrap; flex-shrink: 0;
+}
+.phone-wrap input {
+  flex: 1; background: transparent; border: none;
+  padding: 13px 15px; font-size: .9rem; color: var(--txt);
+  outline: none; font-family: 'Inter', sans-serif;
+}
+.phone-wrap input::placeholder { color: var(--tx3); }
+
+.check-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 22px; }
+.check-row input[type="checkbox"] { accent-color: var(--pu); margin-top: 3px; flex-shrink: 0; width: 15px; height: 15px; cursor: pointer; }
+.check-row span { font-size: .77rem; color: var(--tx2); line-height: 1.55; }
+.check-row a { color: var(--pu); }
+
+.submit-btn {
+  width: 100%; background: var(--pu); color: #fff;
+  border-radius: 12px; padding: 15px; font-family: 'Unbounded', sans-serif;
+  font-weight: 700; font-size: .88rem; letter-spacing: -.3px;
+  transition: all .25s; box-shadow: 0 4px 24px rgba(139,92,246,.4);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  animation: btnPulse 3s ease-in-out infinite;
+}
+@keyframes btnPulse {
+  0%,100% { box-shadow: 0 4px 24px rgba(139,92,246,.4); }
+  50% { box-shadow: 0 4px 40px rgba(139,92,246,.65), 0 0 0 4px rgba(139,92,246,.1); }
+}
+.submit-btn:hover { transform: translateY(-2px); filter: brightness(1.08); animation: none; box-shadow: 0 8px 36px rgba(139,92,246,.55); }
+.submit-btn svg { width: 18px; height: 18px; }
+
+.steps {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 32px;
+}
+.step {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700; flex-shrink: 0;
+  border: 1.5px solid var(--brd2); color: var(--tx3);
+  transition: all .3s;
+}
+.step.act { background: var(--pu); border-color: var(--pu); color: #fff; box-shadow: 0 0 12px var(--pu-g); }
+.step.done { background: #22c55e; border-color: #22c55e; color: #fff; }
+.step-line { flex: 1; height: 1.5px; background: var(--brd); border-radius: 2px; }
+.step-line.done { background: #22c55e; }
+.step-lbl { display: none; }
+
+@media(max-width: 900px) {
+  .left-panel { display: none; }
+  .right-panel { padding: 40px 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="blobs">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <span class="nav-logo-mark">SI</span>
+    Swift<em>Intell</em>
+  </a>
+  <div class="nav-right">
+    <span>Уже есть аккаунт?</span>
+    <a href="/login/"><strong>Войти →</strong></a>
+    <button class="theme-btn" id="themeToggle">
+      <div class="theme-ball" id="themeBall">🌙</div>
+    </button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="left-panel">
+    <div class="lp-grid"></div>
+
+    <div class="lp-badge">
+      <span class="badge-dot"></span>
+      Старт — 15 марта 2026
+    </div>
+
+    <h1 class="lp-title">
+      Начни путь<br>в мир <span class="grd">нейросетей</span><br>сегодня
+    </h1>
+    <p class="lp-desc">
+      Создай аккаунт и получи бесплатный доступ к первым урокам. Уже более 15 000 студентов обучаются с нами.
+    </p>
+
+    <div class="lp-features">
+      <div class="lp-feat">
+        <div class="lp-feat-ico ico-pu">🎓</div>
+        <div class="lp-feat-body">
+          <h5>Доступ к 48+ AI-инструментам</h5>
+          <p>Python, ChatGPT, Midjourney, TensorFlow и другие в одной программе</p>
+        </div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-ico ico-cy">💼</div>
+        <div class="lp-feat-body">
+          <h5>Центр карьеры включён</h5>
+          <p>Помогаем с резюме, собеседованиями и трудоустройством через 200+ партнёров</p>
+        </div>
+      </div>
+      <div class="lp-feat">
+        <div class="lp-feat-ico ico-gn">🔒</div>
+        <div class="lp-feat-body">
+          <h5>Гарантия возврата денег</h5>
+          <p>Если не найдёшь работу — вернём деньги. Это зафиксировано юридически</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-stats">
+      <div class="lp-stat">
+        <div class="lp-stat-n">15К<em>+</em></div>
+        <div class="lp-stat-l">студентов</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-n">200<em>+</em></div>
+        <div class="lp-stat-l">партнёров</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-n">48<em>+</em></div>
+        <div class="lp-stat-l">инструментов</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="form-container">
+
+      <div class="steps">
+        <div class="step act" id="s1">1</div>
+        <div class="step-line" id="l1"></div>
+        <div class="step" id="s2">2</div>
+        <div class="step-line" id="l2"></div>
+        <div class="step" id="s3">3</div>
+      </div>
+
+      <div class="form-header">
+        <div class="form-eyebrow">Регистрация</div>
+        <h2 class="form-title" id="formTitle">Личные данные</h2>
+        <p class="form-sub">Уже зарегистрированы? <a href="/login/">Войти</a></p>
+      </div>
+
+      <div id="step1">
+        <div class="social-btns">
+          <button class="soc-btn" onclick="socialAuth('telegram')">
+            <svg viewBox="0 0 24 24" fill="#2AABEE"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+            Telegram
+          </button>
+        </div>
+
+        <div class="divider"><span>или заполните форму</span></div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="flbl">Имя</label>
+            <input class="finput" type="text" id="fname" placeholder="Александр" autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label class="flbl">Фамилия</label>
+            <input class="finput" type="text" id="lname" placeholder="Иванов" autocomplete="family-name">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="flbl">E-mail</label>
+          <input class="finput" type="email" id="email" placeholder="example@mail.com" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label class="flbl">Телефон</label>
+          <div class="phone-wrap">
+            <button class="flag-sel" id="flagSel">🇺🇿 +998 ▾</button>
+            <input type="tel" id="phone" placeholder="Номер телефона" autocomplete="tel">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="flbl">Telegram (без @)</label>
+          <input class="finput" type="text" id="telegram" placeholder="username" autocomplete="username">
+          <div class="field-hint">Ваш ник в Telegram — сюда придёт код подтверждения</div>
+        </div>
+
+        <button class="submit-btn" onclick="goStep(2)">
+          Продолжить
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <div id="step2" style="display:none">
+        <div class="field">
+          <label class="flbl">Придумайте пароль</label>
+          <div class="input-wrap">
+            <input class="finput" type="password" id="pwd" placeholder="Минимум 8 символов" oninput="checkStrength(this.value)" autocomplete="new-password">
+            <button class="eye-btn" onclick="togglePwd('pwd',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="pwd-strength">
+            <div class="pwd-bars">
+              <div class="pwd-bar" id="b1"></div>
+              <div class="pwd-bar" id="b2"></div>
+              <div class="pwd-bar" id="b3"></div>
+              <div class="pwd-bar" id="b4"></div>
+            </div>
+            <div class="pwd-lbl" id="pwdLbl">Введите пароль</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="flbl">Повторите пароль</label>
+          <div class="input-wrap">
+            <input class="finput" type="password" id="pwd2" placeholder="Повторите пароль" autocomplete="new-password">
+            <button class="eye-btn" onclick="togglePwd('pwd2',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:22px">
+          <button class="submit-btn" style="background:var(--su2);color:var(--txt);box-shadow:none;animation:none;flex:0 0 auto;width:auto;padding:15px 20px;" onclick="goStep(1)">← Назад</button>
+          <button class="submit-btn" onclick="goStep(3)" style="flex:1">
+            Продолжить
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="step3" style="display:none">
+        <p style="font-size:.86rem;color:var(--tx2);margin-bottom:20px;line-height:1.7">Выберите ваше направление. Это поможет нам подобрать нужные курсы.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px" id="goalGrid">
+          <div class="goal-card" onclick="selGoal(this)" data-v="ai-tools">
+            <div style="font-size:1.4rem;margin-bottom:7px">🤖</div>
+            <div style="font-size:.82rem;font-weight:700">AI-инструменты</div>
+            <div style="font-size:.72rem;color:var(--tx2);margin-top:3px">ChatGPT, Midjourney</div>
+          </div>
+          <div class="goal-card" onclick="selGoal(this)" data-v="python">
+            <div style="font-size:1.4rem;margin-bottom:7px">🐍</div>
+            <div style="font-size:.82rem;font-weight:700">Python & ML</div>
+            <div style="font-size:.72rem;color:var(--tx2);margin-top:3px">Программирование, данные</div>
+          </div>
+          <div class="goal-card" onclick="selGoal(this)" data-v="business">
+            <div style="font-size:1.4rem;margin-bottom:7px">📊</div>
+            <div style="font-size:.82rem;font-weight:700">AI для бизнеса</div>
+            <div style="font-size:.72rem;color:var(--tx2);margin-top:3px">Автоматизация, аналитика</div>
+          </div>
+          <div class="goal-card" onclick="selGoal(this)" data-v="design">
+            <div style="font-size:1.4rem;margin-bottom:7px">🎨</div>
+            <div style="font-size:.82rem;font-weight:700">Дизайн & Контент</div>
+            <div style="font-size:.72rem;color:var(--tx2);margin-top:3px">Midjourney, генерация</div>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="agree" checked>
+          <label for="agree"><span>Даю согласие на обработку персональных данных и соглашаюсь с <a href="#">условиями использования</a> и <a href="#">политикой конфиденциальности</a></span></label>
+        </div>
+
+        <div style="display:flex;gap:10px">
+          <button class="submit-btn" style="background:var(--su2);color:var(--txt);box-shadow:none;animation:none;flex:0 0 auto;width:auto;padding:15px 20px;" onclick="goStep(2)">← Назад</button>
+          <button class="submit-btn" id="btnRegister" onclick="register()" style="flex:1">
+            Создать аккаунт 🚀
+          </button>
+        </div>
+      </div>
+
+      <div id="stepOtp" style="display:none;text-align:center;padding:24px 0">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--pu),var(--cy));display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px">📱</div>
+        <h3 style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.2rem;margin-bottom:14px;letter-spacing:-.5px">Код из нашего бота</h3>
+        <ol style="color:var(--tx2);font-size:.85rem;line-height:1.9;margin:0 auto 24px;max-width:340px;text-align:left;padding-left:1.25rem">
+          <li>Нажмите кнопку ниже — откроется наш бот в Telegram.</li>
+          <li>В боте отправьте номер телефона (или нажмите <strong>Start</strong>).</li>
+          <li>Бот пришлёт вам 6-значный код.</li>
+          <li>Введите этот код здесь и нажмите «Подтвердить».</li>
+        </ol>
+        <a id="botLink" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#2AABEE;color:#fff;border-radius:12px;padding:14px 24px;font-weight:700;font-size:.9rem;margin-bottom:28px;transition:all .25s;text-decoration:none">
+          Перейти в бота в Telegram →
+        </a>
+        <div class="field" style="text-align:left;max-width:200px;margin:0 auto 16px">
+          <label class="flbl">Код из бота (6 цифр)</label>
+          <input class="finput" type="text" id="otpCode" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code">
+          <div class="field-hint err" id="otpErr" style="display:none"></div>
+        </div>
+        <button class="submit-btn" id="btnVerify" onclick="verifyOtp()" style="max-width:220px;margin:0 auto">
+          Подтвердить и войти
+        </button>
+      </div>
+
+      <div id="stepSuccess" style="display:none;text-align:center;padding:24px 0">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px">✓</div>
+        <h3 style="font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.3rem;margin-bottom:10px;letter-spacing:-.5px">Аккаунт создан!</h3>
+        <p style="color:var(--tx2);font-size:.86rem;line-height:1.7;margin-bottom:28px">Проверьте почту — мы отправили письмо для подтверждения. Добро пожаловать в Swift Intell!</p>
+        <a href="/student/profile/" style="display:inline-flex;align-items:center;gap:8px;background:var(--pu);color:#fff;border-radius:12px;padding:14px 32px;font-family:'Unbounded',sans-serif;font-weight:700;font-size:.85rem;box-shadow:0 4px 24px rgba(139,92,246,.4);transition:all .25s">
+          Перейти в профиль →
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.goal-card {
+  background: var(--sur); border: 1.5px solid var(--brd);
+  border-radius: 14px; padding: 18px 14px; cursor: pointer;
+  transition: all .2s; text-align: center;
+}
+.goal-card:hover { border-color: rgba(139,92,246,.4); background: rgba(139,92,246,.05); transform: translateY(-2px); }
+.goal-card.sel { border-color: var(--pu); background: rgba(139,92,246,.1); box-shadow: 0 0 0 1px var(--pu); }
+</style>
+
+<script>
+const html = document.documentElement;
+const ball = document.getElementById('themeBall');
+document.getElementById('themeToggle').onclick = () => {
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  ball.textContent = dark ? '🌙' : '☀️';
+};
+
+const titles = ['Личные данные', 'Создайте пароль', 'Ваша цель'];
+function goStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).style.display = i===n ? '' : 'none';
+    const s = document.getElementById('s'+i);
+    if(i < n) { s.className = 'step done'; s.innerHTML = '✓'; }
+    else if(i === n) { s.className = 'step act'; s.textContent = i; }
+    else { s.className = 'step'; s.textContent = i; }
+    if(i < 3) document.getElementById('l'+i).className = i < n ? 'step-line done' : 'step-line';
+  });
+  document.getElementById('formTitle').textContent = titles[n-1];
+}
+
+function checkStrength(val) {
+  let score = 0;
+  if(val.length >= 8) score++;
+  if(/[A-Z]/.test(val)) score++;
+  if(/[0-9]/.test(val)) score++;
+  if(/[^A-Za-z0-9]/.test(val)) score++;
+  const cls = ['','s1','s2','s3','s4'];
+  const lbl = ['Введите пароль','Слабый','Средний','Хороший','Надёжный'];
+  [1,2,3,4].forEach(i => {
+    document.getElementById('b'+i).className = 'pwd-bar' + (i <= score ? ' '+cls[score] : '');
+  });
+  document.getElementById('pwdLbl').textContent = lbl[score];
+}
+
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.innerHTML = show
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+}
+
+function selGoal(el) {
+  document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function socialAuth(p) { alert('Авторизация через ' + p + ' — в разработке'); }
+
+let registerSessionId = null;
+
+/** Номер в формате E.164: + и только цифры (для phonenumber_field) */
+function getPhoneNumber() {
+  const flagText = document.getElementById('flagSel').textContent;
+  const ccMatch = flagText.match(/\+\d+/);
+  const countryCode = ccMatch ? ccMatch[0].replace(/\D/g, '') : '7';
+  const localDigits = (document.getElementById('phone').value || '').replace(/\D/g, '');
+  const fullDigits = (countryCode + localDigits).replace(/^0+/, '');
+  return fullDigits ? '+' + fullDigits : '';
+}
+
+/** Собрать текст ошибки из ответа API (DRF validation errors) */
+function getApiErrorText(data) {
+  if (!data || typeof data !== 'object') return 'Ошибка регистрации';
+  if (data.detail) return typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+  if (data.error) return data.error;
+  const parts = [];
+  for (const [key, val] of Object.entries(data)) {
+    const msg = Array.isArray(val) ? val[0] : val;
+    if (msg) parts.push((key === 'phone_number' ? 'Телефон: ' : key === 'telegram_username' ? 'Telegram: ' : '') + msg);
+  }
+  return parts.length ? parts.join('. ') : 'Ошибка регистрации';
+}
+
+async function register() {
+  if(!document.getElementById('agree').checked) {
+    alert('Пожалуйста, примите условия использования');
+    return;
+  }
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  const telegram = (document.getElementById('telegram').value || '').trim().replace(/^@/,'');
+  const pwd = document.getElementById('pwd').value;
+  const pwd2 = document.getElementById('pwd2').value;
+  if(!fname || !lname) {
+    alert('Заполните имя и фамилию');
+    return;
+  }
+  if(!telegram) {
+    alert('Укажите ваш Telegram (без @) — туда придёт код подтверждения');
+    return;
+  }
+  if(pwd.length < 8) {
+    alert('Пароль не менее 8 символов');
+    return;
+  }
+  if(pwd !== pwd2) {
+    alert('Пароли не совпадают');
+    return;
+  }
+  const phone = getPhoneNumber();
+  if(!phone || phone.length < 11) {
+    alert('Введите корректный номер телефона (например 90 123 45 67)');
+    return;
+  }
+  const btn = document.getElementById('btnRegister');
+  btn.disabled = true;
+  btn.textContent = 'Отправка...';
+  try {
+    const payload = {
+      first_name: fname,
+      surname: lname,
+      last_name: '',
+      phone_number: phone,
+      telegram_username: telegram,
+      password: pwd
+    };
+    const resp = await fetch('/api/v1/auth/register/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json().catch(() => ({}));
+    if(resp.ok) {
+      registerSessionId = data.session_id;
+      document.getElementById('botLink').href = data.bot_link || '#';
+      document.querySelector('.steps').style.display = 'none';
+      [1,2,3].forEach(i => document.getElementById('step'+i).style.display = 'none');
+      document.getElementById('stepSuccess').style.display = 'none';
+      document.getElementById('stepOtp').style.display = '';
+      document.getElementById('formTitle').textContent = 'Код из Telegram';
+      document.getElementById('otpCode').value = '';
+      document.getElementById('otpErr').style.display = 'none';
+    } else {
+      alert(getApiErrorText(data));
+    }
+  } catch(e) {
+    alert('Ошибка соединения с сервером. Попробуйте позже.');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Создать аккаунт 🚀';
+}
+
+async function verifyOtp() {
+  const code = (document.getElementById('otpCode').value || '').trim();
+  const errEl = document.getElementById('otpErr');
+  if(!registerSessionId) {
+    errEl.textContent = 'Сессия не найдена. Начните регистрацию заново.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(code.length !== 6 || !/^\d+$/.test(code)) {
+    errEl.textContent = 'Введите 6 цифр кода из бота';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  const btn = document.getElementById('btnVerify');
+  btn.disabled = true;
+  btn.textContent = 'Проверка...';
+  try {
+    const resp = await fetch('/api/v1/auth/verify-otp/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: registerSessionId, code: code })
+    });
+    const data = await resp.json();
+    if(resp.ok) {
+      localStorage.setItem('access', data.access);
+      localStorage.setItem('refresh', data.refresh);
+      window.location.href = '/student/profile/';
+      return;
+    }
+    errEl.textContent = data.error || data.detail || 'Неверный код. Попробуйте ещё раз.';
+    errEl.style.display = 'block';
+  } catch(e) {
+    errEl.textContent = 'Ошибка соединения. Попробуйте позже.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Подтвердить и войти';
+}
+
+const flags = [
+  { f:'🇺🇿', c:'+998', n:'Узбекистан' },
+  { f:'🇷🇺', c:'+7',   n:'Россия' },
+  { f:'🇰🇿', c:'+7',   n:'Казахстан' },
+  { f:'🇺🇦', c:'+380', n:'Украина' },
+  { f:'🇰🇬', c:'+996', n:'Кыргызстан' },
+];
+let fi = 0;
+document.getElementById('flagSel').onclick = () => {
+  fi = (fi+1) % flags.length;
+  const f = flags[fi];
+  document.getElementById('flagSel').textContent = f.f + ' ' + f.c + ' ▾';
+};
+
+document.getElementById('otpCode').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') verifyOtp();
+});
+</script>
+</body>
+</html>

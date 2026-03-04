@@ -9,10 +9,14 @@ from WebSite.models.worker_model.workers import Teacher
 from WebSite.models.student_model.student import Student
 from WebSite.models.student_model.attandance import Attendance, StudentProgress
 from WebSite.models.study.lesson import Course, Lesson, SubLesson, Task
+from WebSite.models.study.lesson_comment import LessonComment
+from WebSite.models.study.submission import TaskSubmission
 from WebSite.models.study.grade_model import Grade
 from WebSite.models.study.tarif_system import Tariff
 from WebSite.models.group.groups import Group
 from WebSite.models.pay_system.payment import Payment, StudentSubscription
+from WebSite.models.notifications import Notification
+from WebSite.models.news_model import News
 
 User = get_user_model()
 
@@ -250,6 +254,50 @@ class TaskAdmin(admin.ModelAdmin):
         return obj.description[:70] + ('…' if len(obj.description) > 70 else '')
 
 
+@admin.register(LessonComment)
+class LessonCommentAdmin(admin.ModelAdmin):
+    list_display  = ['lesson', 'student', 'short_text', 'file_link', 'created_at']
+    list_filter   = ['lesson__course']
+    search_fields = ['text', 'lesson__title']
+    readonly_fields = ['created_at']
+    ordering      = ['-created_at']
+    list_per_page = 30
+
+    @admin.display(description='Комментарий')
+    def short_text(self, obj):
+        if not obj.text:
+            return '—'
+        return obj.text[:60] + ('…' if len(obj.text) > 60 else '')
+
+    @admin.display(description='Файл')
+    def file_link(self, obj):
+        if obj.file:
+            return format_html('<a href="{}" target="_blank">Скачать</a>', obj.file.url)
+        return '—'
+
+
+@admin.register(TaskSubmission)
+class TaskSubmissionAdmin(admin.ModelAdmin):
+    list_display  = ['student', 'task', 'short_text', 'file_link', 'created_at']
+    list_filter   = ['task__sub_lesson__lesson__course']
+    search_fields = ['text', 'student__user__email']
+    readonly_fields = ['created_at']
+    ordering      = ['-created_at']
+    list_per_page = 30
+
+    @admin.display(description='Ответ')
+    def short_text(self, obj):
+        if not obj.text:
+            return '—'
+        return obj.text[:50] + ('…' if len(obj.text) > 50 else '')
+
+    @admin.display(description='Файл')
+    def file_link(self, obj):
+        if obj.file:
+            return format_html('<a href="{}" target="_blank">Скачать</a>', obj.file.url)
+        return '—'
+
+
 # ─────────────────────────────────────────
 # GRADE
 # ─────────────────────────────────────────
@@ -384,6 +432,36 @@ class PaymentAdmin(admin.ModelAdmin):
     def confirm_payments(self, request, queryset):
         updated = queryset.filter(is_confirmed=False).update(is_confirmed=True)
         self.message_user(request, f'Подтверждено платежей: {updated}')
+
+
+# ─────────────────────────────────────────
+# NOTIFICATIONS & NEWS
+# ─────────────────────────────────────────
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display  = ['id', 'student', 'kind_badge', 'title_short', 'is_read', 'created_at']
+    list_filter   = ['kind', 'is_read']
+    search_fields = ['title', 'message', 'student__user__email']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering      = ['-created_at']
+    list_per_page = 40
+
+    @admin.display(description='Тип')
+    def kind_badge(self, obj):
+        return obj.get_kind_display()
+
+    @admin.display(description='Заголовок')
+    def title_short(self, obj):
+        return (obj.title or '')[:50] + ('…' if len(obj.title or '') > 50 else '')
+
+
+@admin.register(News)
+class NewsAdmin(admin.ModelAdmin):
+    list_display  = ['title', 'is_published', 'created_at']
+    list_filter   = ['is_published']
+    search_fields = ['title', 'content']
+    ordering      = ['-created_at']
 
 
 # ─────────────────────────────────────────

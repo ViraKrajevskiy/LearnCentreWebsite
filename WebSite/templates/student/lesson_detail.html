@@ -1,0 +1,472 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block page_title %}Урок{% endblock %}
+
+{% block content %}
+<div class="student-page">
+
+  <!-- BREADCRUMB -->
+  <nav style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-secondary);margin-bottom:24px;flex-wrap:wrap">
+    <a href="{% url 'student_home' %}" style="color:var(--accent);font-weight:600;text-decoration:none">Главная</a>
+    <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+    <a href="{% url 'my-courses' %}" style="color:var(--accent);font-weight:600;text-decoration:none">Мои курсы</a>
+    <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+    <span>{{ lesson.course.title }}</span>
+    <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+    <span style="color:var(--text-primary);font-weight:600">{{ lesson.title }}</span>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- LEFT: LESSON CONTENT -->
+    <div class="col-lg-8">
+
+      <!-- LESSON HEADER -->
+      <div class="card-ai card-glow animate-on-scroll mb-4" style="padding-bottom:0;overflow:hidden">
+        <div style="background:var(--ai-gradient);padding:32px 28px;margin:-28px -28px 24px;position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 80% 20%,rgba(255,255,255,.12),transparent 60%);pointer-events:none"></div>
+          <div style="position:relative;z-index:1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+              <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:rgba(255,255,255,.2);color:#fff;padding:4px 12px;border-radius:50px;backdrop-filter:blur(6px)">
+                {{ lesson.course.title }}
+              </span>
+              <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;background:rgba(255,255,255,.15);color:#fff;padding:4px 12px;border-radius:50px;backdrop-filter:blur(6px)">
+                Группа: {{ lesson.group.name }}
+              </span>
+              {% if attendance %}
+              <span style="font-size:.7rem;font-weight:700;background:rgba(16,185,129,.3);color:#fff;padding:4px 12px;border-radius:50px">
+                ✓ Посещение зачтено
+              </span>
+              {% endif %}
+            </div>
+            <h1 style="font-size:clamp(1.3rem,3vw,1.9rem);font-weight:800;color:#fff;line-height:1.2;margin-bottom:10px">{{ lesson.title }}</h1>
+            <div style="display:flex;align-items:center;gap:18px;color:rgba(255,255,255,.75);font-size:.82rem;flex-wrap:wrap">
+              <span><i class="bi bi-calendar3 me-1"></i>{{ lesson.scheduled_at|date:"d E Y" }}</span>
+              <span><i class="bi bi-clock me-1"></i>{{ lesson.scheduled_at|date:"H:i" }}</span>
+              <span><i class="bi bi-collection-play me-1"></i>{{ lesson.sub_lessons.count }} подурок{{ lesson.sub_lessons.count|pluralize:",а,ов" }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LESSON PROGRESS BAR -->
+        <div style="padding:0 28px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:.8rem;font-weight:600;color:var(--text-secondary)">Прогресс урока</span>
+            <span style="font-size:.8rem;font-weight:700;color:var(--accent)" id="lessonPctLabel">0%</span>
+          </div>
+          <div class="progress-ai" style="height:8px;border-radius:6px">
+            <div class="progress-bar" id="lessonPct" role="progressbar" style="width:0%;border-radius:6px;transition:width .6s ease"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEO BLOCK (top) — YouTube показывается прямо на сайте -->
+      <div class="card-ai card-glow animate-on-scroll mb-4">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-play-circle-fill" style="color:var(--accent)"></i> Видео урока
+        </h4>
+        <p style="font-size:.8rem;color:var(--text-secondary);margin-bottom:16px;">Видео с YouTube воспроизводится прямо на этой странице.</p>
+        {% if sub_lessons_videos %}
+          {% if sub_lessons_videos|length > 1 %}
+          <div class="d-flex gap-2 mb-3 flex-wrap" id="videoTabs">
+            {% for item in sub_lessons_videos %}
+            <button type="button" class="btn btn-outline-primary btn-sm video-tab" data-embed-url="{{ item.embed_url|default:'' }}" data-content-link="{{ item.content_link|default:'' }}"
+              style="border-radius:10px;font-size:.8rem;{% if forloop.first %}background:var(--ai-subtle);border-color:var(--accent);color:var(--accent){% endif %}"
+              onclick="switchVideo(this)">
+              Часть {{ item.sub.order }}
+            </button>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div style="position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;" id="videoFrameContainer">
+            {% with first=first_video %}
+            {% if first.embed_url %}
+            <iframe id="videoFrame" src="{{ first.embed_url }}" style="width:100%;height:100%;border:none" allowfullscreen
+              referrerpolicy="strict-origin-when-cross-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            {% elif first.content_link %}
+            <div id="videoFrame" class="video-placeholder" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1f2e,#0c0f1a);gap:16px;" data-link="{{ first.content_link }}">
+              <div style="width:64px;height:64px;border-radius:50%;background:var(--ai-gradient);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="window.open('{{ first.content_link }}','_blank')">
+                <i class="bi bi-play-fill" style="font-size:1.6rem;color:#fff;margin-left:4px"></i>
+              </div>
+              <a href="{{ first.content_link }}" target="_blank" style="font-size:.82rem;color:rgba(255,255,255,.6);text-decoration:none">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Открыть материал
+              </a>
+            </div>
+            {% else %}
+            <div id="videoFrame" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--ai-subtle);color:var(--text-secondary);">
+              <span><i class="bi bi-camera-video-off me-2"></i>Видео не добавлено</span>
+            </div>
+            {% endif %}
+            {% endwith %}
+          </div>
+        {% else %}
+        <div style="aspect-ratio:16/9;background:var(--ai-subtle);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary)">
+          <span><i class="bi bi-camera-video-off me-2"></i>Подуроки не добавлены</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- ДЗ: задания добавляют только ментор/учитель; студент сдаёт ответ и/или файл здесь -->
+      <div class="card-ai card-glow animate-on-scroll mb-4">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-clipboard-check" style="color:var(--accent)"></i> Задания к уроку (домашняя работа)
+        </h4>
+        <p style="font-size:.8rem;color:var(--text-secondary);margin-bottom:16px;">Задания добавляют преподаватели. Ниже — ваши сдачи: текст ответа и/или прикреплённый файл.</p>
+        {% if lesson_tasks %}
+          <div class="d-flex flex-column gap-4">
+            {% for task, sub, sub_list in lesson_tasks_with_subs %}
+            <div class="task-item" id="task-{{ task.id }}"
+                 style="padding:18px;border-radius:12px;border:1.5px solid var(--border);background:var(--ai-subtle);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);background:rgba(99,102,241,.12);padding:4px 10px;border-radius:50px">
+                  {{ sub.title }} · Задание
+                </span>
+                <span style="font-size:.7rem;color:var(--text-secondary);background:var(--border);padding:4px 10px;border-radius:50px">
+                  Макс. балл: {{ task.max_score }}
+                </span>
+              </div>
+              <p style="font-size:.9rem;line-height:1.6;margin:0 0 14px;color:var(--text-primary)">{{ task.description }}</p>
+
+              {% if sub_list %}
+              <div class="mb-3">
+                <div style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:10px;">
+                  <i class="bi bi-clock-history me-1"></i>Ваши отправки ({{ sub_list|length }}/3)
+                </div>
+                {% for sent in sub_list %}
+                <div class="p-3 rounded-3 mb-2" style="background:var(--bg-secondary);border:1px solid var(--border);">
+                  <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:6px;">Отправка {{ forloop.counter }} — {{ sent.created_at|date:"d.m.Y H:i" }}</div>
+                  {% if sent.text %}<p style="font-size:.85rem;margin:0 0 6px;color:var(--text-primary);white-space:pre-wrap;">{{ sent.text }}</p>{% endif %}
+                  {% if sent.file %}<a href="{{ sent.file.url }}" target="_blank" rel="noopener" style="font-size:.8rem;color:var(--accent);"><i class="bi bi-paperclip me-1"></i>Файл</a>{% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if sub_list|length >= 3 %}
+              <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px;">
+                <i class="bi bi-info-circle me-1"></i>Достигнут лимит пересдач (3). Новые отправки недоступны.
+              </p>
+              {% else %}
+              <form id="task-form-{{ task.id }}" class="task-submit-form" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px;">
+                {% csrf_token %}
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+                  <textarea name="text" placeholder="Напишите ваш ответ здесь..."
+                    style="flex:1;min-width:220px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;font-size:.85rem;resize:vertical;min-height:80px;outline:none"
+                    onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+                    id="answer-{{ task.id }}"></textarea>
+                  <button type="submit" class="btn btn-ai" style="padding:10px 20px;font-size:.85rem">
+                    <i class="bi bi-send me-1"></i>Пересдать ({{ sub_list|length }}/3)
+                  </button>
+                </div>
+                <div class="file-input-wrap">
+                  <label for="file-{{ task.id }}" class="btn-choose-file">
+                    <i class="bi bi-paperclip"></i> Выбрать файл
+                  </label>
+                  <input type="file" name="file" id="file-{{ task.id }}" accept=".pdf,.doc,.docx,.txt,.zip,.rar,.png,.jpg,.jpeg" data-filename-id="file-name-{{ task.id }}">
+                  <span class="file-input-filename" id="file-name-{{ task.id }}"></span>
+                </div>
+              </form>
+              {% endif %}
+
+              <div id="task-msg-{{ task.id }}" style="display:none;margin-top:10px;font-size:.8rem;color:#10b981">
+                <i class="bi bi-check-circle me-1"></i>Ответ отправлен!
+              </div>
+              <div id="task-err-{{ task.id }}" style="display:none;margin-top:10px;font-size:.8rem;color:#ef4444"></div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+        <p style="color:var(--text-secondary);margin:0">Заданий к этому уроку пока нет.</p>
+        {% endif %}
+      </div>
+
+      <!-- COMMENTS SECTION (студенты пишут комментарии и могут приложить файл; описание урока и задания добавляют только ментор/учитель) -->
+      <div class="card-ai card-glow animate-on-scroll mb-4">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-chat-left-text" style="color:var(--accent)"></i> Комментарии к уроку
+        </h4>
+        <p style="font-size:.8rem;color:var(--text-secondary);margin-bottom:16px;">Здесь вы можете написать комментарий или приложить файл. Задания к уроку добавляют только преподаватели — они отображаются выше в блоке «Задания к уроку».</p>
+        <div id="commentsList" style="margin-bottom:16px;">
+          {% for comment in lesson_comments %}
+          <div class="comment-item mb-3 p-3 rounded-3" style="background:var(--ai-subtle);border:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+              <span style="font-weight:600;font-size:.88rem;color:var(--text-primary)">
+                {% if comment.student.user %}{{ comment.student.user.surname }} {{ comment.student.user.first_name }}{% else %}Студент{% endif %}
+              </span>
+              <span style="font-size:.75rem;color:var(--text-secondary)">{{ comment.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            {% if comment.text %}
+            <p style="font-size:.85rem;margin:0 0 8px;color:var(--text-primary);white-space:pre-wrap">{{ comment.text }}</p>
+            {% endif %}
+            {% if comment.file %}
+            <a href="{{ comment.file.url }}" target="_blank" rel="noopener" style="font-size:.82rem;color:var(--accent);">
+              <i class="bi bi-paperclip me-1"></i>Прикреплённый файл
+            </a>
+            {% endif %}
+          </div>
+          {% empty %}
+          <p id="commentsPlaceholder" style="font-size:.85rem;color:var(--text-secondary);margin:0">Пока нет комментариев.</p>
+          {% endfor %}
+        </div>
+        <form id="lessonCommentForm" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px;">
+          {% csrf_token %}
+          <textarea name="text" id="lessonComment" placeholder="Напишите комментарий к уроку..."
+            style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;font-size:.85rem;resize:vertical;min-height:100px;outline:none"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          <div class="file-input-wrap">
+            <label for="lessonCommentFile" class="btn-choose-file">
+              <i class="bi bi-paperclip"></i> Выбрать файл
+            </label>
+            <input type="file" name="file" id="lessonCommentFile" accept=".pdf,.doc,.docx,.txt,.zip,.rar,.png,.jpg,.jpeg" data-filename-id="lessonCommentFileName">
+            <span class="file-input-filename" id="lessonCommentFileName"></span>
+          </div>
+          <button type="submit" class="btn btn-ai align-self-start">
+            <i class="bi bi-send me-1"></i>Отправить комментарий
+          </button>
+        </form>
+        <div id="commentMsg" style="display:none;margin-top:10px;font-size:.8rem;color:#10b981"></div>
+        <div id="commentErr" style="display:none;margin-top:10px;font-size:.8rem;color:#ef4444"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="col-lg-4">
+
+      <!-- LESSON INFO -->
+      <div class="card-ai card-glow animate-on-scroll mb-4">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-info-circle" style="color:var(--accent)"></i> О занятии
+        </h4>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;color:var(--text-secondary)">Курс</span>
+            <span style="font-size:.82rem;font-weight:600;text-align:right;max-width:180px">{{ lesson.course.title }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;color:var(--text-secondary)">Группа</span>
+            <span style="font-size:.82rem;font-weight:600">{{ lesson.group.name }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;color:var(--text-secondary)">Дата</span>
+            <span style="font-size:.82rem;font-weight:600">{{ lesson.scheduled_at|date:"d.m.Y" }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;color:var(--text-secondary)">Время</span>
+            <span style="font-size:.82rem;font-weight:600">{{ lesson.scheduled_at|date:"H:i" }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:.82rem;color:var(--text-secondary)">Подуроков</span>
+            <span class="badge-ai" style="font-size:.78rem;padding:4px 10px">{{ lesson.sub_lessons.count }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+            <span style="font-size:.82rem;color:var(--text-secondary)">Посещение</span>
+            {% if attendance and attendance.is_present %}
+            <span style="font-size:.78rem;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);padding:4px 10px;border-radius:50px">✓ Присутствовал</span>
+            {% elif attendance and not attendance.is_present %}
+            <span style="font-size:.78rem;font-weight:700;color:#ef4444;background:rgba(239,68,68,.12);padding:4px 10px;border-radius:50px">✗ Отсутствовал</span>
+            {% else %}
+            <span style="font-size:.78rem;color:var(--text-secondary)">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- OTHER LESSONS IN COURSE -->
+      <div class="card-ai card-glow animate-on-scroll mb-4">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-list-ul" style="color:var(--accent)"></i> Другие уроки курса
+        </h4>
+        {% for l in other_lessons %}
+        <a href="{% url 'lesson_detail' l.id %}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all .2s;background:{% if l.id == lesson.id %}var(--ai-subtle){% else %}transparent{% endif %};border:1.5px solid {% if l.id == lesson.id %}var(--accent){% else %}transparent{% endif %}"
+           onmouseover="if({{ l.id }}!={{ lesson.id }})this.style.background='var(--ai-subtle)'" onmouseout="if({{ l.id }}!={{ lesson.id }})this.style.background='transparent'">
+          <div style="width:32px;height:32px;min-width:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;
+            {% if l.id == lesson.id %}background:var(--ai-gradient);color:#fff{% else %}background:var(--ai-subtle);color:var(--accent){% endif %}">
+            {{ forloop.counter }}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.83rem;font-weight:{% if l.id == lesson.id %}700{% else %}500{% endif %};color:{% if l.id == lesson.id %}var(--text-primary){% else %}var(--text-secondary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              {{ l.title }}
+            </div>
+            <div style="font-size:.7rem;color:var(--text-secondary)">{{ l.scheduled_at|date:"d.m" }}</div>
+          </div>
+          {% if l.id == lesson.id %}
+          <i class="bi bi-arrow-right" style="color:var(--accent);font-size:.8rem;flex-shrink:0"></i>
+          {% endif %}
+        </a>
+        {% empty %}
+        <p style="font-size:.82rem;color:var(--text-secondary)">Других уроков нет</p>
+        {% endfor %}
+      </div>
+
+      <!-- MY GRADES FOR THIS LESSON -->
+      {% if lesson_grades %}
+      <div class="card-ai card-glow animate-on-scroll">
+        <h4 style="font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+          <i class="bi bi-trophy" style="color:var(--accent)"></i> Мои оценки
+        </h4>
+        {% for grade in lesson_grades %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:.83rem;font-weight:600">{{ grade.get_grade_display }}</div>
+            <div style="font-size:.7rem;color:var(--text-secondary)">{{ grade.created_at|date:"d.m.Y" }}</div>
+          </div>
+          <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.92rem;
+            {% if grade.grade_value >= 80 %}background:rgba(16,185,129,.15);color:#10b981
+            {% elif grade.grade_value >= 60 %}background:rgba(245,158,11,.15);color:#f59e0b
+            {% else %}background:rgba(239,68,68,.15);color:#ef4444{% endif %}">
+            {{ grade.grade_value }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- NAVIGATION BETWEEN LESSONS -->
+  <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-top:8px">
+    {% if prev_lesson %}
+    <a href="{% url 'lesson_detail' prev_lesson.id %}" class="btn btn-ai" style="display:flex;align-items:center;gap:8px;font-size:.85rem;padding:12px 22px;background:var(--ai-subtle);color:var(--accent);border:1.5px solid var(--border);border-radius:12px;text-decoration:none;font-weight:700;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <i class="bi bi-arrow-left"></i> {{ prev_lesson.title|truncatechars:30 }}
+    </a>
+    {% else %}<div></div>{% endif %}
+
+    {% if next_lesson %}
+    <a href="{% url 'lesson_detail' next_lesson.id %}" class="btn btn-ai" style="display:flex;align-items:center;gap:8px;font-size:.85rem;padding:12px 22px;background:var(--ai-gradient);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;transition:all .2s;box-shadow:0 4px 16px rgba(99,102,241,.3)">
+      {{ next_lesson.title|truncatechars:30 }} <i class="bi bi-arrow-right"></i>
+    </a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var bar = document.getElementById('lessonPct');
+  var lbl = document.getElementById('lessonPctLabel');
+  if (bar) bar.style.width = '0%';
+  if (lbl) lbl.textContent = '0%';
+  document.querySelectorAll('input[type="file"][data-filename-id]').forEach(function(input) {
+    input.addEventListener('change', function() {
+      var span = document.getElementById(input.getAttribute('data-filename-id'));
+      if (span) span.textContent = this.files && this.files.length ? this.files[0].name : '';
+    });
+  });
+  document.querySelectorAll('.task-submit-form').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var taskId = form.id.replace('task-form-', '');
+      submitTask(parseInt(taskId, 10));
+    });
+  });
+  var commentForm = document.getElementById('lessonCommentForm');
+  if (commentForm) {
+    commentForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      submitComment();
+    });
+  }
+});
+
+function switchVideo(btn) {
+  var embedUrl = btn.getAttribute('data-embed-url');
+  var contentLink = btn.getAttribute('data-content-link') || '';
+  var container = document.getElementById('videoFrameContainer');
+  if (!container) return;
+  document.querySelectorAll('.video-tab').forEach(function(b) {
+    b.style.background = '';
+    b.style.borderColor = '';
+    b.style.color = '';
+  });
+  btn.style.background = 'var(--ai-subtle)';
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.color = 'var(--accent)';
+  if (embedUrl) {
+    var safeUrl = embedUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    container.innerHTML = '<iframe id="videoFrame" src="' + safeUrl + '" style="width:100%;height:100%;border:none" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>';
+  } else if (contentLink) {
+    var esc = contentLink.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    container.innerHTML = '<div id="videoFrame" class="video-placeholder" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1f2e,#0c0f1a);gap:16px;">' +
+      '<div style="width:64px;height:64px;border-radius:50%;background:var(--ai-gradient);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="window.open(\'' + esc + '\',\'_blank\')"><i class="bi bi-play-fill" style="font-size:1.6rem;color:#fff;margin-left:4px"></i></div>' +
+      '<a href="' + esc + '" target="_blank" style="font-size:.82rem;color:rgba(255,255,255,.6);text-decoration:none"><i class="bi bi-box-arrow-up-right me-1"></i>Открыть материал</a></div>';
+  }
+}
+
+function submitTask(taskId) {
+  var form = document.getElementById('task-form-' + taskId);
+  var textEl = document.getElementById('answer-' + taskId);
+  var fileEl = document.getElementById('file-' + taskId);
+  var text = textEl ? textEl.value.trim() : '';
+  var hasFile = fileEl && fileEl.files && fileEl.files.length > 0;
+  if (!text && !hasFile) {
+    if (textEl) { textEl.style.borderColor = '#ef4444'; setTimeout(function() { textEl.style.borderColor = 'var(--border)'; }, 1500); }
+    return;
+  }
+  var msg = document.getElementById('task-msg-' + taskId);
+  var errEl = document.getElementById('task-err-' + taskId);
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  var fd = new FormData(form);
+  fd.set('text', text);
+  if (hasFile) fd.set('file', fileEl.files[0]);
+  fetch('/student/task/' + taskId + '/submit/', {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-CSRFToken': document.querySelector('#task-form-' + taskId + ' [name=csrfmiddlewaretoken]').value }
+  }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+    .then(function(result) {
+      if (result.ok) {
+        if (msg) { msg.style.display = 'block'; msg.innerHTML = '<i class="bi bi-check-circle me-1"></i>' + (result.data.message || 'Ответ отправлен!'); }
+        form.reset();
+        window.location.reload();
+      } else {
+        if (errEl) { errEl.textContent = result.data.error || 'Ошибка отправки'; errEl.style.display = 'block'; }
+      }
+    }).catch(function() {
+      if (errEl) { errEl.textContent = 'Ошибка сети'; errEl.style.display = 'block'; }
+    });
+}
+
+function submitComment() {
+  var form = document.getElementById('lessonCommentForm');
+  var ta = document.getElementById('lessonComment');
+  var fileEl = document.getElementById('lessonCommentFile');
+  var text = ta ? ta.value.trim() : '';
+  var hasFile = fileEl && fileEl.files && fileEl.files.length > 0;
+  if (!text && !hasFile) {
+    if (ta) { ta.style.borderColor = '#ef4444'; setTimeout(function() { ta.style.borderColor = 'var(--border)'; }, 1500); }
+    return;
+  }
+  var msg = document.getElementById('commentMsg');
+  var errEl = document.getElementById('commentErr');
+  if (msg) { msg.style.display = 'none'; }
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  var fd = new FormData(form);
+  fd.set('text', text);
+  if (hasFile) fd.set('file', fileEl.files[0]);
+  var lessonId = {{ lesson.id }};
+  fetch('/student/lesson/' + lessonId + '/comment/', {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value }
+  }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+    .then(function(result) {
+      if (result.ok) {
+        if (msg) { msg.textContent = (result.data.message || 'Комментарий добавлен!'); msg.style.display = 'block'; }
+        form.reset();
+        window.location.reload();
+      } else {
+        if (errEl) { errEl.textContent = result.data.error || 'Ошибка'; errEl.style.display = 'block'; }
+      }
+    }).catch(function() {
+      if (errEl) { errEl.textContent = 'Ошибка сети'; errEl.style.display = 'block'; }
+    });
+}
+</script>
+{% endblock %}

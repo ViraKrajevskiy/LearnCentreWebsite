@@ -13,70 +13,49 @@
     </div>
 
     <div class="row g-4">
+        {% for course in courses %}
         <div class="col-md-6 col-lg-4">
-            <div class="card-ai card-glow h-100 animate-on-scroll">
-                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
-                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
-                        <i class="bi bi-code-slash text-white" style="font-size: 4rem; opacity: 0.9;"></i>
+            <a href="{% url 'student_course_detail' course.id %}" class="text-decoration-none text-body d-block h-100 course-card-link">
+                <div class="card-ai card-glow h-100 animate-on-scroll student-course-card">
+                    <div class="position-relative overflow-hidden rounded-4 student-course-card-image" style="height: 140px;">
+                        <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                            {% if course.trailer_video_url %}
+                            <i class="bi bi-play-circle-fill text-white" style="font-size: 3.5rem; opacity: 0.95;"></i>
+                            {% else %}
+                            <i class="bi bi-code-slash text-white" style="font-size: 3.5rem; opacity: 0.9;"></i>
+                            {% endif %}
+                        </div>
+                        <span class="badge-ai position-absolute top-0 end-0 m-2">AI</span>
                     </div>
-                    <span class="badge-ai position-absolute top-0 end-0 m-3">AI</span>
-                    <div class="position-absolute bottom-0 start-0 end-0 p-3" style="background: linear-gradient(transparent, rgba(0,0,0,0.3));"></div>
-                </div>
-                <h5 class="mb-2 fw-bold">Программирование на Python</h5>
-                <p class="text-secondary small mb-4">С нуля до продвинутого уровня. API, базы данных, тесты.</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>24 урока • 12 недель</span>
-                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card-ai card-glow h-100 animate-on-scroll">
-                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
-                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);">
-                        <i class="bi bi-robot text-white" style="font-size: 4rem; opacity: 0.9;"></i>
-                    </div>
-                    <span class="badge-ai position-absolute top-0 end-0 m-3">AI</span>
-                </div>
-                <h5 class="mb-2 fw-bold">Искусственный интеллект и ML</h5>
-                <p class="text-secondary small mb-4">Машинное обучение, нейросети, NLP и компьютерное зрение.</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>18 уроков • 10 недель</span>
-                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card-ai card-glow h-100 animate-on-scroll">
-                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
-                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);">
-                        <i class="bi bi-globe2 text-white" style="font-size: 4rem; opacity: 0.9;"></i>
-                    </div>
-                    <span class="badge-ai position-absolute top-0 end-0 m-3">Новый</span>
-                </div>
-                <h5 class="mb-2 fw-bold">FastAPI: Веб-разработка</h5>
-                <p class="text-secondary small mb-4">Современный асинхронный фреймворк для API и веб-приложений.</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>16 уроков • 8 недель</span>
-                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card-ai card-glow h-100 animate-on-scroll">
-                <div class="position-relative mb-4 overflow-hidden rounded-4" style="height: 160px;">
-                    <div class="h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #6366f1 100%);">
-                        <i class="bi bi-database text-white" style="font-size: 4rem; opacity: 0.9;"></i>
+                    <div class="card-body pt-3">
+                        <h5 class="student-course-title mb-2">{{ course.title }}</h5>
+                        <p class="text-secondary small mb-3 student-course-desc">{{ course.description|truncatewords:15 }}</p>
+                        {% if course.duration_months or course.modules_description %}
+                        <p class="small mb-2 student-course-meta">
+                            {% if course.duration_months %}<span class="me-2"><i class="bi bi-calendar3 me-1"></i>{{ course.duration_months }} мес.</span>{% endif %}
+                            {% if course.modules_description %}<span class="text-secondary">{{ course.modules_description|truncatewords:8 }}</span>{% endif %}
+                        </p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="text-secondary small">
+                                <i class="bi bi-collection me-1"></i>{{ course.lessons.count }} уроков
+                                {% if course.price and course.price > 0 %}
+                                · <strong style="color: var(--accent);">{{ course.price|floatformat:0 }} ₽</strong>
+                                {% endif %}
+                            </span>
+                            <span class="btn btn-sm btn-ai">Подробнее</span>
+                        </div>
                     </div>
                 </div>
-                <h5 class="mb-2 fw-bold">Базы данных и SQL</h5>
-                <p class="text-secondary small mb-4">PostgreSQL, проектирование БД, оптимизация запросов.</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-secondary small"><i class="bi bi-clock me-1"></i>14 уроков • 7 недель</span>
-                    <a href="#" class="btn btn-sm btn-ai">Записаться</a>
-                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-ai card-glow text-center py-5">
+                <p class="text-secondary mb-0">В каталоге пока нет курсов.</p>
             </div>
         </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

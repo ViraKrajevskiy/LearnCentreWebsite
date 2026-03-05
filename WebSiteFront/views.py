@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 
 def front_home(request):
-    return render(request, 'Main_page/lastFigma versuin.html')
+    return render(request, 'main_pages/home.html')
 
 
 def front_register(request):
@@ -31,3 +31,7 @@ def front_faq(request):
 
 def front_invite(request):
     return render(request, 'main_pages/invite.html')
+
+
+def front_proftest(request):
+    return render(request, 'main_pages/proftest.html')

@@ -17,6 +17,8 @@ from WebSite.models.group.groups import Group
 from WebSite.models.pay_system.payment import Payment, StudentSubscription
 from WebSite.models.notifications import Notification
 from WebSite.models.news_model import News
+from WebSite.models.proftest_result import TestResult
+from WebSite.models.course_application import CourseApplication
 
 User = get_user_model()
 
@@ -26,19 +28,24 @@ User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display  = ['email', 'full_name', 'phone_number', 'role_badge', 'is_active', 'created_at']
+    list_display  = ['email', 'full_name', 'phone_number', 'role_badge', 'proftest_status_display', 'is_active', 'created_at']
     list_filter   = ['role', 'is_active', 'is_staff']
     search_fields = ['email', 'first_name', 'surname', 'phone_number', 'telegram_username']
     ordering      = ['-created_at']
-    readonly_fields = ['created_at', 'updated_at']
     filter_horizontal = ('groups', 'user_permissions')
     list_per_page = 30
+    readonly_fields = ['created_at', 'updated_at', 'proftest_status_readonly']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.prefetch_related('proftest_results')
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Личные данные', {'fields': ('first_name', 'surname', 'last_name', 'phone_number', 'birth_date')}),
         ('Telegram', {'fields': ('telegram_username', 'telegram_chat_id')}),
         ('Роль', {'fields': ('role',)}),
+        ('Профтест', {'fields': ('proftest_status_readonly',), 'description': 'Автоматически: прошёл профтест при регистрации или после сохранения результата на сайте.'}),
         ('Права', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Даты', {'fields': ('created_at', 'updated_at')}),
     )
@@ -65,6 +72,26 @@ class UserAdmin(BaseUserAdmin):
             '<span style="background:{};color:#fff;padding:3px 10px;border-radius:50px;font-size:.75rem;font-weight:700">{}</span>',
             c, obj.get_role_display()
         )
+
+    @admin.display(description='Профтест')
+    def proftest_status_display(self, obj):
+        if not obj.proftest_passed:
+            return mark_safe('<span style="color:#94a3b8">Не проходил</span>')
+        pid = obj.proftest_latest_profile_id
+        labels = dict(TestResult.PROFILE_CHOICES)
+        label = labels.get(pid, pid) if pid else '—'
+        return format_html('<span style="color:#22c55e">Прошёл: {}</span>', label)
+
+    @admin.display(description='Статус профтеста')
+    def proftest_status_readonly(self, obj):
+        if not obj or not obj.pk:
+            return '—'
+        if not obj.proftest_passed:
+            return 'Не проходил профтест'
+        pid = obj.proftest_latest_profile_id
+        labels = dict(TestResult.PROFILE_CHOICES)
+        label = labels.get(pid, pid) if pid else '—'
+        return f'Прошёл профтест — направление: {label}'
 
 
 # ─────────────────────────────────────────
@@ -195,12 +222,17 @@ class LessonInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display  = ['title', 'creator', 'price', 'lesson_count', 'created_at']
+    list_display  = ['title', 'creator', 'price', 'duration_months', 'lesson_count', 'created_at']
     list_filter   = ['creator']
-    search_fields = ['title', 'description']
+    search_fields = ['title', 'description', 'modules_description']
     readonly_fields = ['created_at', 'updated_at']
     ordering      = ['-created_at']
     inlines       = [LessonInline]
+    fieldsets     = (
+        (None, {'fields': ('title', 'description', 'creator', 'price')}),
+        ('Программа и медиа', {'fields': ('duration_months', 'modules_description', 'trailer_video_url')}),
+        ('Даты', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
+    )
 
     @admin.display(description='Уроков')
     def lesson_count(self, obj):
@@ -462,6 +494,24 @@ class NewsAdmin(admin.ModelAdmin):
     list_filter   = ['is_published']
     search_fields = ['title', 'content']
     ordering      = ['-created_at']
+
+
+@admin.register(TestResult)
+class TestResultAdmin(admin.ModelAdmin):
+    list_display  = ['user', 'profile_id', 'created_at']
+    list_filter   = ['profile_id']
+    search_fields = ['user__email']
+    ordering      = ['-created_at']
+    raw_id_fields = ['user']
+
+
+@admin.register(CourseApplication)
+class CourseApplicationAdmin(admin.ModelAdmin):
+    list_display  = ['name', 'telegram', 'tag', 'course', 'status', 'created_at']
+    list_filter   = ['status', 'course']
+    search_fields = ['name', 'telegram', 'tag']
+    ordering      = ['-created_at']
+    raw_id_fields = ['course', 'student']
 
 
 # ─────────────────────────────────────────

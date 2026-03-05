@@ -577,6 +577,75 @@ body {
     margin-top: 4px;
 }
 
+/* Тёмная тема: уведомления и новости — читаемый текст */
+[data-theme="dark"] .notifications-dropdown,
+[data-theme="dark"] .notifications-header,
+[data-theme="dark"] .notifications-list {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+[data-theme="dark"] .notifications-header {
+    border-bottom-color: var(--border);
+}
+[data-theme="dark"] .notifications-header strong,
+[data-theme="dark"] .notification-item .notification-title {
+    color: var(--text-primary);
+}
+[data-theme="dark"] .notification-item .notification-meta,
+[data-theme="dark"] .notifications-header .btn-link {
+    color: var(--text-secondary) !important;
+}
+[data-theme="dark"] .notification-item:hover {
+    background: var(--ai-subtle);
+}
+[data-theme="dark"] .notification-item.unread {
+    background: rgba(99, 102, 241, 0.12);
+}
+[data-theme="dark"] #notificationsEmpty,
+[data-theme="dark"] .notifications-list .text-center.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Тёмная тема: новости и карточки — читаемый текст */
+[data-theme="dark"] .student-page .card-ai,
+[data-theme="dark"] .student-page .card-ai h4,
+[data-theme="dark"] .student-page .card-ai .fw-bold {
+    color: var(--text-primary);
+}
+[data-theme="dark"] .student-page a.text-body {
+    color: var(--text-primary);
+}
+[data-theme="dark"] .student-page a.text-body:hover .card-ai {
+    border-color: var(--accent);
+}
+[data-theme="dark"] .student-page .card-ai .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Оформление уведомлений: карточки, отступы */
+.notifications-dropdown {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+[data-theme="dark"] .notifications-dropdown {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.notifications-header {
+    background: var(--ai-subtle);
+    padding: 12px 16px;
+}
+.notification-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.notification-item:last-child {
+    border-bottom: none;
+}
+.notification-item .notification-title {
+    display: block;
+    margin-bottom: 2px;
+}
+
 .user-avatar {
     width: 44px;
     height: 44px;
@@ -1019,4 +1088,55 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* ——— Каталог курсов: названия курсов хорошо видно ——— */
+.student-course-card .student-course-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+}
+.course-card-link:hover .student-course-title {
+    color: var(--accent);
+}
+.student-course-card .student-course-desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+.student-course-card .student-course-meta {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+/* ——— Успеваемость: страница ——— */
+.performance-page .performance-course-title {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+.performance-badge-grade {
+    background: var(--ai-subtle);
+    color: var(--accent);
+    font-weight: 600;
+}
+.performance-badge-tasks {
+    background: var(--border);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.performance-status-done {
+    color: var(--success);
+    font-size: 1.25rem;
+}
+.performance-status-pending {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+}
+.performance-task-item {
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+.performance-task-item:hover {
+    border-color: var(--accent) !important;
+    background: var(--ai-subtle) !important;
 }

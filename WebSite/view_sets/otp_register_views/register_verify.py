@@ -10,6 +10,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_seriali
 from rest_framework import serializers
 
 from WebSite.models.opt_model import UserOTP
+from WebSite.models import TestResult
 from WebSite.models.student_model.student import Student
 from WebSite.utils.telegram import send_telegram_message
 from WebSite.serializers.otp_register.otp_registration import (
@@ -18,6 +19,8 @@ from WebSite.serializers.otp_register.otp_registration import (
 )
 
 User = get_user_model()
+
+VALID_PROFILE_IDS = {'ai_business', 'design_content', 'python_ml', 'analytics'}
 
 
 class RegisterView(APIView):
@@ -49,6 +52,10 @@ class RegisterView(APIView):
                 identifier=user.phone_number,
                 code=code
             )
+            profile_id = (request.data.get('profile_id') or '').strip()
+            if profile_id in VALID_PROFILE_IDS:
+                otp_record.profile_id = profile_id
+                otp_record.save(update_fields=['profile_id'])
 
             bot_link = f"https://t.me/{settings.TELEGRAM_BOT_USERNAME}?start={otp_record.session_id}"
 
@@ -118,6 +125,8 @@ class VerifyOTPView(APIView):
                     )
 
                 Student.objects.get_or_create(user=user, defaults={'course': None})
+                if getattr(otp, 'profile_id', None) and otp.profile_id in VALID_PROFILE_IDS:
+                    TestResult.objects.create(user=user, profile_id=otp.profile_id)
                 login(request, user)
                 refresh = RefreshToken.for_user(user)
                 return Response({

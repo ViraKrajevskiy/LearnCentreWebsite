@@ -13,8 +13,9 @@ from WebSite.models.study.grade_model import Grade
 from WebSite.models.study.lesson import Course, Lesson, SubLesson, Task
 from WebSite.models.study.lesson_comment import LessonComment
 from WebSite.models.study.submission import TaskSubmission
-from WebSite.models.pay_system.payment import StudentSubscription
+from WebSite.models.pay_system.payment import StudentSubscription, Payment
 from WebSite.models.notifications import Notification
+from WebSite.models.news_model import News
 
 
 def student_required(view_func):
@@ -193,18 +194,35 @@ def student_home(request):
 
 @student_required
 def student_courses(request):
-    return render(request, 'student/courses.html')
+    courses = Course.objects.all().select_related('creator').prefetch_related('lessons').order_by('-created_at')
+    return render(request, 'student/courses.html', {'courses': courses})
 
-# Параметры embed: без иконки канала, без посторонних рекомендаций
+
+@student_required
+def student_course_detail(request, course_id):
+    course = get_object_or_404(Course.objects.select_related('creator').prefetch_related('lessons'), pk=course_id)
+    lessons_count = course.lessons.count()
+    trailer_embed_url = _youtube_embed_url(course.trailer_video_url) if getattr(course, 'trailer_video_url', None) else None
+    student_group = None
+    if request.user.is_authenticated and hasattr(request.user, 'student'):
+        student_group = request.user.student.study_groups.filter(course=course).first()
+    return render(request, 'student/course_detail.html', {
+        'course': course,
+        'lessons_count': lessons_count,
+        'trailer_embed_url': trailer_embed_url,
+        'student_group': student_group,
+    })
+
+# Параметры embed: без иконки канала, без посторонних рекомендаций. nocookie уменьшает риск ошибки 153.
 _YOUTUBE_EMBED_PARAMS = '?modestbranding=1&rel=0'
 
 
 def _youtube_embed_url(url):
-    """Преобразует ссылку на YouTube в embed-URL для просмотра прямо на сайте."""
+    """Преобразует ссылку на YouTube в embed-URL (youtube-nocookie.com для стабильного воспроизведения)."""
     if not url:
         return None
     url = (url or '').strip()
-    base_embed = 'https://www.youtube.com/embed'
+    base_embed = 'https://www.youtube-nocookie.com/embed'
     vid = None
     # youtu.be/VIDEO_ID
     if 'youtu.be/' in url:
@@ -346,9 +364,80 @@ def student_assignments(request):
         )
     return render(request, 'student/assignments.html', {'tasks_data': tasks_data})
 
+
+@student_required
+def student_performance(request):
+    """Страница успеваемости: оценки по курсам, сдал/не сдал по заданиям. С пагинацией."""
+    from django.core.paginator import Paginator
+    performance_data = []
+    if request.user.is_authenticated and hasattr(request.user, 'student'):
+        student = request.user.student
+        progress_list = StudentProgress.objects.filter(student=student).select_related('course')
+        submitted_task_ids = set(
+            TaskSubmission.objects.filter(student=student).values_list('task_id', flat=True).distinct()
+        )
+        for progress in progress_list:
+            course = progress.course
+            student_group = student.study_groups.filter(course=course).first()
+            tasks_in_course = list(
+                Task.objects.filter(sub_lesson__lesson__course=course)
+                .select_related('sub_lesson__lesson')
+                .order_by('sub_lesson__lesson__scheduled_at', 'sub_lesson__order', 'id')
+            )
+            tasks_with_status = [
+                {'task': t, 'submitted': t.id in submitted_task_ids}
+                for t in tasks_in_course
+            ]
+            performance_data.append({
+                'course': course,
+                'progress': progress,
+                'student_group': student_group,
+                'tasks_total': len(tasks_in_course),
+                'tasks_submitted': sum(1 for tw in tasks_with_status if tw['submitted']),
+                'tasks_with_status': tasks_with_status,
+            })
+    paginator = Paginator(performance_data, 5)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'student/performance.html', {'page_obj': page_obj, 'performance_data': page_obj.object_list})
+
 @student_required
 def student_profile(request):
-    return render(request, 'student/profile.html')
+    user = request.user
+    show_proftest_prompt = user.proftest_offer_shown_at is None
+    if show_proftest_prompt:
+        from django.utils import timezone
+        user.proftest_offer_shown_at = timezone.now()
+        user.save(update_fields=['proftest_offer_shown_at'])
+
+    payment_history = []
+    performance_data = []
+    if hasattr(user, 'student'):
+        student = user.student
+        payment_history = (
+            Payment.objects.filter(student=student)
+            .select_related('subscription', 'subscription__tariff', 'subscription__tariff__course')
+            .order_by('-created_at')[:50]
+        )
+        # Успеваемость: по каждому курсу — прогресс и сданные/несданные задания
+        progress_list = StudentProgress.objects.filter(student=student).select_related('course')
+        for progress in progress_list:
+            course = progress.course
+            tasks_in_course = Task.objects.filter(sub_lesson__lesson__course=course)
+            tasks_total = tasks_in_course.count()
+            tasks_submitted = TaskSubmission.objects.filter(student=student, task__in=tasks_in_course).values('task').distinct().count()
+            performance_data.append({
+                'course': course,
+                'progress': progress,
+                'tasks_total': tasks_total,
+                'tasks_submitted': tasks_submitted,
+            })
+
+    return render(request, 'student/profile.html', {
+        'show_proftest_prompt': show_proftest_prompt,
+        'payment_history': payment_history,
+        'performance_data': performance_data,
+    })
 
 @student_required
 def student_ai_chat(request):
@@ -360,7 +449,14 @@ def student_messages(request):
 
 @student_required
 def student_news(request):
-    return render(request, 'student/news.html')
+    news_list = News.objects.filter(is_published=True).order_by('-created_at')[:50]
+    return render(request, 'student/news.html', {'news_list': news_list})
+
+
+@student_required
+def student_news_detail(request, pk):
+    news_item = get_object_or_404(News.objects.filter(is_published=True), pk=pk)
+    return render(request, 'student/news_detail.html', {'news_item': news_item})
 
 
 @student_required
@@ -378,6 +474,24 @@ def student_attendance(request):
             .order_by('-lesson__scheduled_at')
         )
     return render(request, 'student/attendance.html', {'attendance_list': attendance_list})
+
+
+@student_required
+def upload_receipt_view(request, payment_id):
+    """Загрузка чека об оплате. POST: file (чек). Платёж должен принадлежать студенту."""
+    if request.method != 'POST':
+        return redirect('profile')
+    payment = get_object_or_404(Payment, pk=payment_id)
+    if payment.student_id != request.user.student.id:
+        return JsonResponse({'error': 'Нет доступа к этому платежу'}, status=403)
+    file_obj = request.FILES.get('receipt') or request.FILES.get('file')
+    if not file_obj:
+        return JsonResponse({'error': 'Выберите файл чека'}, status=400)
+    payment.receipt = file_obj
+    payment.save(update_fields=['receipt'])
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('ajax'):
+        return JsonResponse({'ok': True, 'message': 'Чек загружен', 'receipt_url': payment.receipt.url if payment.receipt else None})
+    return redirect('profile')
 
 
 @require_POST
@@ -423,11 +537,29 @@ def submit_lesson_comment_view(request, lesson_id):
     return JsonResponse({'ok': True, 'message': 'Комментарий добавлен!'})
 
 
+def _get_student_from_request(request):
+    """Возвращает студента из request: сессия или JWT (Bearer)."""
+    if request.user.is_authenticated and getattr(request.user, 'student', None):
+        return request.user.student
+    auth = request.META.get('HTTP_AUTHORIZATION') or ''
+    if auth.startswith('Bearer '):
+        from rest_framework_simplejwt.tokens import AccessToken
+        from django.contrib.auth import get_user_model
+        try:
+            token = AccessToken(auth[7:])
+            user = get_user_model().objects.get(pk=token['user_id'])
+            if hasattr(user, 'student'):
+                return user.student
+        except Exception:
+            pass
+    return None
+
+
 def notifications_list_api(request):
-    """Список уведомлений студента (JSON). Только для авторизованного студента."""
-    if not request.user.is_authenticated or not hasattr(request.user, 'student'):
+    """Список уведомлений студента (JSON). Поддержка сессии и JWT (Bearer)."""
+    student = _get_student_from_request(request)
+    if not student:
         return JsonResponse({'notifications': [], 'unread_count': 0})
-    student = request.user.student
     qs = Notification.objects.filter(student=student).order_by('-created_at')[:50]
     unread_count = Notification.objects.filter(student=student, is_read=False).count()
     data = {
@@ -450,20 +582,15 @@ def notifications_list_api(request):
 
 @require_POST
 def notification_mark_read_api(request):
-    """Отметить уведомление прочитанным (JSON: notification_id) или все (пустой body)."""
-    if not request.user.is_authenticated or not hasattr(request.user, 'student'):
+    """Отметить уведомление прочитанным (JSON: notification_id) или все (пустой body). Сохраняется в БД."""
+    student = _get_student_from_request(request)
+    if not student:
         return JsonResponse({'error': 'Войдите в аккаунт'}, status=401)
-    student = request.user.student
+    import json
     try:
-        body = request.json() if hasattr(request, 'json') else {}
+        body = json.loads(request.body.decode('utf-8') or '{}')
     except Exception:
         body = {}
-    if not body:
-        import json
-        try:
-            body = json.loads(request.body.decode() or '{}')
-        except Exception:
-            body = {}
     nid = body.get('notification_id')
     if nid:
         Notification.objects.filter(student=student, pk=nid).update(is_read=True)

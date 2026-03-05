@@ -2,6 +2,7 @@ from django.urls import path
 from WebSiteFront.views import (
     front_home, front_register, front_login,
     front_courses, front_about, front_contact, front_faq, front_invite,
+    front_proftest,
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path('contact/', front_contact, name='contact'),
     path('faq/', front_faq, name='faq'),
     path('invite/', front_invite, name='invite'),
+    path('proftest/', front_proftest, name='proftest'),
 ]

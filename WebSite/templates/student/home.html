@@ -16,8 +16,8 @@
     <p class="text-secondary" style="font-size:.9rem">{{ today_date|date:"d E Y" }} · Продолжай учиться — ты на верном пути</p>
   </div>
 
-  <!-- STATS ROW -->
-  <div class="stats-grid mb-4" style="grid-template-columns:repeat(4,1fr)">
+  <!-- STATS ROW (посещаемость скрыта — Zoom-уроки пока не проводятся) -->
+  <div class="stats-grid mb-4" style="grid-template-columns:repeat(3,1fr)">
     <div class="stat-card animate-on-scroll stagger-1 stat-card-hover" style="position:relative;overflow:hidden">
       <div class="stat-value">{{ progress.completed_lessons_count|default:"0" }}</div>
       <div class="stat-label">Уроков пройдено</div>
@@ -29,11 +29,6 @@
       <i class="bi bi-trophy" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
     </div>
     <div class="stat-card animate-on-scroll stagger-3 stat-card-hover" style="position:relative;overflow:hidden">
-      <div class="stat-value">{{ attendance_rate|default:"—" }}%</div>
-      <div class="stat-label">Посещаемость</div>
-      <i class="bi bi-person-check" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
-    </div>
-    <div class="stat-card animate-on-scroll stagger-4 stat-card-hover" style="position:relative;overflow:hidden">
       <div class="stat-value">{{ pending_tasks|default:"0" }}</div>
       <div class="stat-label">Заданий ждут</div>
       <i class="bi bi-clipboard-check" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
@@ -165,31 +160,9 @@
         {% endif %}
       </div>
 
-      <!-- ATTENDANCE MINI -->
-      <div class="card-ai card-glow animate-on-scroll">
-        <div class="card-header-custom">
-          <h3 class="card-title-custom"><i class="bi bi-calendar-check me-2" style="color:var(--accent)"></i>Посещаемость</h3>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px">
-          {% for day in attendance_calendar %}
-          <div title="{{ day.label }}" style="width:100%;aspect-ratio:1;border-radius:5px;
-            {% if day.status == 'present' %}background:rgba(16,185,129,.7)
-            {% elif day.status == 'absent' %}background:rgba(239,68,68,.5)
-            {% elif day.status == 'today' %}background:var(--accent)
-            {% else %}background:var(--border){% endif %}">
-          </div>
-          {% empty %}
-          {% for i in "1234567890123456789012345678" %}
-          <div style="width:100%;aspect-ratio:1;border-radius:5px;background:var(--border)"></div>
-          {% endfor %}
-          {% endfor %}
-        </div>
-        <div style="display:flex;gap:14px;font-size:.72rem;color:var(--text-secondary)">
-          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(16,185,129,.7);margin-right:4px"></span>Присутствовал</span>
-          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,.5);margin-right:4px"></span>Пропустил</span>
-          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--border);margin-right:4px"></span>Нет урока</span>
-        </div>
-      </div>
+      {% comment %} Блок посещаемости скрыт — Zoom-уроки пока не проводятся
+      <div class="card-ai card-glow animate-on-scroll">...</div>
+      {% endcomment %}
     </div>
   </div>
 

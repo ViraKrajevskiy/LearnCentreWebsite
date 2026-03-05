@@ -8,6 +8,12 @@ class UserOTP(models.Model):
     code = models.CharField(max_length=6)
     session_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     telegram_chat_id = models.BigIntegerField(null=True, blank=True, help_text='Telegram chat_id для отправки уведомления об успехе')
+    profile_id = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        help_text='Выбранное направление профориентации (ai_business, design_content, python_ml, analytics) для сохранения в TestResult после верификации',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)

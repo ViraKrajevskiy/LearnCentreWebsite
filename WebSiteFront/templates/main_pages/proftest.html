@@ -1,0 +1,41 @@
+{% extends "main_pages/base.html" %}
+{% load static %}
+
+{% block title %}Профориентация в AI{% endblock %}
+
+{% block content %}
+<section class="proftest-section">
+    <div class="proftest-header text-center">
+        <div class="chip" style="justify-content: center;"><span class="chip-dot"></span>Профориентация</div>
+        <h1 class="section-title">А какая ваша суперсила?</h1>
+        <p class="section-subtitle">Ответьте на 7 вопросов — узнайте, какое направление в AI подходит именно вам</p>
+    </div>
+
+    <div class="ptw" id="ptw">
+        <div class="pt-l">
+            <h2>Найдём вашу нишу в мире AI</h2>
+            <p>Тест учитывает ваш опыт, цели и интересы и подбирает направление: от быстрой автоматизации задач до разработки и аналитики.</p>
+        </div>
+        <div class="pt-r">
+            <div class="pt-prog-row">
+                <span class="pt-q-lbl" id="qLbl">Вопрос 1 из 7</span>
+                <span class="pt-q-pct" id="qPct">0%</span>
+            </div>
+            <div class="pt-bar"><div class="pt-fill" id="ptFill"></div></div>
+            <div class="pt-opts" id="ptOpts"></div>
+            <div class="pt-foot">
+                <button type="button" class="pt-btn" id="ptNext">Далее →</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+window.PROFTEST_REGISTER_URL = "{% url 'register' %}";
+window.PROFTEST_COURSES_URL = "{% url 'courses' %}";
+window.PROFTEST_USER_LOGGED_IN = {{ request.user.is_authenticated|yesno:"true,false" }};
+window.PROFTEST_SAVE_TO_PROFILE_URL = "{% url 'api_proftest_save_to_profile' %}";
+</script>
+<script src="{% static 'js/proftest.js' %}"></script>
+<script src="{% static 'js/proftest-run.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}{{ news_item.title }}{% endblock %}
+{% block page_title %}{{ news_item.title|truncatechars:40 }}{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <a href="{% url 'news' %}" class="d-inline-flex align-items-center gap-2 text-secondary small text-decoration-none mb-3">
+            <i class="bi bi-arrow-left"></i>
+            <span>Все новости</span>
+        </a>
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Новость</p>
+        <h1 class="mb-2">{{ news_item.title }}</h1>
+        <p class="lead text-secondary mb-0">{{ news_item.created_at|date:"d E Y" }}</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card-ai card-glow animate-on-scroll">
+                <div class="card-body">
+                    <div class="news-detail-content" style="line-height: 1.8; white-space: pre-wrap;">{{ news_item.content }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="{% url 'news' %}" class="btn btn-ai">
+            <i class="bi bi-arrow-left me-1"></i>
+            К списку новостей
+        </a>
+    </div>
+</div>
+{% endblock %}

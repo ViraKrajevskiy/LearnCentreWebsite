@@ -499,7 +499,10 @@ nav {
       </div>
 
       <div id="step3" style="display:none">
-        <p style="font-size:.86rem;color:var(--tx2);margin-bottom:20px;line-height:1.7">Выберите ваше направление. Это поможет нам подобрать нужные курсы.</p>
+        <div id="proftestBanner" style="display:none;margin-bottom:16px;padding:12px 16px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);border-radius:12px;font-size:.85rem;color:var(--txt);">
+          <strong>По результатам профтеста вам подходит:</strong> <span id="proftestBannerLabel"></span>. Можно изменить выбор ниже.
+        </div>
+        <p style="font-size:.86rem;color:var(--tx2);margin-bottom:12px;line-height:1.7">Выберите направление или пройдите профтест позже в своём профиле.</p>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px" id="goalGrid">
           <div class="goal-card" onclick="selGoal(this)" data-v="ai-tools">
@@ -521,6 +524,11 @@ nav {
             <div style="font-size:1.4rem;margin-bottom:7px">🎨</div>
             <div style="font-size:.82rem;font-weight:700">Дизайн & Контент</div>
             <div style="font-size:.72rem;color:var(--tx2);margin-top:3px">Midjourney, генерация</div>
+          </div>
+          <div class="goal-card" onclick="selGoal(this)" data-v="on_profile">
+            <div style="font-size:1.4rem;margin-bottom:7px">📋</div>
+            <div style="font-size:.82rem;font-weight:700">Пройду профтест на своём профиле</div>
+            <div style="font-size:.72rem;color:var(--tx2);margin-top:3px">Выберу направление после входа</div>
           </div>
         </div>
 
@@ -592,6 +600,16 @@ document.getElementById('themeToggle').onclick = () => {
 };
 
 const titles = ['Личные данные', 'Создайте пароль', 'Ваша цель'];
+/** Результат профтеста из URL ?goal= (ai_business -> business, design_content -> design, python_ml -> python, analytics -> ai-tools) */
+const goalFromUrl = (function() {
+  const p = new URLSearchParams(window.location.search);
+  const g = p.get('goal');
+  if (!g) return null;
+  const map = { ai_business: 'business', design_content: 'design', python_ml: 'python', analytics: 'ai-tools' };
+  return map[g] || null;
+})();
+const goalLabels = { 'business': 'AI для бизнеса', 'design': 'Дизайн и контент', 'python': 'Python и ML', 'ai-tools': 'AI-инструменты и аналитика' };
+
 function goStep(n) {
   [1,2,3].forEach(i => {
     document.getElementById('step'+i).style.display = i===n ? '' : 'none';
@@ -602,6 +620,15 @@ function goStep(n) {
     if(i < 3) document.getElementById('l'+i).className = i < n ? 'step-line done' : 'step-line';
   });
   document.getElementById('formTitle').textContent = titles[n-1];
+  if (n === 3 && goalFromUrl) {
+    const card = document.querySelector('.goal-card[data-v="' + goalFromUrl + '"]');
+    if (card) { document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('sel')); card.classList.add('sel'); }
+    const banner = document.getElementById('proftestBanner');
+    if (banner && goalLabels[goalFromUrl]) {
+      document.getElementById('proftestBannerLabel').textContent = goalLabels[goalFromUrl];
+      banner.style.display = 'block';
+    }
+  }
 }
 
 function checkStrength(val) {
@@ -685,6 +712,11 @@ async function register() {
     alert('Пароли не совпадают');
     return;
   }
+  const selectedGoal = document.querySelector('.goal-card.sel');
+  if(!selectedGoal) {
+    alert('Выберите направление (профориентацию)');
+    return;
+  }
   const phone = getPhoneNumber();
   if(!phone || phone.length < 11) {
     alert('Введите корректный номер телефона (например 90 123 45 67)');
@@ -693,6 +725,10 @@ async function register() {
   const btn = document.getElementById('btnRegister');
   btn.disabled = true;
   btn.textContent = 'Отправка...';
+  const dataV = selectedGoal.getAttribute('data-v');
+  const goalToProfileId = { 'ai-tools': 'analytics', 'python': 'python_ml', 'business': 'ai_business', 'design': 'design_content' };
+  const profile_id = (dataV && dataV !== 'on_profile') ? goalToProfileId[dataV] || null : null;
+
   try {
     const payload = {
       first_name: fname,
@@ -702,6 +738,7 @@ async function register() {
       telegram_username: telegram,
       password: pwd
     };
+    if (profile_id) payload.profile_id = profile_id;
     const resp = await fetch('/api/v1/auth/register/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -14,10 +14,11 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-bot = Bot(
-    token=settings.TELEGRAM_BOT_TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-)
+_token = (settings.TELEGRAM_BOT_TOKEN or '').strip()
+if _token:
+    bot = Bot(token=_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+else:
+    bot = None
 dp = Dispatcher(storage=MemoryStorage())
 
 

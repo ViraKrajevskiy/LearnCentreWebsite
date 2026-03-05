@@ -13,44 +13,27 @@
     </div>
 
     <div class="row g-4">
+        {% for n in news_list %}
         <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge-ai"><i class="bi bi-sparkles me-1"></i>Новое</span>
-                    <small class="text-secondary align-self-center">16 февраля 2025</small>
+            <a href="{% url 'news_detail' n.pk %}" class="text-decoration-none text-body d-block">
+                <div class="card-ai card-glow animate-on-scroll h-100">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge-ai"><i class="bi bi-newspaper me-1"></i>Новость</span>
+                        <small class="text-secondary align-self-center">{{ n.created_at|date:"d.m.Y" }}</small>
+                    </div>
+                    <h4 class="mb-3 fw-bold">{{ n.title }}</h4>
+                    <p class="text-secondary mb-0">{{ n.content|truncatewords:30 }}</p>
+                    <span class="d-inline-block mt-3 small" style="color: var(--accent); font-weight: 600;">Читать полностью →</span>
                 </div>
-                <h4 class="mb-3 fw-bold">Запуск AI-ассистента в LearnCentre</h4>
-                <p class="text-secondary mb-0">Теперь каждый студент может задавать вопросы нашему AI прямо в личном кабинете. AI помогает с объяснением материала, подсказками по коду и подготовкой к экзаменам. Перейдите в раздел «AI Чат» и попробуйте!</p>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-ai card-glow text-center py-5">
+                <p class="text-secondary mb-0">Пока нет новостей.</p>
             </div>
         </div>
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge-ai"><i class="bi bi-arrow-up-circle me-1"></i>Обновление</span>
-                    <small class="text-secondary align-self-center">12 февраля 2025</small>
-                </div>
-                <h4 class="mb-3 fw-bold">Новый курс: FastAPI</h4>
-                <p class="text-secondary mb-0">Добавлен курс по современному асинхронному веб-фреймворку FastAPI. 16 уроков, проекты, тесты. Записывайтесь в разделе «Курсы».</p>
-            </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <small class="text-secondary">5 февраля 2025</small>
-                </div>
-                <h4 class="mb-3 fw-bold">Расписание на март</h4>
-                <p class="text-secondary mb-0">Опубликовано расписание занятий на март. Проверьте раздел «Мои курсы» для уточнения дат ваших уроков.</p>
-            </div>
-        </div>
-        <div class="col-12">
-            <div class="card-ai card-glow animate-on-scroll">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    <small class="text-secondary">28 января 2025</small>
-                </div>
-                <h4 class="mb-3 fw-bold">Личные сообщения</h4>
-                <p class="text-secondary mb-0">Теперь вы можете переписываться с преподавателями и поддержкой прямо на платформе. Откройте раздел «Сообщения» в меню.</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

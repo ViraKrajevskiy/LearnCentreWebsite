@@ -7,6 +7,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from WebSite.view_sets.otp_register_views.register_verify import (
     RegisterView, VerifyOTPView, LoginView, ProfileView, ChangePasswordView
 )
+from WebSite.view_sets.proftest_save import ProftestSaveView, ProftestSaveToProfileView
+from WebSite.view_sets.course_application import CourseApplicationSubmitView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,6 +18,9 @@ urlpatterns = [
     path('api/v1/auth/login/', LoginView.as_view(), name='api_login'),
     path('api/v1/auth/me/', ProfileView.as_view(), name='api_profile'),
     path('api/v1/auth/change-password/', ChangePasswordView.as_view(), name='api_change_password'),
+    path('api/v1/proftest/save/', ProftestSaveView.as_view(), name='api_proftest_save'),
+    path('api/v1/proftest/save-to-profile/', ProftestSaveToProfileView.as_view(), name='api_proftest_save_to_profile'),
+    path('api/v1/course-application/', CourseApplicationSubmitView.as_view(), name='api_course_application'),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

@@ -8,6 +8,20 @@ class Course(DateCreate):
     description = models.TextField()
     creator = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Длительность и модули (например: "1 месяц — Python, 2 месяц — SQL, ...")
+    duration_months = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Длительность курса в месяцах (например: 7)'
+    )
+    modules_description = models.TextField(
+        blank=True,
+        help_text='Краткое описание модулей по месяцам, например: 1 месяц — Python; 2 месяц — SQL; 3 месяц — Backend'
+    )
+    # Ссылка на видео (трейлер или обзор курса)
+    trailer_video_url = models.URLField(
+        max_length=500, blank=True,
+        help_text='Ссылка на видео (YouTube и т.д.) — трейлер или обзор курса'
+    )
 
     def __str__(self):
         return self.title

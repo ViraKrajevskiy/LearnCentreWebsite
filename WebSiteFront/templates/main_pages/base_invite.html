@@ -1,5 +1,6 @@
-{% load static %}
+
 <!DOCTYPE html>
+{% load static %}
 <html lang="ru" data-theme="light">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +11,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/main_pages.css' %}">
 </head>
-<body>
+<body class="invite-page">
+    <!-- Декоративный фон только для пригласительной: паутина и т.п. -->
+    <div class="invite-bg-decor" id="inviteBgDecor" aria-hidden="true">
+        <div class="invite-parallax-layer" id="inviteParallaxLayer">
+        <svg class="invite-web invite-web-1" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="webLines" patternUnits="userSpaceOnUse" width="200" height="200">
+                    <path d="M100 100 L100 20 M100 100 L180 100 M100 100 L160 40 M100 100 L100 180 M100 100 L20 100 M100 100 L40 40 M100 100 L40 160 M100 100 L160 160" stroke="currentColor" stroke-width="0.4" fill="none" opacity="0.5"/>
+                    <ellipse cx="100" cy="100" rx="25" ry="25" stroke="currentColor" stroke-width="0.35" fill="none" opacity="0.4"/>
+                    <ellipse cx="100" cy="100" rx="50" ry="50" stroke="currentColor" stroke-width="0.3" fill="none" opacity="0.3"/>
+                    <ellipse cx="100" cy="100" rx="75" ry="75" stroke="currentColor" stroke-width="0.25" fill="none" opacity="0.2"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#webLines)"/>
+        </svg>
+        <svg class="invite-web invite-web-2" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="webLines2" patternUnits="userSpaceOnUse" width="200" height="200">
+                    <path d="M100 100 L100 15 M100 100 L185 100 M100 100 L165 35 M100 100 L100 185 M100 100 L15 100 M100 100 L35 35 M100 100 L35 165 M100 100 L165 165" stroke="currentColor" stroke-width="0.35" fill="none" opacity="0.35"/>
+                    <ellipse cx="100" cy="100" rx="30" ry="30" stroke="currentColor" stroke-width="0.3" fill="none" opacity="0.3"/>
+                    <ellipse cx="100" cy="100" rx="60" ry="60" stroke="currentColor" stroke-width="0.25" fill="none" opacity="0.2"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#webLines2)"/>
+        </svg>
+        <div class="invite-bg-glow invite-bg-glow-1"></div>
+        <div class="invite-bg-glow invite-bg-glow-2"></div>
+        </div>
+    </div>
     {% block content %}{% endblock %}
     <script src="{% static 'js/main_pages.js' %}"></script>
     {% block extra_js %}{% endblock %}

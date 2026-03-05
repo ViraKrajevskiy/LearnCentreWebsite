@@ -35,6 +35,11 @@ class User(AbstractBaseUser, PermissionsMixin, DateCreate):
     telegram_chat_id = models.BigIntegerField(null=True, blank=True, db_index=True, help_text='Telegram chat_id для бота')
     birth_date = models.DateField(null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='guest')
+    proftest_offer_shown_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Когда впервые показали предложение пройти профтест в профиле (один раз при первом входе)',
+    )
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -48,6 +53,20 @@ class User(AbstractBaseUser, PermissionsMixin, DateCreate):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ['-created_at']
+
+    @property
+    def proftest_passed(self):
+        """True, если пользователь хотя бы раз проходил профтест (есть запись в TestResult)."""
+        return self.proftest_results.exists()
+
+    @property
+    def proftest_latest_profile_id(self):
+        """ID направления по последнему профтесту или None (использует prefetch при наличии)."""
+        results = list(self.proftest_results.all())
+        if not results:
+            return None
+        latest = max(results, key=lambda r: r.created_at)
+        return latest.profile_id
 
     def __str__(self):
         return f"{self.email} ({self.get_role_display()})"

@@ -22,33 +22,5 @@
         </div>
     </div>
 </section>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var btn = document.getElementById('inviteBgToggle');
-    var icon = document.getElementById('inviteBgIcon');
-    if (btn) {
-        var saved = localStorage.getItem('inviteBg') || 'default';
-        if (saved === 'white') {
-            document.documentElement.setAttribute('data-invite-bg', 'white');
-            icon.className = 'bi bi-moon-stars';
-            btn.title = 'Тёмный фон';
-        }
-        btn.addEventListener('click', function() {
-            var html = document.documentElement;
-            var isWhite = html.getAttribute('data-invite-bg') === 'white';
-            if (isWhite) {
-                html.removeAttribute('data-invite-bg');
-                localStorage.setItem('inviteBg', 'default');
-                icon.className = 'bi bi-sun';
-                btn.title = 'Белый фон';
-            } else {
-                html.setAttribute('data-invite-bg', 'white');
-                localStorage.setItem('inviteBg', 'white');
-                icon.className = 'bi bi-moon-stars';
-                btn.title = 'Тёмный фон';
-            }
-        });
-    }
-});
-</script>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/invite.js' %}"></script>{% endblock %}

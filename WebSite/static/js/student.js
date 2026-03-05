@@ -160,8 +160,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return '';
     }
 
+    function getNotificationsHeaders() {
+        var h = { 'Accept': 'application/json' };
+        var token = typeof localStorage !== 'undefined' && localStorage.getItem('access');
+        if (token) h['Authorization'] = 'Bearer ' + token;
+        return h;
+    }
+
     function loadNotifications(callback) {
-        fetch('/student/notifications/api/', { credentials: 'same-origin' })
+        fetch('/student/notifications/api/', { credentials: 'same-origin', headers: getNotificationsHeaders() })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 notificationsData = data;
@@ -204,16 +211,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function markReadAll() {
         var token = getCsrfToken();
+        var headers = { 'Content-Type': 'application/json', 'X-CSRFToken': token };
+        var authToken = typeof localStorage !== 'undefined' && localStorage.getItem('access');
+        if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
         fetch('/student/notifications/read/', {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+            headers: headers,
             body: JSON.stringify({})
         }).then(function() { loadNotifications(renderNotificationsList); });
     }
 
     if (notificationsBtn && notificationsDropdown) {
         notificationsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
             notificationsDropdown.classList.toggle('show');
             if (notificationsDropdown.classList.contains('show')) {
@@ -225,7 +236,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function() {
         if (notificationsDropdown && notificationsDropdown.classList) notificationsDropdown.classList.remove('show');
     });
-    if (notificationsDropdown) notificationsDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+    if (notificationsDropdown) {
+        notificationsDropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+    }
     if (notificationsMarkAllRead) notificationsMarkAllRead.addEventListener('click', function(e) { e.preventDefault(); markReadAll(); });
     loadNotifications();
 });

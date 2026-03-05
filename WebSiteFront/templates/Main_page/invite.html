@@ -1,0 +1,279 @@
+{% extends 'main_pages/base.html' %}
+{% load static %}
+
+{% block title %}Пригласить{% endblock %}
+
+{% block navbar %}{% endblock navbar %}
+
+{% block content %}
+<section class="invite-hero">
+    <!-- Animated background blobs -->
+    <div class="invite-blob invite-blob-1"></div>
+    <div class="invite-blob invite-blob-2"></div>
+    <div class="invite-blob invite-blob-3"></div>
+
+    <div class="invite-content">
+        <h1 class="invite-title">Пригласите друзей в Swift Intell!</h1>
+        <p class="invite-subtitle">Расскажите о нас своим друзьям и получите бонусы за каждого нового студента. Вместе учиться выгоднее и веселее!</p>
+        <div class="invite-cta">
+            <a href="{% url 'register' %}" class="invite-btn invite-btn-primary">Зарегистрироваться и получить бонус →</a>
+            <a href="{% url 'home' %}" class="invite-btn invite-btn-secondary">Вернуться на главную</a>
+        </div>
+        <div class="invite-features">
+            <div class="invite-feature">
+                <span class="invite-feature-icon">🎁</span>
+                <h3>Бонусы</h3>
+                <p>За каждого друга</p>
+            </div>
+            <div class="invite-feature">
+                <span class="invite-feature-icon">🤝</span>
+                <h3>Вместе</h3>
+                <p>Учитесь с близкими</p>
+            </div>
+            <div class="invite-feature">
+                <span class="invite-feature-icon">🚀</span>
+                <h3>Быстрее</h3>
+                <p>Достигайте целей</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    body {
+        background: linear-gradient(-45deg, #1e1b4b 0%, #312e81 25%, #4338ca 50%, #06b6d4 75%, #0891b2 100%);
+        background-size: 400% 400%;
+        animation: gradientShift 12s ease infinite;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .invite-hero {
+        padding: 60px 24px;
+        text-align: center;
+        max-width: 900px;
+        margin: auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .invite-blob {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.4;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .invite-blob-1 {
+        width: 400px;
+        height: 400px;
+        background: rgba(139, 92, 246, 0.6);
+        top: -100px;
+        right: -100px;
+        animation: blobFloat 8s ease-in-out infinite;
+    }
+    .invite-blob-2 {
+        width: 300px;
+        height: 300px;
+        background: rgba(6, 182, 212, 0.5);
+        bottom: -80px;
+        left: -80px;
+        animation: blobFloat 10s ease-in-out infinite reverse;
+        animation-delay: -2s;
+    }
+    .invite-blob-3 {
+        width: 200px;
+        height: 200px;
+        background: rgba(168, 85, 247, 0.4);
+        top: 50%;
+        left: 20%;
+        animation: blobFloat 7s ease-in-out infinite;
+        animation-delay: -4s;
+    }
+
+    @keyframes blobFloat {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -30px) scale(1.05); }
+        66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    .invite-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .invite-title {
+        font-family: 'Unbounded', sans-serif;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        font-weight: 900;
+        line-height: 1.15;
+        letter-spacing: -2px;
+        margin-bottom: 24px;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        animation: titleReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    .invite-subtitle {
+        font-size: clamp(1rem, 2vw, 1.2rem);
+        line-height: 1.7;
+        margin-bottom: 48px;
+        opacity: 0.95;
+        animation: titleReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    @keyframes titleReveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .invite-cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: center;
+        margin-bottom: 64px;
+        animation: titleReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    .invite-btn {
+        border-radius: 14px;
+        padding: 16px 36px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        border: none;
+    }
+
+    .invite-btn-primary {
+        background: #fff;
+        color: #7c3aed;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        animation: btnPulse 2.5s ease-in-out infinite;
+    }
+
+    .invite-btn-primary:hover {
+        transform: translateY(-6px) scale(1.03);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    @keyframes btnPulse {
+        0%, 100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); }
+        50% { box-shadow: 0 12px 48px rgba(255, 255, 255, 0.2), 0 0 0 4px rgba(255, 255, 255, 0.15); }
+    }
+
+    .invite-btn-secondary {
+        background: rgba(255, 255, 255, 0.12);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: #fff;
+        backdrop-filter: blur(8px);
+    }
+
+    .invite-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: #fff;
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .invite-features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .invite-feature {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 28px 20px;
+        text-align: center;
+        backdrop-filter: blur(12px);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: featureReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    .invite-feature:nth-child(1) { animation-delay: 0.45s; }
+    .invite-feature:nth-child(2) { animation-delay: 0.55s; }
+    .invite-feature:nth-child(3) { animation-delay: 0.65s; }
+
+    .invite-feature:hover {
+        transform: translateY(-12px) scale(1.05);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes featureReveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .invite-feature-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 12px;
+        animation: iconBounce 2s ease-in-out infinite;
+    }
+
+    .invite-feature:nth-child(2) .invite-feature-icon { animation-delay: 0.2s; }
+    .invite-feature:nth-child(3) .invite-feature-icon { animation-delay: 0.4s; }
+
+    @keyframes iconBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
+
+    .invite-feature h3 {
+        font-family: 'Unbounded', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .invite-feature p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .invite-features {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .invite-cta { flex-direction: column; }
+        .invite-btn { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}

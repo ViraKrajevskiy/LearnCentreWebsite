@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+from WebSite.utils.input_validation import (
+    sanitize_name,
+    sanitize_email,
+    sanitize_telegram,
+    sanitize_otp_code,
+    MAX_NAME_SHORT,
+)
+
 User = get_user_model()
 
 try:
@@ -38,6 +46,20 @@ class RegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['first_name', 'surname', 'last_name', 'phone_number', 'telegram_username', 'password']
 
+    def validate_first_name(self, value):
+        return sanitize_name(value, max_len=MAX_NAME_SHORT)
+
+    def validate_surname(self, value):
+        return sanitize_name(value, max_len=MAX_NAME_SHORT)
+
+    def validate_last_name(self, value):
+        if not value:
+            return ''
+        return sanitize_name(value, max_len=MAX_NAME_SHORT)
+
+    def validate_telegram_username(self, value):
+        return sanitize_telegram(value)[:100]
+
     def validate_phone_number(self, value):
         normalized = normalize_phone_e164(value)
         if not normalized:
@@ -57,6 +79,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
 class OTPVerifySerializer(serializers.Serializer):
     session_id = serializers.UUIDField()
     code = serializers.CharField(max_length=6)
+
+    def validate_code(self, value):
+        return sanitize_otp_code(value)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -98,7 +123,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'surname', 'last_name', 'phone_number', 'telegram_username']
 
     def validate_email(self, value):
-        value = (value or '').strip().lower()
+        value = sanitize_email(value)
         if not value:
             raise serializers.ValidationError('Email не может быть пустым.')
         if User.objects.filter(email=value).exclude(pk=self.instance.pk).exists():
@@ -116,5 +141,19 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
     def validate_telegram_username(self, value):
         if value is None:
             return ''
-        value = (value or '').strip().lstrip('@')
-        return value[:100] if value else ''
+        return sanitize_telegram(value)[:100]
+
+    def validate_first_name(self, value):
+        if value is None:
+            return ''
+        return sanitize_name(value, max_len=MAX_NAME_SHORT)
+
+    def validate_surname(self, value):
+        if value is None:
+            return ''
+        return sanitize_name(value, max_len=MAX_NAME_SHORT)
+
+    def validate_last_name(self, value):
+        if value is None:
+            return ''
+        return sanitize_name(value, max_len=MAX_NAME_SHORT)

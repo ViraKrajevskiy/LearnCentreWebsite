@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -361,7 +362,7 @@ nav {
 
         <div class="field">
           <label class="flbl">Номер телефона</label>
-          <input class="finput" type="text" id="loginId" placeholder="+998901234567" autocomplete="username">
+          <input class="finput" type="text" id="loginId" name="phone_number" placeholder="+998901234567" maxlength="20" autocomplete="username" inputmode="tel">
         </div>
 
         <div class="field">
@@ -401,7 +402,7 @@ nav {
 
         <div class="field">
           <label class="flbl">E-mail</label>
-          <input class="finput" type="email" id="resetEmail" placeholder="example@mail.com" autocomplete="email">
+          <input class="finput" type="email" id="resetEmail" name="email" placeholder="example@mail.com" maxlength="254" autocomplete="email">
         </div>
 
         <button class="submit-btn" onclick="doReset()" style="margin-bottom:14px">
@@ -423,6 +424,7 @@ nav {
   </div>
 </div>
 
+<script src="{% static 'js/input-validation.js' %}"></script>
 <script>
 const html = document.documentElement;
 const ball = document.getElementById('themeBall');
@@ -454,7 +456,9 @@ function togglePwd(id, btn) {
 }
 
 async function doLogin() {
-  const id  = document.getElementById('loginId').value.trim();
+  var idRaw = document.getElementById('loginId').value;
+  var id = typeof InputValidation !== 'undefined' ? InputValidation.sanitizePhone(idRaw) : idRaw.replace(/[^0-9\s+\-()]/g, '').trim().slice(0, 20);
+  document.getElementById('loginId').value = id;
   const pwd = document.getElementById('loginPwd').value;
   const btn = document.getElementById('loginBtn');
   const err = document.getElementById('errBanner');
@@ -518,8 +522,12 @@ function showLogin() {
   document.getElementById('resetSuccess').style.display = 'none';
 }
 function doReset() {
-  const email = document.getElementById('resetEmail').value.trim();
-  if(!email) { document.getElementById('resetEmail').classList.add('shake'); setTimeout(() => document.getElementById('resetEmail').classList.remove('shake'), 500); return; }
+  var emailEl = document.getElementById('resetEmail');
+  var email = emailEl.value;
+  if (typeof InputValidation !== 'undefined') email = InputValidation.sanitizeEmail(email);
+  else email = email.trim().toLowerCase().slice(0, 254);
+  emailEl.value = email;
+  if(!email) { emailEl.classList.add('shake'); setTimeout(function(){ emailEl.classList.remove('shake'); }, 500); return; }
   document.getElementById('resetSuccess').style.display = '';
 }
 

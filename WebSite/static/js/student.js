@@ -1,5 +1,21 @@
 /* LearnCentre - Student Frontend JS */
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    var s = String(str);
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/** Безопасный href: только относительный путь или https? URL. */
+function safeHref(url) {
+    if (!url || typeof url !== 'string') return '#';
+    var t = url.trim();
+    if (!t) return '#';
+    if (t[0] === '/' && t.indexOf('//') !== 0) return t;
+    if (t.indexOf('http://') === 0 || t.indexOf('https://') === 0) return t;
+    return '#';
+}
+
 function setTheme(nextTheme, showToast) {
     const html = document.documentElement;
     html.setAttribute('data-theme', nextTheme);
@@ -196,14 +212,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var kinds = { news: 'Новость', homework: 'Домашнее задание', lesson_soon: 'Урок через 30 мин', lesson_started: 'Урок начался' };
         var html = '';
         list.forEach(function(n) {
-            var kindLabel = kinds[n.kind] || n.kind;
+            var kindLabel = escapeHtml(kinds[n.kind] || n.kind);
             var cls = 'notification-item' + (n.is_read ? '' : ' unread');
-            var link = (n.link && n.link.length) ? n.link : '#';
+            var link = safeHref(n.link);
             var timeStr = n.created_at ? new Date(n.created_at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-            html += '<a href="' + link + '" class="' + cls + '" data-id="' + (n.id || '') + '">';
-            html += '<span class="notification-title">' + (n.title || '') + '</span>';
-            html += '<div class="notification-meta">' + kindLabel + (timeStr ? ' · ' + timeStr : '') + '</div>';
-            if (n.message) html += '<div class="notification-meta mt-1">' + (n.message.substring(0, 80) + (n.message.length > 80 ? '…' : '')) + '</div>';
+            html += '<a href="' + escapeHtml(link) + '" class="' + cls + '" data-id="' + escapeHtml(String(n.id || '')) + '">';
+            html += '<span class="notification-title">' + escapeHtml(n.title || '') + '</span>';
+            html += '<div class="notification-meta">' + kindLabel + (timeStr ? ' · ' + escapeHtml(timeStr) : '') + '</div>';
+            if (n.message) html += '<div class="notification-meta mt-1">' + escapeHtml(n.message.substring(0, 80) + (n.message.length > 80 ? '…' : '')) + '</div>';
             html += '</a>';
         });
         notificationsList.innerHTML = html;

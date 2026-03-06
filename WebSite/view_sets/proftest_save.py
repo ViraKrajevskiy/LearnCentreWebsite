@@ -1,6 +1,7 @@
 """
 Сохранение результата профтеста: создание пользователя по email+пароль и запись TestResult.
 Для авторизованных: сохранение результата в свой профиль (без повторного ввода email/пароля).
+Валидация полей: защита от XSS и некорректных данных.
 """
 import random
 from rest_framework.views import APIView
@@ -12,6 +13,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
 from WebSite.models import TestResult
+from WebSite.utils.input_validation import (
+    sanitize_email,
+    sanitize_profile_id,
+    validate_json_scores,
+)
 
 User = get_user_model()
 
@@ -32,10 +38,10 @@ class ProftestSaveView(APIView):
     """POST: email, password, profile_id → создаёт пользователя и записывает результат теста."""
 
     def post(self, request):
-        email = (request.data.get('email') or '').strip()
+        email = sanitize_email(request.data.get('email'))
         password = request.data.get('password')
-        profile_id = (request.data.get('profile_id') or '').strip()
-        scores_json = request.data.get('scores_json')
+        profile_id = sanitize_profile_id(request.data.get('profile_id'), VALID_PROFILE_IDS)
+        scores_json = validate_json_scores(request.data.get('scores_json'))
 
         if not email:
             return Response(
@@ -89,7 +95,7 @@ class ProftestSaveView(APIView):
         TestResult.objects.create(
             user=user,
             profile_id=profile_id,
-            scores_json=scores_json,
+            scores_json=scores_json or {},
         )
 
         return Response(
@@ -106,8 +112,8 @@ class ProftestSaveToProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        profile_id = (request.data.get('profile_id') or '').strip()
-        scores_json = request.data.get('scores_json')
+        profile_id = sanitize_profile_id(request.data.get('profile_id'), VALID_PROFILE_IDS)
+        scores_json = validate_json_scores(request.data.get('scores_json'))
 
         if profile_id not in VALID_PROFILE_IDS:
             return Response(
@@ -118,7 +124,7 @@ class ProftestSaveToProfileView(APIView):
         TestResult.objects.create(
             user=request.user,
             profile_id=profile_id,
-            scores_json=scores_json,
+            scores_json=scores_json or {},
         )
 
         return Response(

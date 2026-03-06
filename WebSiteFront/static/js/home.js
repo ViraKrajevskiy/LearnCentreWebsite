@@ -1,3 +1,29 @@
+/* Безопасность: экранирование для вставки в HTML (защита от XSS) */
+function escapeHtml(str) {
+  if (str == null) return '';
+  var s = String(str);
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* Безопасность полей формы: санитизация ввода */
+function sanitizeName(val) {
+  if (val == null) return '';
+  return String(val).trim().replace(/[<>\"'&]/g, '').slice(0, 200);
+}
+function sanitizeEmail(val) {
+  if (val == null) return '';
+  return String(val).trim().toLowerCase().slice(0, 254);
+}
+function sanitizePhone(val) {
+  if (val == null) return '';
+  return String(val).replace(/[^0-9\s\+\-\(\)]/g, '').trim().slice(0, 20);
+}
+
 /* THEME — базовый белый фон, иконка = текущая тема (☀️ светлая, 🌙 тёмная) */
 const html = document.documentElement;
 const ball = document.getElementById('themeBall');
@@ -34,6 +60,52 @@ mobile.querySelectorAll('a').forEach(link => {
     document.body.style.overflow = '';
   };
 });
+
+/* Форма заявки на главной: санитизация полей и безопасная отправка */
+(function(){
+  var form = document.getElementById('heroLeadForm');
+  if (!form) return;
+  var nameEl = document.getElementById('heroName');
+  var emailEl = document.getElementById('heroEmail');
+  var phoneEl = document.getElementById('heroPhone');
+  var agreeEl = document.getElementById('heroAgree');
+
+  function applySanitize(el, fn) {
+    if (!el) return;
+    el.addEventListener('blur', function() {
+      var v = fn(el.value);
+      if (v !== el.value) el.value = v;
+    });
+    el.addEventListener('input', function() {
+      var pos = el.selectionStart;
+      var v = fn(el.value);
+      if (v !== el.value) {
+        el.value = v;
+        el.setSelectionRange(Math.min(pos, v.length), Math.min(pos, v.length));
+      }
+    });
+  }
+  applySanitize(nameEl, sanitizeName);
+  applySanitize(emailEl, sanitizeEmail);
+  applySanitize(phoneEl, sanitizePhone);
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (nameEl) nameEl.value = sanitizeName(nameEl.value);
+    if (emailEl) emailEl.value = sanitizeEmail(emailEl.value);
+    if (phoneEl) phoneEl.value = sanitizePhone(phoneEl.value);
+    if (agreeEl && !agreeEl.checked) {
+      agreeEl.focus();
+      return;
+    }
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    var url = form.getAttribute('data-register-url') || '/register/';
+    if (url) window.location.href = url;
+  });
+})();
 
 /* CTA — пригласительный блок: переключение темы и интерактивное свечение */
 (function(){
@@ -166,7 +238,7 @@ function nextQ(){
   document.getElementById('qLbl').textContent = qs[qi].q;
   document.getElementById('qPct').textContent = pct+'%';
   document.getElementById('ptFill').style.width = pct+'%';
-  document.getElementById('ptOpts').innerHTML = qs[qi].o.map((o,i)=>`<div class="pt-o" onclick="selOpt(this)"><span>${o}</span><div class="pt-radio"></div></div>`).join('');
+  document.getElementById('ptOpts').innerHTML = qs[qi].o.map((o,i)=>'<div class="pt-o" onclick="selOpt(this)"><span>'+escapeHtml(o)+'</span><div class="pt-radio"></div></div>').join('');
   if(qi===qs.length-1){
     const btn=document.getElementById('ptNext');
     btn.textContent='Узнать результат';
@@ -184,7 +256,8 @@ function nextQ(){
       let max=-1, win='ai_business';
       keys.forEach(k=>{ if(scores[k]>max){ max=scores[k]; win=k; } });
       const r = ptResults[win];
-      document.querySelector('.pt-r').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;text-align:center;padding:48px 36px"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px">'+r.emoji+'</div><h3 style="font-family:Unbounded,sans-serif;font-weight:900;font-size:1.25rem;margin-bottom:12px;letter-spacing:-.5px">Ваша ниша — '+r.title+'</h3><p style="color:var(--tx2);font-size:.85rem;line-height:1.7;margin-bottom:24px;max-width:320px">'+r.desc+'</p><a href="/register/?goal='+encodeURIComponent(win)+'" class="btn-p" style="text-decoration:none">Записаться на курс →</a><a href="/proftest/" style="display:block;margin-top:12px;font-size:.8rem;color:var(--tx3)">Пройти полный тест (7 вопросов) →</a></div>';
+      if (!r) return;
+      document.querySelector('.pt-r').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;text-align:center;padding:48px 36px"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px">'+escapeHtml(r.emoji)+'</div><h3 style="font-family:Unbounded,sans-serif;font-weight:900;font-size:1.25rem;margin-bottom:12px;letter-spacing:-.5px">Ваша ниша — '+escapeHtml(r.title)+'</h3><p style="color:var(--tx2);font-size:.85rem;line-height:1.7;margin-bottom:24px;max-width:320px">'+escapeHtml(r.desc)+'</p><a href="/register/?goal='+encodeURIComponent(win)+'" class="btn-p" style="text-decoration:none">Записаться на курс →</a><a href="/proftest/" style="display:block;margin-top:12px;font-size:.8rem;color:var(--tx3)">Пройти полный тест (7 вопросов) →</a></div>';
     };
   }
 }
@@ -251,12 +324,13 @@ document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
       const num = parseInt(text.replace(/\D/g,''));
       if(isNaN(num)||num<10) return;
       const hasSuffix = el.querySelector('em');
-      const suffix = hasSuffix ? hasSuffix.outerHTML : '';
+      const suffix = hasSuffix ? escapeHtml(hasSuffix.textContent || '') : '';
+      const suffixTag = hasSuffix ? '<em>' + suffix + '</em>' : '';
       const dur = 1600; const startTime = performance.now();
       function step(now){
         const p = Math.min((now-startTime)/dur,1);
         const val = Math.floor((1-Math.pow(1-p,3))*num);
-        el.innerHTML = val.toLocaleString('ru') + suffix;
+        el.innerHTML = val.toLocaleString('ru') + suffixTag;
         if(p<1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);

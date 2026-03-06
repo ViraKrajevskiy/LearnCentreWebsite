@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -426,30 +427,30 @@ nav {
         <div class="field-row">
           <div class="field">
             <label class="flbl">Имя</label>
-            <input class="finput" type="text" id="fname" placeholder="Александр" autocomplete="given-name">
+            <input class="finput" type="text" id="fname" name="first_name" placeholder="Александр" maxlength="50" autocomplete="given-name">
           </div>
           <div class="field">
             <label class="flbl">Фамилия</label>
-            <input class="finput" type="text" id="lname" placeholder="Иванов" autocomplete="family-name">
+            <input class="finput" type="text" id="lname" name="surname" placeholder="Иванов" maxlength="50" autocomplete="family-name">
           </div>
         </div>
 
         <div class="field">
           <label class="flbl">E-mail</label>
-          <input class="finput" type="email" id="email" placeholder="example@mail.com" autocomplete="email">
+          <input class="finput" type="email" id="email" name="email" placeholder="example@mail.com" maxlength="254" autocomplete="email">
         </div>
 
         <div class="field">
           <label class="flbl">Телефон</label>
           <div class="phone-wrap">
-            <button class="flag-sel" id="flagSel">🇺🇿 +998 ▾</button>
-            <input type="tel" id="phone" placeholder="Номер телефона" autocomplete="tel">
+            <button type="button" class="flag-sel" id="flagSel">🇺🇿 +998 ▾</button>
+            <input type="tel" id="phone" name="phone_number" placeholder="Номер телефона" maxlength="20" autocomplete="tel" inputmode="tel">
           </div>
         </div>
 
         <div class="field">
           <label class="flbl">Telegram (без @)</label>
-          <input class="finput" type="text" id="telegram" placeholder="username" autocomplete="username">
+          <input class="finput" type="text" id="telegram" name="telegram_username" placeholder="username" maxlength="100" autocomplete="username">
           <div class="field-hint">Ваш ник в Telegram — сюда придёт код подтверждения</div>
         </div>
 
@@ -559,7 +560,7 @@ nav {
         </a>
         <div class="field" style="text-align:left;max-width:200px;margin:0 auto 16px">
           <label class="flbl">Код из бота (6 цифр)</label>
-          <input class="finput" type="text" id="otpCode" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code">
+          <input class="finput" type="text" id="otpCode" name="code" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code">
           <div class="field-hint err" id="otpErr" style="display:none"></div>
         </div>
         <button class="submit-btn" id="btnVerify" onclick="verifyOtp()" style="max-width:220px;margin:0 auto">
@@ -590,6 +591,7 @@ nav {
 .goal-card.sel { border-color: var(--pu); background: rgba(139,92,246,.1); box-shadow: 0 0 0 1px var(--pu); }
 </style>
 
+<script src="{% static 'js/input-validation.js' %}"></script>
 <script>
 const html = document.documentElement;
 const ball = document.getElementById('themeBall');
@@ -691,9 +693,16 @@ async function register() {
     alert('Пожалуйста, примите условия использования');
     return;
   }
-  const fname = document.getElementById('fname').value.trim();
-  const lname = document.getElementById('lname').value.trim();
-  const telegram = (document.getElementById('telegram').value || '').trim().replace(/^@/,'');
+  var V = typeof InputValidation !== 'undefined' ? InputValidation : null;
+  var fnameEl = document.getElementById('fname');
+  var lnameEl = document.getElementById('lname');
+  var telegramEl = document.getElementById('telegram');
+  var fname = V ? V.sanitizeName(fnameEl.value, 50) : fnameEl.value.trim().replace(/[<>"'&]/g, '').slice(0, 50);
+  var lname = V ? V.sanitizeName(lnameEl.value, 50) : lnameEl.value.trim().replace(/[<>"'&]/g, '').slice(0, 50);
+  var telegram = V ? V.sanitizeTelegram(telegramEl.value) : (telegramEl.value || '').trim().replace(/^@/, '').replace(/[^\w@]/g, '').slice(0, 100);
+  fnameEl.value = fname;
+  lnameEl.value = lname;
+  telegramEl.value = telegram;
   const pwd = document.getElementById('pwd').value;
   const pwd2 = document.getElementById('pwd2').value;
   if(!fname || !lname) {

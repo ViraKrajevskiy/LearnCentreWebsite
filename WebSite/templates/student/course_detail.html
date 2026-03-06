@@ -151,11 +151,25 @@
         if (submitBtn) submitBtn.disabled = true;
         if (msgEl) { msgEl.classList.add('d-none'); msgEl.classList.remove('alert-danger', 'alert-success'); }
         var fd = new FormData(form);
+        function sanitizeName(s) {
+            if (!s) return '';
+            return String(s).trim().replace(/[<>\"'&]/g, '').slice(0, 255);
+        }
+        function sanitizeTelegram(s) {
+            if (!s) return '';
+            return String(s).trim().replace(/^@/, '').replace(/[^\w@]/g, '').slice(0, 128);
+        }
+        function sanitizeTag(s) {
+            if (!s) return '';
+            return String(s).trim().replace(/[^\w\-]/g, '').slice(0, 128);
+        }
+        var courseId = parseInt(fd.get('course_id'), 10);
+        if (isNaN(courseId) || courseId <= 0) courseId = {{ course.id }};
         var payload = {
-            course_id: parseInt(fd.get('course_id'), 10) || {{ course.id }},
-            name: (fd.get('name') || '').trim(),
-            telegram: (fd.get('telegram') || '').trim(),
-            tag: (fd.get('tag') || '').trim()
+            course_id: courseId,
+            name: sanitizeName(fd.get('name')),
+            telegram: sanitizeTelegram(fd.get('telegram')),
+            tag: sanitizeTag(fd.get('tag'))
         };
         var token = localStorage.getItem('access');
         var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };

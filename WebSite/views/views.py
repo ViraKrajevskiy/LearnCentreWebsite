@@ -19,6 +19,7 @@ from WebSite.models.pay_system.payment import StudentSubscription, Payment
 from WebSite.models.notifications import Notification
 from WebSite.models.news_model import News
 from WebSite.models.group.groups import Group
+from WebSite.utils.input_validation import sanitize_text_field, validate_int_id
 
 
 # --- HELPERS / DECORATORS ---
@@ -657,11 +658,11 @@ def submit_task_view(request, task_id):
     submission_count = TaskSubmission.objects.filter(student=student, task=task).count()
     if submission_count >= 3:
         return JsonResponse({'error': 'Достигнут лимит пересдач (максимум 3)'}, status=400)
-    text = (request.POST.get('text') or '').strip()
+    text = sanitize_text_field(request.POST.get('text'))
     file_obj = request.FILES.get('file')
     if not text and not file_obj:
         return JsonResponse({'error': 'Добавьте текст или файл'}, status=400)
-    TaskSubmission.objects.create(student=student, task=task, text=text, file=file_obj or None)
+    TaskSubmission.objects.create(student=student, task=task, text=text or '', file=file_obj or None)
     return JsonResponse({'ok': True, 'message': 'Ответ отправлен!', 'attempts_left': 2 - submission_count})
 
 
@@ -677,7 +678,7 @@ def submit_lesson_comment_view(request, lesson_id):
     ).exists()
     if not has_access:
         return JsonResponse({'error': 'Нет доступа к курсу'}, status=403)
-    text = (request.POST.get('text') or '').strip()
+    text = sanitize_text_field(request.POST.get('text'))
     file_obj = request.FILES.get('file')
     if not text and not file_obj:
         return JsonResponse({'error': 'Напишите комментарий или прикрепите файл'}, status=400)
@@ -723,8 +724,8 @@ def notification_mark_read_api(request):
         body = json.loads(request.body.decode('utf-8') or '{}')
     except Exception:
         body = {}
-    nid = body.get('notification_id')
-    if nid:
+    nid = validate_int_id(body.get('notification_id'))
+    if nid is not None:
         Notification.objects.filter(student=student, pk=nid).update(is_read=True)
     else:
         Notification.objects.filter(student=student).update(is_read=True)

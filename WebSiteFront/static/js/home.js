@@ -212,13 +212,13 @@ document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
 /* FLOATING TECH ICONS */
 (function(){
   const icons = [
-    'https://cdn.worldvectorlogo.com/logos/python-5.svg',
-    'https://upload.wikimedia.org/wikipedia/commons/1/1d/PyCharm_Icon.svg',
-    'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg',
-    'https://cdn.worldvectorlogo.com/logos/tensorflow-2.svg',
-    'https://upload.wikimedia.org/wikipedia/commons/3/38/Jupyter_logo.svg',
-    'https://cdn.worldvectorlogo.com/logos/numpy-1.svg',
-    'https://upload.wikimedia.org/wikipedia/commons/9/96/Pytorch_logo.png',
+    '/static/img/tech/python.svg',
+    '/static/img/tech/pycharm.svg',
+    '/static/img/tech/chatgpt.svg',
+    '/static/img/tech/tensorflow.svg',
+    '/static/img/tech/jupyter.svg',
+    '/static/img/tech/numpy.svg',
+    '/static/img/tech/pytorch.svg',
   ];
   const container = document.getElementById('techIconsBg');
   if(!container) return;
@@ -232,6 +232,7 @@ document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
     el.style.cssText = `width:${size}px;height:${size}px;left:${30+Math.random()*55}%;bottom:${15+Math.random()*15}%;animation:floatIcon ${dur}s ${delay}s ease-in-out forwards;opacity:0.7;`;
     const img = document.createElement('img');
     img.src = src; img.style.cssText='width:26px;height:26px;object-fit:contain;border-radius:4px;';
+    img.onerror = () => el.remove();
     el.appendChild(img);
     container.appendChild(el);
     setTimeout(()=>el.remove(), (dur+delay+1)*1000);

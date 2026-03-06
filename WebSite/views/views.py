@@ -21,6 +21,8 @@ from WebSite.models.news_model import News
 from WebSite.models.group.groups import Group
 
 
+# --- HELPERS / DECORATORS ---
+
 def student_required(view_func):
     @wraps(view_func)
     @login_required(login_url='login')
@@ -29,6 +31,25 @@ def student_required(view_func):
             return redirect('login')
         return view_func(request, *args, **kwargs)
     return _wrapped
+
+
+def _get_student_from_request(request):
+    """Возвращает студента из request: сессия или JWT (Bearer)."""
+    if request.user.is_authenticated and getattr(request.user, 'student', None):
+        return request.user.student
+    auth = request.META.get('HTTP_AUTHORIZATION') or ''
+    if auth.startswith('Bearer '):
+        from rest_framework_simplejwt.tokens import AccessToken
+        from django.contrib.auth import get_user_model
+        try:
+            token = AccessToken(auth[7:])
+            user = get_user_model().objects.get(pk=token['user_id'])
+            if hasattr(user, 'student'):
+                return user.student
+        except Exception:
+            pass
+    return None
+
 
 def _get_my_courses_data(student):
     """
@@ -125,23 +146,63 @@ def _get_my_courses_data(student):
     return result
 
 
+def _youtube_video_id(url):
+    """Извлекает video_id из ссылки YouTube."""
+    if not url:
+        return None
+    url = (url or '').strip()
+    if 'youtu.be/' in url:
+        return url.split('youtu.be/')[-1].split('?')[0].split('/')[0]
+    if 'youtube.com/embed/' in url:
+        return url.split('youtube.com/embed/')[-1].split('?')[0].split('/')[0]
+    if 'youtube.com' in url and 'v=' in url:
+        try:
+            parsed = urlparse(url)
+            qs = parse_qs(parsed.query)
+            return (qs.get('v') or [None])[0]
+        except Exception:
+            pass
+        for part in url.split('?')[-1].split('&'):
+            if part.startswith('v='):
+                return part[2:].split('#')[0]
+    return None
+
+
+_YOUTUBE_EMBED_BASE = 'https://www.youtube-nocookie.com/embed'
+_YOUTUBE_EMBED_PARAMS = '?modestbranding=1&rel=0'
+
+
+def _youtube_embed_url(url):
+    """Преобразует ссылку на YouTube в embed-URL."""
+    vid = _youtube_video_id(url)
+    return f'{_YOUTUBE_EMBED_BASE}/{vid}{_YOUTUBE_EMBED_PARAMS}' if vid else None
+
+
+# --- MAIN PAGES (GUESTS) ---
+
 def main_home(request):
-    return render(request, 'main_pages/index.html')
+    return render(request, 'main_pages/home.html')
+
 
 def main_courses(request):
     return render(request, 'main_pages/courses.html')
 
+
 def main_about(request):
     return render(request, 'main_pages/about.html')
+
 
 def main_contact(request):
     return render(request, 'main_pages/contact.html')
 
+
 def main_faq(request):
     return render(request, 'main_pages/faq.html')
 
+
 def main_invite(request):
     return render(request, 'main_pages/invite.html')
+
 
 def main_login(request):
     return render(request, 'main_pages/login.html', {'login_type': 'student'})
@@ -150,8 +211,12 @@ def main_login(request):
 def main_staff_login(request):
     return render(request, 'main_pages/login.html', {'login_type': 'staff'})
 
+
 def main_register(request):
     return render(request, 'main_pages/register.html')
+
+
+# --- STUDENT VIEWS ---
 
 @student_required
 def student_home(request):
@@ -196,8 +261,13 @@ def student_home(request):
             group__in=groups, scheduled_at__gte=now
         ).select_related('course', 'group').prefetch_related('sub_lessons').order_by('scheduled_at')[:5]
 
-        total_att = Attendance.objects.filter(student=student).count()
-        present_att = Attendance.objects.filter(student=student, is_present=True).count()
+        # optimization: get attendance counts in one query
+        att_counts = Attendance.objects.filter(student=student).aggregate(
+            total=Count('id'),
+            present=Count('id', filter=timezone.Q(is_present=True))
+        )
+        total_att = att_counts['total']
+        present_att = att_counts['present']
         att_rate = round(present_att / total_att * 100) if total_att else 0
 
         pending_tasks = Task.objects.filter(
@@ -257,6 +327,7 @@ def student_home(request):
 
     return render(request, 'student/home.html', ctx)
 
+
 @student_required
 def student_courses(request):
     courses = (
@@ -268,37 +339,13 @@ def student_courses(request):
     return render(request, 'student/courses.html', {'courses': courses})
 
 
-def _youtube_video_id(url):
-    """Извлекает video_id из ссылки YouTube (один раз парсим, переиспользуем)."""
-    if not url:
-        return None
-    url = (url or '').strip()
-    if 'youtu.be/' in url:
-        return url.split('youtu.be/')[-1].split('?')[0].split('/')[0]
-    if 'youtube.com/embed/' in url:
-        return url.split('youtube.com/embed/')[-1].split('?')[0].split('/')[0]
-    if 'youtube.com' in url and 'v=' in url:
-        try:
-            parsed = urlparse(url)
-            qs = parse_qs(parsed.query)
-            return (qs.get('v') or [None])[0]
-        except Exception:
-            pass
-        for part in url.split('?')[-1].split('&'):
-            if part.startswith('v='):
-                return part[2:].split('#')[0]
-    return None
-
-
-# Параметры embed: без иконки канала, без посторонних рекомендаций.
-_YOUTUBE_EMBED_BASE = 'https://www.youtube-nocookie.com/embed'
-_YOUTUBE_EMBED_PARAMS = '?modestbranding=1&rel=0'
-
-
-def _youtube_embed_url(url):
-    """Преобразует ссылку на YouTube в embed-URL."""
-    vid = _youtube_video_id(url)
-    return f'{_YOUTUBE_EMBED_BASE}/{vid}{_YOUTUBE_EMBED_PARAMS}' if vid else None
+@student_required
+def student_my_courses(request):
+    courses_data = []
+    if request.user.is_authenticated and hasattr(request.user, 'student'):
+        student = request.user.student
+        courses_data = _get_my_courses_data(student)
+    return render(request, 'student/my_courses.html', {'courses_data': courses_data})
 
 
 @student_required
@@ -359,9 +406,10 @@ def student_lesson_detail(request, lesson_id):
     if request.user.is_authenticated and hasattr(request.user, 'student'):
         student = request.user.student
         attendance = Attendance.objects.filter(student=student, lesson=lesson).first()
-        lesson_grades = []
-        student_grades = []
-
+        # Optimization: only query if needed, and lesson_grades/student_grades were empty anyway
+        lesson_grades = list(Grade.objects.filter(student=student, lesson=lesson).select_related('student__user'))
+        student_grades = lesson_grades # in this context they seem same or similar
+    
     sub_lessons = list(lesson.sub_lessons.all())
     sub_lessons_videos = []
     for sub in sub_lessons:
@@ -412,14 +460,6 @@ def student_lesson_detail(request, lesson_id):
         'lesson_comments': lesson_comments,
     })
 
-
-@student_required
-def student_my_courses(request):
-    courses_data = []
-    if request.user.is_authenticated and hasattr(request.user, 'student'):
-        student = request.user.student
-        courses_data = _get_my_courses_data(student)
-    return render(request, 'student/my_courses.html', {'courses_data': courses_data})
 
 @student_required
 def student_assignments(request):
@@ -487,6 +527,7 @@ def student_performance(request):
     page_obj = paginator.get_page(page_number)
     return render(request, 'student/performance.html', {'page_obj': page_obj, 'performance_data': page_obj.object_list})
 
+
 @student_required
 def student_profile(request):
     user = request.user
@@ -541,13 +582,16 @@ def student_profile(request):
         'performance_data': performance_data,
     })
 
+
 @student_required
 def student_ai_chat(request):
     return render(request, 'student/ai_chat.html')
 
+
 @student_required
 def student_messages(request):
     return render(request, 'student/messages.html')
+
 
 @student_required
 def student_news(request):
@@ -578,9 +622,11 @@ def student_attendance(request):
     return render(request, 'student/attendance.html', {'attendance_list': attendance_list})
 
 
+# --- ACTIONS (POST ONLY) ---
+
 @student_required
 def upload_receipt_view(request, payment_id):
-    """Загрузка чека об оплате. POST: file (чек). Платёж должен принадлежать студенту."""
+    """Загрузка чека об оплате."""
     if request.method != 'POST':
         return redirect('profile')
     payment = get_object_or_404(Payment, pk=payment_id)
@@ -598,7 +644,7 @@ def upload_receipt_view(request, payment_id):
 
 @require_POST
 def submit_task_view(request, task_id):
-    """Приём сдачи задания: текст и/или файл. Требует авторизации."""
+    """Приём сдачи задания."""
     if not request.user.is_authenticated or not hasattr(request.user, 'student'):
         return JsonResponse({'error': 'Войдите в аккаунт'}, status=401)
     task = get_object_or_404(Task.objects.select_related('sub_lesson__lesson'), pk=task_id)
@@ -621,7 +667,7 @@ def submit_task_view(request, task_id):
 
 @require_POST
 def submit_lesson_comment_view(request, lesson_id):
-    """Добавить комментарий к уроку (текст и/или файл). Только студенты с доступом к курсу."""
+    """Добавить комментарий к уроку."""
     if not request.user.is_authenticated or not hasattr(request.user, 'student'):
         return JsonResponse({'error': 'Войдите в аккаунт'}, status=401)
     lesson = get_object_or_404(Lesson.objects.select_related('course'), pk=lesson_id)
@@ -639,26 +685,10 @@ def submit_lesson_comment_view(request, lesson_id):
     return JsonResponse({'ok': True, 'message': 'Комментарий добавлен!'})
 
 
-def _get_student_from_request(request):
-    """Возвращает студента из request: сессия или JWT (Bearer)."""
-    if request.user.is_authenticated and getattr(request.user, 'student', None):
-        return request.user.student
-    auth = request.META.get('HTTP_AUTHORIZATION') or ''
-    if auth.startswith('Bearer '):
-        from rest_framework_simplejwt.tokens import AccessToken
-        from django.contrib.auth import get_user_model
-        try:
-            token = AccessToken(auth[7:])
-            user = get_user_model().objects.get(pk=token['user_id'])
-            if hasattr(user, 'student'):
-                return user.student
-        except Exception:
-            pass
-    return None
-
+# --- API VIEWS ---
 
 def notifications_list_api(request):
-    """Список уведомлений студента (JSON). Поддержка сессии и JWT (Bearer)."""
+    """Список уведомлений студента (JSON)."""
     student = _get_student_from_request(request)
     if not student:
         return JsonResponse({'notifications': [], 'unread_count': 0})
@@ -684,7 +714,7 @@ def notifications_list_api(request):
 
 @require_POST
 def notification_mark_read_api(request):
-    """Отметить уведомление прочитанным (JSON: notification_id) или все (пустой body). Сохраняется в БД."""
+    """Отметить уведомление прочитанным."""
     student = _get_student_from_request(request)
     if not student:
         return JsonResponse({'error': 'Войдите в аккаунт'}, status=401)

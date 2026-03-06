@@ -1,7 +1,9 @@
 from datetime import date, timedelta
 from functools import wraps
+from urllib.parse import urlparse, parse_qs
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,6 +18,7 @@ from WebSite.models.study.submission import TaskSubmission
 from WebSite.models.pay_system.payment import StudentSubscription, Payment
 from WebSite.models.notifications import Notification
 from WebSite.models.news_model import News
+from WebSite.models.group.groups import Group
 
 
 def student_required(view_func):
@@ -27,24 +30,11 @@ def student_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped
 
-def _get_next_lesson_for_student(student, course):
-    student_groups = student.study_groups.filter(course=course)
-    attended_lesson_ids = set(
-        Attendance.objects.filter(student=student).values_list('lesson_id', flat=True)
-    )
-    for group in student_groups:
-        for lesson in group.lessons.order_by('scheduled_at'):
-            if lesson.id not in attended_lesson_ids:
-                return lesson
-    return None
-
-
 def _get_my_courses_data(student):
     """
     Возвращает только купленные курсы студента — по подпискам (StudentSubscription).
-    Студент видит в личном кабинете только те курсы, на которые у него есть подписка.
+    Оптимизировано: минимум запросов к БД (batch prefetch).
     """
-    result = []
     subscriptions = (
         StudentSubscription.objects
         .filter(student=student)
@@ -52,19 +42,72 @@ def _get_my_courses_data(student):
         .order_by('-start_date')
     )
     seen_course_ids = set()
+    courses_order = []
     for sub in subscriptions:
         course = sub.tariff.course
         if course.id in seen_course_ids:
             continue
         seen_course_ids.add(course.id)
-        group = student.study_groups.filter(course=course).first() or course.groups.first()
-        total = group.lessons.count() if group else 0
-        attended = (
-            Attendance.objects.filter(student=student, lesson__group__course=course).count()
-            if group else 0
-        )
-        next_lesson = _get_next_lesson_for_student(student, course)
-        first_lesson = group.lessons.order_by('scheduled_at').first() if group else None
+        courses_order.append((course, sub))
+
+    if not courses_order:
+        return []
+
+    course_ids = list(seen_course_ids)
+
+    # Один запрос: группы студента по этим курсам
+    student_groups = list(
+        student.study_groups.filter(course_id__in=course_ids).select_related('course')
+    )
+    groups_by_course = {g.course_id: g for g in student_groups}
+
+    # Один запрос: все группы курсов с количеством уроков и префетчем уроков по порядку
+    groups_with_lessons = Group.objects.filter(course_id__in=course_ids).annotate(
+        lessons_count=Count('lessons')
+    ).prefetch_related(
+        Prefetch('lessons', queryset=Lesson.objects.order_by('scheduled_at'))
+    )
+    for g in groups_with_lessons:
+        if g.course_id not in groups_by_course:
+            groups_by_course[g.course_id] = g
+    # Для курсов без группы студента — первая группа курса
+    first_group_per_course = {}
+    for g in groups_with_lessons:
+        if g.course_id not in first_group_per_course:
+            first_group_per_course[g.course_id] = g
+    for cid in course_ids:
+        if cid not in groups_by_course and cid in first_group_per_course:
+            groups_by_course[cid] = first_group_per_course[cid]
+
+    # Один запрос: посещённые уроки студента по этим курсам
+    attended_lesson_ids = set(
+        Attendance.objects.filter(
+            student=student, lesson__group__course_id__in=course_ids
+        ).values_list('lesson_id', flat=True)
+    )
+
+    # Один запрос: количество посещений по курсам
+    attendance_counts = {
+        row['lesson__group__course_id']: row['cnt']
+        for row in Attendance.objects.filter(
+            student=student, lesson__group__course_id__in=course_ids
+        ).values('lesson__group__course_id').annotate(cnt=Count('id'))
+    }
+
+    result = []
+    for course, sub in courses_order:
+        group = groups_by_course.get(course.id)
+        total = group.lessons_count if group else 0
+        attended = attendance_counts.get(course.id, 0)
+        next_lesson = None
+        first_lesson = None
+        if group:
+            for lesson in group.lessons.all():
+                if first_lesson is None:
+                    first_lesson = lesson
+                if lesson.id not in attended_lesson_ids:
+                    next_lesson = lesson
+                    break
         continue_url = (
             reverse('lesson', args=[next_lesson.id]) if next_lesson else
             (reverse('lesson', args=[first_lesson.id]) if first_lesson else None)
@@ -132,9 +175,19 @@ def student_home(request):
             student=student
         ).values_list('tariff__course_id', flat=True).distinct()
 
-        progress = StudentProgress.objects.filter(
-            student=student, course_id__in=purchased_course_ids
-        ).select_related('course').first()
+        # Prefetch course and groups with lessons_count to avoid N+1
+        progress = (
+            StudentProgress.objects
+            .filter(student=student, course_id__in=purchased_course_ids)
+            .select_related('course')
+            .prefetch_related(
+                Prefetch(
+                    'course__groups',
+                    queryset=Group.objects.annotate(lessons_count=Count('lessons'))
+                )
+            )
+            .first()
+        )
 
         groups = student.study_groups.filter(course_id__in=purchased_course_ids)
 
@@ -154,14 +207,24 @@ def student_home(request):
         # recent grades
         recent_grades = Grade.objects.order_by('-created_at')[:4]
 
-        # attendance calendar (last 28 days)
+        # attendance calendar (last 28 days) — один запрос вместо 28
         today = date.today()
+        date_from = today - timedelta(days=28)
+        attendance_list = list(
+            Attendance.objects.filter(
+                student=student, date__gte=date_from, date__lte=today
+            ).order_by('date').values_list('date', 'is_present')
+        )
+        attendance_by_date = {}
+        for d, is_present in attendance_list:
+            if d not in attendance_by_date:
+                attendance_by_date[d] = is_present
         calendar = []
         for i in range(27, -1, -1):
             d = today - timedelta(days=i)
-            att = Attendance.objects.filter(student=student, date=d).first()
-            if att:
-                status = 'present' if att.is_present else 'absent'
+            is_present = attendance_by_date.get(d)
+            if is_present is not None:
+                status = 'present' if is_present else 'absent'
             elif d == today:
                 status = 'today'
             else:
@@ -173,9 +236,11 @@ def student_home(request):
         progress_group = None
         if progress:
             course = progress.course
-            progress_group = student.study_groups.filter(course=course).first()
+            progress_group = next((g for g in groups if g.course_id == course.id), None)
+            if not progress_group and course:
+                progress_group = next(iter(course.groups.all()), None)
             if progress_group:
-                total_lessons = progress_group.lessons.count()
+                total_lessons = getattr(progress_group, 'lessons_count', None) or progress_group.lessons.count()
                 course_percent = round(progress.completed_lessons_count / total_lessons * 100) if total_lessons else 0
 
         ctx.update({
@@ -194,59 +259,67 @@ def student_home(request):
 
 @student_required
 def student_courses(request):
-    courses = Course.objects.all().select_related('creator').prefetch_related('lessons').order_by('-created_at')
+    courses = (
+        Course.objects.all()
+        .annotate(lessons_count=Count('lessons'))
+        .select_related('creator')
+        .order_by('-created_at')
+    )
     return render(request, 'student/courses.html', {'courses': courses})
+
+
+def _youtube_video_id(url):
+    """Извлекает video_id из ссылки YouTube (один раз парсим, переиспользуем)."""
+    if not url:
+        return None
+    url = (url or '').strip()
+    if 'youtu.be/' in url:
+        return url.split('youtu.be/')[-1].split('?')[0].split('/')[0]
+    if 'youtube.com/embed/' in url:
+        return url.split('youtube.com/embed/')[-1].split('?')[0].split('/')[0]
+    if 'youtube.com' in url and 'v=' in url:
+        try:
+            parsed = urlparse(url)
+            qs = parse_qs(parsed.query)
+            return (qs.get('v') or [None])[0]
+        except Exception:
+            pass
+        for part in url.split('?')[-1].split('&'):
+            if part.startswith('v='):
+                return part[2:].split('#')[0]
+    return None
+
+
+# Параметры embed: без иконки канала, без посторонних рекомендаций.
+_YOUTUBE_EMBED_BASE = 'https://www.youtube-nocookie.com/embed'
+_YOUTUBE_EMBED_PARAMS = '?modestbranding=1&rel=0'
+
+
+def _youtube_embed_url(url):
+    """Преобразует ссылку на YouTube в embed-URL."""
+    vid = _youtube_video_id(url)
+    return f'{_YOUTUBE_EMBED_BASE}/{vid}{_YOUTUBE_EMBED_PARAMS}' if vid else None
 
 
 @student_required
 def student_course_detail(request, course_id):
-    course = get_object_or_404(Course.objects.select_related('creator').prefetch_related('lessons'), pk=course_id)
-    lessons_count = course.lessons.count()
-    trailer_embed_url = _youtube_embed_url(course.trailer_video_url) if getattr(course, 'trailer_video_url', None) else None
+    course = get_object_or_404(
+        Course.objects.annotate(lessons_count=Count('lessons')).select_related('creator'),
+        pk=course_id
+    )
+    trailer_url = getattr(course, 'trailer_video_url', None)
+    trailer_video_id = _youtube_video_id(trailer_url) if trailer_url else None
+    trailer_embed_url = f'{_YOUTUBE_EMBED_BASE}/{trailer_video_id}{_YOUTUBE_EMBED_PARAMS}' if trailer_video_id else None
     student_group = None
     if request.user.is_authenticated and hasattr(request.user, 'student'):
         student_group = request.user.student.study_groups.filter(course=course).first()
     return render(request, 'student/course_detail.html', {
         'course': course,
-        'lessons_count': lessons_count,
+        'lessons_count': course.lessons_count,
         'trailer_embed_url': trailer_embed_url,
+        'trailer_video_id': trailer_video_id,
         'student_group': student_group,
     })
-
-# Параметры embed: без иконки канала, без посторонних рекомендаций. nocookie уменьшает риск ошибки 153.
-_YOUTUBE_EMBED_PARAMS = '?modestbranding=1&rel=0'
-
-
-def _youtube_embed_url(url):
-    """Преобразует ссылку на YouTube в embed-URL (youtube-nocookie.com для стабильного воспроизведения)."""
-    if not url:
-        return None
-    url = (url or '').strip()
-    base_embed = 'https://www.youtube-nocookie.com/embed'
-    vid = None
-    # youtu.be/VIDEO_ID
-    if 'youtu.be/' in url:
-        vid = url.split('youtu.be/')[-1].split('?')[0].split('/')[0]
-    # youtube.com/embed/VIDEO_ID
-    elif 'youtube.com/embed/' in url:
-        vid = url.split('youtube.com/embed/')[-1].split('?')[0].split('/')[0]
-    # youtube.com/watch?v=VIDEO_ID или m.youtube.com/...
-    elif 'youtube.com' in url and 'v=' in url:
-        from urllib.parse import urlparse, parse_qs
-        try:
-            parsed = urlparse(url)
-            qs = parse_qs(parsed.query)
-            vid = (qs.get('v') or [None])[0]
-        except Exception:
-            pass
-        if not vid:
-            for part in url.split('?')[-1].split('&'):
-                if part.startswith('v='):
-                    vid = part[2:].split('#')[0]
-                    break
-    if not vid:
-        return None
-    return f'{base_embed}/{vid}{_YOUTUBE_EMBED_PARAMS}'
 
 
 @student_required
@@ -372,30 +445,43 @@ def student_performance(request):
     performance_data = []
     if request.user.is_authenticated and hasattr(request.user, 'student'):
         student = request.user.student
-        progress_list = StudentProgress.objects.filter(student=student).select_related('course')
-        submitted_task_ids = set(
-            TaskSubmission.objects.filter(student=student).values_list('task_id', flat=True).distinct()
+        progress_list = list(
+            StudentProgress.objects.filter(student=student).select_related('course')
         )
-        for progress in progress_list:
-            course = progress.course
-            student_group = student.study_groups.filter(course=course).first()
-            tasks_in_course = list(
-                Task.objects.filter(sub_lesson__lesson__course=course)
+        if progress_list:
+            course_ids = [p.course_id for p in progress_list]
+            student_groups = list(
+                student.study_groups.filter(course_id__in=course_ids).select_related('course')
+            )
+            groups_by_course = {g.course_id: g for g in student_groups}
+            submitted_task_ids = set(
+                TaskSubmission.objects.filter(student=student).values_list('task_id', flat=True).distinct()
+            )
+            all_tasks = list(
+                Task.objects.filter(sub_lesson__lesson__course_id__in=course_ids)
                 .select_related('sub_lesson__lesson')
                 .order_by('sub_lesson__lesson__scheduled_at', 'sub_lesson__order', 'id')
             )
-            tasks_with_status = [
-                {'task': t, 'submitted': t.id in submitted_task_ids}
-                for t in tasks_in_course
-            ]
-            performance_data.append({
-                'course': course,
-                'progress': progress,
-                'student_group': student_group,
-                'tasks_total': len(tasks_in_course),
-                'tasks_submitted': sum(1 for tw in tasks_with_status if tw['submitted']),
-                'tasks_with_status': tasks_with_status,
-            })
+            tasks_by_course = {}
+            for t in all_tasks:
+                cid = t.sub_lesson.lesson.course_id
+                tasks_by_course.setdefault(cid, []).append(t)
+            for progress in progress_list:
+                course = progress.course
+                student_group = groups_by_course.get(course.id)
+                tasks_in_course = tasks_by_course.get(course.id, [])
+                tasks_with_status = [
+                    {'task': t, 'submitted': t.id in submitted_task_ids}
+                    for t in tasks_in_course
+                ]
+                performance_data.append({
+                    'course': course,
+                    'progress': progress,
+                    'student_group': student_group,
+                    'tasks_total': len(tasks_in_course),
+                    'tasks_submitted': sum(1 for tw in tasks_with_status if tw['submitted']),
+                    'tasks_with_status': tasks_with_status,
+                })
     paginator = Paginator(performance_data, 5)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -419,19 +505,35 @@ def student_profile(request):
             .select_related('subscription', 'subscription__tariff', 'subscription__tariff__course')
             .order_by('-created_at')[:50]
         )
-        # Успеваемость: по каждому курсу — прогресс и сданные/несданные задания
-        progress_list = StudentProgress.objects.filter(student=student).select_related('course')
-        for progress in progress_list:
-            course = progress.course
-            tasks_in_course = Task.objects.filter(sub_lesson__lesson__course=course)
-            tasks_total = tasks_in_course.count()
-            tasks_submitted = TaskSubmission.objects.filter(student=student, task__in=tasks_in_course).values('task').distinct().count()
-            performance_data.append({
-                'course': course,
-                'progress': progress,
-                'tasks_total': tasks_total,
-                'tasks_submitted': tasks_submitted,
-            })
+        # Успеваемость: по каждому курсу — прогресс и сданные/несданные задания (batch)
+        progress_list = list(
+            StudentProgress.objects.filter(student=student).select_related('course')
+        )
+        if progress_list:
+            course_ids = [p.course_id for p in progress_list]
+            tasks_total_by_course = dict(
+                Task.objects.filter(sub_lesson__lesson__course_id__in=course_ids)
+                .values('sub_lesson__lesson__course_id')
+                .annotate(total=Count('id'))
+                .values_list('sub_lesson__lesson__course_id', 'total')
+            )
+            submitted_by_course = dict(
+                TaskSubmission.objects.filter(
+                    student=student,
+                    task__sub_lesson__lesson__course_id__in=course_ids
+                )
+                .values('task__sub_lesson__lesson__course_id')
+                .annotate(cnt=Count('task', distinct=True))
+                .values_list('task__sub_lesson__lesson__course_id', 'cnt')
+            )
+            for progress in progress_list:
+                cid = progress.course_id
+                performance_data.append({
+                    'course': progress.course,
+                    'progress': progress,
+                    'tasks_total': tasks_total_by_course.get(cid, 0),
+                    'tasks_submitted': submitted_by_course.get(cid, 0),
+                })
 
     return render(request, 'student/profile.html', {
         'show_proftest_prompt': show_proftest_prompt,

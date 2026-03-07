@@ -15,6 +15,11 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 _raw = (os.getenv('TELEGRAM_BOT_USERNAME') or '').strip()
 TELEGRAM_BOT_USERNAME = _raw.lstrip('@') if _raw and ' ' not in _raw else 'SWIFT_INTEL_EDUCATION_bot'
 
+# Прокси для бота (если api.telegram.org недоступен: блокировка, таймаут).
+# Примеры: http://127.0.0.1:7890  socks5://127.0.0.1:1080  http://user:pass@host:port
+# Для socks4/socks5 нужен пакет: pip install aiohttp-socks
+TELEGRAM_BOT_PROXY = (os.getenv('TELEGRAM_BOT_PROXY') or '').strip() or None
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,14 +64,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'WebSite.context_processors.teacher_dashboard',
             ],
         },
     },
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),   # 1 день — чтобы студент не разлогинивался через 15 минут
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
@@ -145,6 +151,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 AUTH_USER_MODEL = 'WebSite.User'
+
+# Сессия: дольше не разлогинивать при входе через сайт
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 дней (секунды)
+SESSION_SAVE_EVERY_REQUEST = True       # продлевать сессию при каждом запросе
 
 STATIC_URL = '/static/'
 

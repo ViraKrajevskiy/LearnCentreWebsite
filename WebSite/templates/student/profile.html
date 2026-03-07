@@ -5,184 +5,122 @@
 {% block page_title %}Профиль{% endblock %}
 
 {% block content %}
-<div class="student-page">
-    <div class="page-hero anim-fade-up mb-4">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-            <div>
-                <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Личный кабинет</p>
-                <h1>Профиль</h1>
-                <p class="lead mb-0">Данные и смена пароля</p>
-            </div>
-            <button type="button" id="logout-btn" class="btn btn-outline-danger d-flex align-items-center gap-2">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Выйти</span>
-            </button>
-        </div>
-    </div>
+<div class="student-page profile-page">
     <div id="profile-auth-required" class="alert alert-warning d-none">
         <a href="{% url 'login' %}" class="alert-link">Войдите</a>, чтобы просмотреть профиль.
     </div>
     {% if show_proftest_prompt %}
-    <div class="card-ai card-glow mb-4 animate-on-scroll" id="proftest-first-login-block" style="border: 2px solid var(--accent, #6366f1); background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06));">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="profile-proftest animate-on-scroll" id="proftest-first-login-block">
+        <div class="profile-proftest-inner">
             <div>
-                <h5 class="mb-2" style="color: var(--accent, #6366f1);">
-                    <i class="bi bi-clipboard-check me-2"></i>Пройдите профтест
-                </h5>
-                <p class="text-secondary mb-0 small">Мы подберём для вас направление и курсы по результатам. Займёт пару минут.</p>
+                <h5 class="profile-proftest-title"><i class="bi bi-clipboard-check me-2"></i>Пройдите профтест</h5>
+                <p class="profile-proftest-text">Мы подберём направление и курсы по результатам. Займёт пару минут.</p>
             </div>
-            <a href="/proftest/" class="btn btn-ai d-flex align-items-center gap-2">
-                <i class="bi bi-arrow-right-circle"></i>
-                <span>Пройти профтест</span>
-            </a>
+            <a href="/proftest/" class="btn btn-ai d-inline-flex align-items-center gap-2">Пройти профтест <i class="bi bi-arrow-right"></i></a>
         </div>
-        <button type="button" class="btn btn-link btn-sm text-secondary p-0 mt-2" id="proftest-dismiss" style="font-size: 0.8rem;">Позже</button>
+        <button type="button" class="btn btn-link btn-sm p-0 mt-2 profile-proftest-dismiss" id="proftest-dismiss">Позже</button>
     </div>
     {% endif %}
-    <div id="profile-content" class="row g-4 d-none">
-        <div class="col-lg-4">
-            <div class="card-ai card-glow text-center animate-on-scroll">
-                <div id="avatar-initials" class="avatar-profile mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: var(--ai-gradient); color: white; font-size: 2.5rem; font-weight: 700; box-shadow: 0 15px 40px rgba(99,102,241,0.4);">
-                    —
-                </div>
-                <h4 id="profile-name" class="mb-1 fw-bold">—</h4>
-                <p id="profile-email" class="text-secondary small mb-4">—</p>
+    <div id="profile-content" class="d-none profile-wrap">
+        <!-- Левая колонка: аватар, имя, выход, ссылка на оплаты -->
+        <aside class="profile-sidebar">
+            <div class="profile-card profile-card-user animate-on-scroll">
+                <div id="avatar-initials" class="profile-avatar">—</div>
+                <h1 id="profile-name" class="profile-name">—</h1>
+                <p id="profile-email" class="profile-email">—</p>
+                <button type="button" id="logout-btn" class="btn btn-outline-danger btn-sm w-100 mt-2"><i class="bi bi-box-arrow-right me-1"></i>Выйти</button>
             </div>
-        </div>
-        <div class="col-lg-8">
-            <div class="card-ai card-glow mb-4 animate-on-scroll">
-                <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-person-vcard me-2" style="color: var(--accent);"></i>Личные данные
-                </h5>
-                <form id="profile-edit-form">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-secondary">Имя</label>
-                            <input type="text" name="first_name" id="profile-edit-first-name" class="form-control" placeholder="Имя" maxlength="50">
+            <div class="profile-card profile-card-link animate-on-scroll">
+                <a href="{% url 'payments' %}" class="profile-link-block">
+                    <span class="profile-link-icon"><i class="bi bi-credit-card"></i></span>
+                    <span class="profile-link-text">Оплаты и чеки</span>
+                    <i class="bi bi-chevron-right profile-link-arrow"></i>
+                </a>
+            </div>
+        </aside>
+        <!-- Правая колонка: формы -->
+        <div class="profile-main">
+            <section class="profile-section animate-on-scroll">
+                <h2 class="profile-section-title"><i class="bi bi-person-vcard"></i> Личные данные</h2>
+                <form id="profile-edit-form" class="profile-form">
+                    <div class="profile-form-grid">
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-first-name">Имя</label>
+                            <input type="text" name="first_name" id="profile-edit-first-name" class="form-control profile-input" placeholder="Имя" maxlength="50">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-secondary">Фамилия</label>
-                            <input type="text" name="surname" id="profile-edit-surname" class="form-control" placeholder="Фамилия" maxlength="50">
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-surname">Фамилия</label>
+                            <input type="text" name="surname" id="profile-edit-surname" class="form-control profile-input" placeholder="Фамилия" maxlength="50">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-secondary">Email</label>
-                            <input type="email" name="email" id="profile-edit-email" class="form-control" placeholder="email@example.com" required>
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-email">Email</label>
+                            <input type="email" name="email" id="profile-edit-email" class="form-control profile-input" placeholder="email@example.com" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-secondary">Телефон</label>
-                            <input type="tel" name="phone_number" id="profile-edit-phone" class="form-control" placeholder="+7 999 123-45-67" required>
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-phone">Телефон</label>
+                            <input type="tel" name="phone_number" id="profile-edit-phone" class="form-control profile-input" placeholder="+7 999 123-45-67" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-secondary">Telegram (без @)</label>
-                            <input type="text" name="telegram_username" id="profile-edit-telegram" class="form-control" placeholder="username" maxlength="100">
-                        </div>
-                        <div class="col-12">
-                            <div id="profile-edit-error" class="alert alert-danger d-none mb-2"></div>
-                            <div id="profile-edit-success" class="alert alert-success d-none mb-2">Данные сохранены.</div>
-                            <button type="submit" class="btn btn-ai" id="profile-edit-submit">
-                                <i class="bi bi-check-lg me-1"></i>Сохранить изменения
-                            </button>
+                        <div class="profile-field profile-field-full">
+                            <label class="profile-label" for="profile-edit-telegram">Telegram (без @)</label>
+                            <input type="text" name="telegram_username" id="profile-edit-telegram" class="form-control profile-input" placeholder="username" maxlength="100">
                         </div>
                     </div>
+                    <div id="profile-edit-error" class="alert alert-danger d-none mb-3"></div>
+                    <div id="profile-edit-success" class="alert alert-success d-none mb-3">Данные сохранены.</div>
+                    <button type="submit" class="btn btn-ai" id="profile-edit-submit"><i class="bi bi-check-lg me-1"></i>Сохранить</button>
                 </form>
-            </div>
-            <!-- Загрузка чеков об оплате — как это сделать -->
-            <div class="card-ai card-glow mb-4 animate-on-scroll" style="border-left: 4px solid var(--accent);">
-                <h5 class="card-title-custom mb-2">
-                    <i class="bi bi-receipt me-2" style="color: var(--accent);"></i>Чеки об оплате
-                </h5>
-                <p class="small text-secondary mb-0">После оплаты курса загрузите чек (скрин или PDF) в таблице ниже — выберите файл у нужной оплаты и нажмите «Загрузить». Менеджер подтвердит платёж после проверки.</p>
-            </div>
-
-            <!-- История оплат -->
-            <div class="card-ai card-glow mb-4 animate-on-scroll">
-                <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-credit-card me-2" style="color: var(--accent);"></i>История оплат
-                </h5>
-                {% if payment_history %}
-                <div class="table-responsive">
-                    <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.9rem;">
-                        <thead>
-                            <tr class="border-bottom border-secondary border-opacity-25">
-                                <th class="text-secondary fw-normal">Дата</th>
-                                <th class="text-secondary fw-normal">Сумма</th>
-                                <th class="text-secondary fw-normal">Курс</th>
-                                <th class="text-secondary fw-normal">Статус</th>
-                                <th class="text-secondary fw-normal">Чек</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in payment_history %}
-                            <tr class="border-bottom border-secondary border-opacity-10">
-                                <td>{{ p.created_at|date:"d.m.Y" }}</td>
-                                <td>{{ p.amount|floatformat:0 }} ₽</td>
-                                <td>{% if p.subscription and p.subscription.tariff %}{{ p.subscription.tariff.course.title }}{% else %}—{% endif %}</td>
-                                <td>{% if p.is_confirmed %}<span class="text-success small">Подтверждено</span>{% else %}<span class="text-warning small">Ожидает</span>{% endif %}</td>
-                                <td>
-                                    {% if p.receipt %}
-                                    <a href="{{ p.receipt.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-pdf me-1"></i>Скачать чек</a>
-                                    {% else %}
-                                    <form action="{% url 'upload_receipt' p.id %}" method="post" enctype="multipart/form-data" class="d-inline receipt-upload-form">
-                                        {% csrf_token %}
-                                        <input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png,.webp" class="form-control form-control-sm d-inline-block" style="max-width:140px" required>
-                                        <button type="submit" class="btn btn-sm btn-ai ms-1">Загрузить</button>
-                                    </form>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            </section>
+            <section class="profile-section profile-section-compact animate-on-scroll" id="telegram-link-card">
+                <h2 class="profile-section-title"><i class="bi bi-telegram"></i> Данные через Telegram-бот</h2>
+                <p class="profile-section-desc mb-0">В боте: <b>/profile</b>, <b>/payments</b>, <b>/resetpassword</b> (сброс пароля по коду, если забыли).</p>
+            </section>
+            <section class="profile-section animate-on-scroll">
+                <h2 class="profile-section-title"><i class="bi bi-key"></i> Смена пароля</h2>
+                <p class="profile-section-desc mb-3">По текущему паролю или по коду из Telegram.</p>
+                <div class="mb-3 d-flex flex-wrap gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="change_password_method" id="method-password" value="password" checked>
+                        <label class="form-check-label" for="method-password">Текущий пароль</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="change_password_method" id="method-telegram" value="telegram">
+                        <label class="form-check-label" for="method-telegram">Код из Telegram</label>
+                    </div>
                 </div>
-                {% else %}
-                <p class="text-secondary small mb-0">Пока нет оплат.</p>
-                {% endif %}
-            </div>
-
-            <!-- Успеваемость: оценки по курсам, сданные/несданные задания -->
-            <div class="card-ai card-glow mb-4 animate-on-scroll">
-                <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-graph-up me-2" style="color: var(--accent);"></i>Успеваемость
-                </h5>
-                {% if performance_data %}
-                <div class="d-flex flex-column gap-3">
-                    {% for item in performance_data %}
-                    <div class="p-3 rounded-3" style="background: var(--ai-subtle, rgba(99,102,241,0.06)); border: 1px solid var(--border);">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-                            <strong>{{ item.course.title }}</strong>
-                            <span class="badge bg-secondary">Средний балл: {{ item.progress.average_grade|floatformat:1 }}</span>
+                <div id="change-password-by-password">
+                    <form id="change-password-form" class="profile-form">
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Текущий пароль</label>
+                            <input type="password" name="old_password" class="form-control profile-input" placeholder="••••••••">
                         </div>
-                        <div class="small text-secondary mb-1">Уроков пройдено: {{ item.progress.completed_lessons_count }}</div>
-                        <div class="small">Заданий сдано: <strong>{{ item.tasks_submitted }}</strong> из <strong>{{ item.tasks_total }}</strong></div>
-                        {% if item.progress.finished_course %}
-                        <span class="badge bg-success mt-2">Курс завершён</span>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Новый пароль (не менее 8 символов)</label>
+                            <input type="password" name="new_password" class="form-control profile-input" minlength="8" placeholder="••••••••">
+                        </div>
+                        <div id="password-error" class="alert alert-danger d-none mb-3"></div>
+                        <button type="submit" class="btn btn-ai">Изменить пароль</button>
+                    </form>
                 </div>
-                {% else %}
-                <p class="text-secondary small mb-0">Нет данных об успеваемости (запишитесь на курс и выполняйте задания).</p>
-                {% endif %}
-            </div>
-
-            <div class="card-ai card-glow animate-on-scroll">
-                <h5 class="card-title-custom mb-4">
-                    <i class="bi bi-key me-2" style="color: var(--accent);"></i>Смена пароля
-                </h5>
-                <p class="text-muted small mb-3">Изменить пароль можно здесь или в Telegram-боте командой /changepassword</p>
-                <form id="change-password-form">
-                    <div class="mb-3">
-                        <label class="form-label">Текущий пароль</label>
-                        <input type="password" name="old_password" class="form-control" required placeholder="••••••••">
+                <div id="change-password-by-telegram" class="d-none">
+                    <div id="telegram-otp-step1">
+                        <p class="text-muted small mb-2">Код придёт в привязанный Telegram.</p>
+                        <button type="button" class="btn btn-ai btn-sm mb-3" id="request-password-otp-btn"><i class="bi bi-telegram me-1"></i>Получить код</button>
+                        <div id="request-otp-error" class="alert alert-danger d-none mb-2"></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Новый пароль (не менее 8 символов)</label>
-                        <input type="password" name="new_password" class="form-control" required minlength="8" placeholder="••••••••">
-                    </div>
-                    <div id="password-error" class="alert alert-danger d-none mb-3"></div>
-                    <button type="submit" class="btn btn-ai">Изменить пароль</button>
-                </form>
-            </div>
+                    <form id="change-password-otp-form" class="d-none profile-form">
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Код из Telegram</label>
+                            <input type="text" name="code" class="form-control profile-input" maxlength="6" placeholder="123456" autocomplete="one-time-code">
+                        </div>
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Новый пароль</label>
+                            <input type="password" name="new_password" class="form-control profile-input" minlength="8" placeholder="••••••••">
+                        </div>
+                        <div id="password-otp-error" class="alert alert-danger d-none mb-3"></div>
+                        <button type="submit" class="btn btn-ai">Изменить пароль</button>
+                    </form>
+                </div>
+            </section>
         </div>
     </div>
 </div>
@@ -240,6 +178,81 @@
     }).catch(() => {
         authRequired?.classList.remove('d-none');
         profileContent?.classList.add('d-none');
+    });
+
+    // Переключение способа смены пароля
+    const methodPassword = document.getElementById('method-password');
+    const methodTelegram = document.getElementById('method-telegram');
+    const byPasswordBlock = document.getElementById('change-password-by-password');
+    const byTelegramBlock = document.getElementById('change-password-by-telegram');
+    function toggleChangePasswordMethod() {
+        const byTelegram = methodTelegram && methodTelegram.checked;
+        if (byPasswordBlock) byPasswordBlock.classList.toggle('d-none', byTelegram);
+        if (byTelegramBlock) byTelegramBlock.classList.toggle('d-none', !byTelegram);
+    }
+    methodPassword?.addEventListener('change', toggleChangePasswordMethod);
+    methodTelegram?.addEventListener('change', toggleChangePasswordMethod);
+    toggleChangePasswordMethod();
+
+    let passwordOtpSessionId = null;
+
+    document.getElementById('request-password-otp-btn')?.addEventListener('click', async function() {
+        const errEl = document.getElementById('request-otp-error');
+        errEl.classList.add('d-none');
+        const res = await fetch('/api/v1/auth/request-change-password-otp/', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access') }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            passwordOtpSessionId = data.session_id;
+            document.getElementById('telegram-otp-step1')?.classList.add('d-none');
+            document.getElementById('change-password-otp-form')?.classList.remove('d-none');
+        } else {
+            errEl.textContent = data.error || 'Не удалось отправить код. Привяжите Telegram в профиле.';
+            errEl.classList.remove('d-none');
+        }
+    });
+
+    document.getElementById('change-password-otp-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const errEl = document.getElementById('password-otp-error');
+        errEl.classList.add('d-none');
+        if (!passwordOtpSessionId) {
+            errEl.textContent = 'Сначала нажмите «Получить код в Telegram».';
+            errEl.classList.remove('d-none');
+            return;
+        }
+        const res = await fetch('/api/v1/auth/change-password/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access')
+            },
+            body: JSON.stringify({
+                session_id: passwordOtpSessionId,
+                code: (form.querySelector('[name="code"]')?.value || '').trim(),
+                new_password: form.querySelector('[name="new_password"]')?.value || ''
+            })
+        });
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (res.ok) {
+            form.reset();
+            passwordOtpSessionId = null;
+            document.getElementById('telegram-otp-step1')?.classList.remove('d-none');
+            form.classList.add('d-none');
+            errEl.classList.remove('d-none');
+            errEl.classList.remove('alert-danger');
+            errEl.classList.add('alert-success');
+            errEl.textContent = 'Пароль успешно изменён.';
+        } else {
+            errEl.classList.remove('alert-success');
+            errEl.classList.add('alert-danger');
+            errEl.textContent = (data.code && data.code[0]) || (data.new_password && data.new_password[0]) || data.error || 'Ошибка';
+            errEl.classList.remove('d-none');
+        }
     });
 
     changeForm?.addEventListener('submit', async (e) => {
@@ -318,6 +331,7 @@
             profileEditError.textContent = Array.isArray(msg) ? msg[0] : msg;
         }
     });
+
 })();
 </script>
 {% endblock %}

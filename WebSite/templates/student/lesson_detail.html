@@ -18,11 +18,28 @@
     <span style="color:var(--text-primary);font-weight:600">{{ lesson.title }}</span>
   </nav>
 
+  {% if lesson_locked %}
+  <!-- Урок заблокирован (тариф «активное обучение»): открывается после сдачи предыдущего и в назначенное время -->
+  <div class="card-ai card-glow animate-on-scroll mb-4">
+    <div style="text-align:center;padding:32px 24px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--ai-subtle);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px">
+        <i class="bi bi-lock-fill" style="font-size:2rem;color:var(--accent)"></i>
+      </div>
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px">Урок пока недоступен</h2>
+      <p style="font-size:.9rem;color:var(--text-secondary);margin-bottom:4px">Он откроется после сдачи предыдущего урока и в назначенное время.</p>
+      {% if unlock_at %}
+      <p style="font-size:.95rem;font-weight:600;color:var(--accent)"><i class="bi bi-calendar3 me-1"></i>{{ unlock_at|date:"d.m.Y" }} в {{ unlock_at|date:"H:i" }}</p>
+      {% endif %}
+      <a href="{% url 'my-courses' %}" class="btn btn-ai btn-sm mt-3">Вернуться к курсам</a>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row g-4">
 
     <!-- LEFT: LESSON CONTENT -->
     <div class="col-lg-8">
-
+      {% if not lesson_locked %}
       <!-- LESSON HEADER -->
       <div class="card-ai card-glow animate-on-scroll mb-4" style="padding-bottom:0;overflow:hidden">
         <div style="background:var(--ai-gradient);padding:32px 28px;margin:-28px -28px 24px;position:relative;overflow:hidden">
@@ -47,6 +64,13 @@
               <span><i class="bi bi-clock me-1"></i>{{ lesson.scheduled_at|date:"H:i" }}</span>
               <span><i class="bi bi-collection-play me-1"></i>{{ lesson.sub_lessons.count }} подурок{{ lesson.sub_lessons.count|pluralize:",а,ов" }}</span>
             </div>
+            {% if lesson_teacher or lesson_mentor or lesson_created_by %}
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.2);font-size:.8rem;color:rgba(255,255,255,.85)">
+              {% if lesson_teacher and lesson_teacher.user %}<span><i class="bi bi-person-badge me-1"></i>Учитель: {{ lesson_teacher.user.get_full_name|default:lesson_teacher.user.email }}</span>{% endif %}
+              {% if lesson_mentor and lesson_mentor.user %}<span class="ms-3"><i class="bi bi-person-workspace me-1"></i>Ментор: {{ lesson_mentor.user.get_full_name|default:lesson_mentor.user.email }}</span>{% endif %}
+              {% if lesson_created_by and lesson_created_by.user %}<span class="ms-3"><i class="bi bi-pencil-square me-1"></i>Создал урок: {{ lesson_created_by.user.get_full_name|default:lesson_created_by.user.email }}</span>{% endif %}
+            </div>
+            {% endif %}
           </div>
         </div>
 
@@ -231,6 +255,7 @@
         <div id="commentErr" style="display:none;margin-top:10px;font-size:.8rem;color:#ef4444"></div>
       </div>
 
+      {% endif %}
     </div>
 
     <!-- RIGHT SIDEBAR -->
@@ -272,6 +297,18 @@
             <span style="font-size:.78rem;color:var(--text-secondary)">—</span>
             {% endif %}
           </div>
+          <div style="padding:10px 0;border-top:1px solid var(--border)">
+            <a href="{% url 'messages' %}?group={{ lesson.group.id }}" class="btn btn-ai btn-sm w-100 mb-2" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:.8rem">
+              <i class="bi bi-chat-dots"></i> Написать учителю или ментору
+            </a>
+            <form method="post" action="{% url 'group_chat_clear' lesson.group.id %}" class="d-inline w-100" onsubmit="return confirm('Удалить все ваши сообщения в чате этой группы?');">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'lesson_detail' lesson.id %}">
+              <button type="submit" class="btn btn-outline-secondary btn-sm w-100" style="font-size:.8rem">
+                <i class="bi bi-trash me-1"></i> Удалить мои сообщения в чате
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -280,23 +317,35 @@
         <h4 style="font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
           <i class="bi bi-list-ul" style="color:var(--accent)"></i> Другие уроки курса
         </h4>
-        {% for l in other_lessons %}
-        <a href="{% url 'lesson_detail' l.id %}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all .2s;background:{% if l.id == lesson.id %}var(--ai-subtle){% else %}transparent{% endif %};border:1.5px solid {% if l.id == lesson.id %}var(--accent){% else %}transparent{% endif %}"
-           onmouseover="if({{ l.id }}!={{ lesson.id }})this.style.background='var(--ai-subtle)'" onmouseout="if({{ l.id }}!={{ lesson.id }})this.style.background='transparent'">
+        {% for item in other_lessons_with_lock %}
+        {% if item.is_locked %}
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--ai-subtle);opacity:.85;cursor:not-allowed;border:1.5px solid transparent">
+          <div style="width:32px;height:32px;min-width:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;background:var(--ai-subtle);color:var(--text-secondary)">
+            <i class="bi bi-lock" style="font-size:.9rem"></i>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.83rem;font-weight:500;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.lesson.title }}</div>
+            <div style="font-size:.7rem;color:var(--text-secondary)">Откроется {{ item.unlock_at|date:"d.m" }} в {{ item.unlock_at|date:"H:i" }}</div>
+          </div>
+        </div>
+        {% else %}
+        <a href="{% url 'lesson_detail' item.lesson.id %}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all .2s;background:{% if item.lesson.id == lesson.id %}var(--ai-subtle){% else %}transparent{% endif %};border:1.5px solid {% if item.lesson.id == lesson.id %}var(--accent){% else %}transparent{% endif %}"
+           onmouseover="if({{ item.lesson.id }}!={{ lesson.id }})this.style.background='var(--ai-subtle)'" onmouseout="if({{ item.lesson.id }}!={{ lesson.id }})this.style.background='transparent'">
           <div style="width:32px;height:32px;min-width:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;
-            {% if l.id == lesson.id %}background:var(--ai-gradient);color:#fff{% else %}background:var(--ai-subtle);color:var(--accent){% endif %}">
+            {% if item.lesson.id == lesson.id %}background:var(--ai-gradient);color:#fff{% else %}background:var(--ai-subtle);color:var(--accent){% endif %}">
             {{ forloop.counter }}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:.83rem;font-weight:{% if l.id == lesson.id %}700{% else %}500{% endif %};color:{% if l.id == lesson.id %}var(--text-primary){% else %}var(--text-secondary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-              {{ l.title }}
+            <div style="font-size:.83rem;font-weight:{% if item.lesson.id == lesson.id %}700{% else %}500{% endif %};color:{% if item.lesson.id == lesson.id %}var(--text-primary){% else %}var(--text-secondary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              {{ item.lesson.title }}
             </div>
-            <div style="font-size:.7rem;color:var(--text-secondary)">{{ l.scheduled_at|date:"d.m" }}</div>
+            <div style="font-size:.7rem;color:var(--text-secondary)">{{ item.lesson.scheduled_at|date:"d.m" }}</div>
           </div>
-          {% if l.id == lesson.id %}
+          {% if item.lesson.id == lesson.id %}
           <i class="bi bi-arrow-right" style="color:var(--accent);font-size:.8rem;flex-shrink:0"></i>
           {% endif %}
         </a>
+        {% endif %}
         {% empty %}
         <p style="font-size:.82rem;color:var(--text-secondary)">Других уроков нет</p>
         {% endfor %}

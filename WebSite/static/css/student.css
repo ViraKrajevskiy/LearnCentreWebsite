@@ -1156,3 +1156,118 @@ body {
     border-color: var(--accent) !important;
     background: var(--ai-subtle) !important;
 }
+
+/* ——— Профиль: две колонки (слева — карточка пользователя и оплаты, справа — формы), снизу отступ ——— */
+.profile-page { padding-bottom: 2.5rem; }
+.profile-wrap {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 767px) {
+    .profile-wrap { grid-template-columns: 1fr; }
+}
+.profile-proftest {
+    background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.profile-proftest-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.profile-proftest-title { font-size: 1rem; font-weight: 700; color: var(--accent); margin-bottom: 0.25rem; }
+.profile-proftest-text { font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
+.profile-proftest-dismiss { color: var(--text-secondary) !important; font-size: 0.8rem; }
+
+/* Левая колонка */
+.profile-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+.profile-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+[data-theme="dark"] .profile-card { box-shadow: 0 2px 16px rgba(0,0,0,0.2); }
+.profile-card-user { text-align: center; }
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 0.75rem;
+    border-radius: 50%;
+    background: var(--ai-gradient);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+}
+.profile-name { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.25rem; line-height: 1.3; }
+.profile-email { font-size: 0.8rem; color: var(--text-secondary); margin: 0; }
+.profile-card-link { padding: 0; overflow: hidden; }
+
+/* Правая колонка */
+.profile-main { display: flex; flex-direction: column; gap: 1.5rem; }
+.profile-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.35rem 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+[data-theme="dark"] .profile-section { box-shadow: 0 2px 20px rgba(0,0,0,0.2); }
+.profile-section-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.profile-section-title i { color: var(--accent); opacity: 0.95; }
+.profile-section-desc { font-size: 0.8125rem; color: var(--text-secondary); margin: 0; line-height: 1.45; }
+.profile-section-compact .profile-section-title { margin-bottom: 0.35rem; }
+.profile-section-row { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; margin-bottom: 1.25rem; }
+@media (max-width: 576px) { .profile-form-grid { grid-template-columns: 1fr; } }
+.profile-field-full { grid-column: 1 / -1; }
+.profile-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block; }
+.profile-input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.profile-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); outline: none; }
+.profile-section-link { padding: 0; overflow: hidden; }
+.profile-link-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    color: inherit;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.profile-link-block:hover { background: var(--ai-subtle); color: inherit; }
+.profile-link-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(99,102,241,0.12);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.profile-link-text { font-weight: 600; flex: 1; }
+.profile-link-arrow { color: var(--text-secondary); font-size: 0.9rem; }

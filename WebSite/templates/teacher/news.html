@@ -1,0 +1,39 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Новости{% endblock %}
+{% block page_title %}Новости{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">LearnCentre</p>
+        <h1><span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Новости</span></h1>
+        <p class="lead">Обновления и нововведения</p>
+    </div>
+
+    <div class="row g-4">
+        {% for n in news_list %}
+        <div class="col-12">
+            <a href="{% url 'teacher_news_detail' n.pk %}" class="text-decoration-none text-body d-block">
+                <div class="card-ai card-glow animate-on-scroll h-100">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge-ai"><i class="bi bi-newspaper me-1"></i>Новость</span>
+                        <small class="text-secondary align-self-center">{{ n.created_at|date:"d.m.Y" }}</small>
+                    </div>
+                    <h4 class="mb-3 fw-bold">{{ n.title }}</h4>
+                    <p class="text-secondary mb-0">{{ n.content|truncatewords:30 }}</p>
+                    <span class="d-inline-block mt-3 small" style="color: var(--accent); font-weight: 600;">Читать полностью →</span>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card-ai card-glow text-center py-5">
+                <p class="text-secondary mb-0">Пока нет новостей.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

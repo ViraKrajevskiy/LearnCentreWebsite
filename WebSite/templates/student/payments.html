@@ -1,0 +1,80 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}Оплаты{% endblock %}
+{% block page_title %}Оплаты{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <nav style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-secondary);margin-bottom:24px;flex-wrap:wrap">
+        <a href="{% url 'student_home' %}" style="color:var(--accent);font-weight:600;text-decoration:none">Главная</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+        <a href="{% url 'profile' %}" style="color:var(--accent);font-weight:600;text-decoration:none">Профиль</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+        <span style="color:var(--text-primary);font-weight:600">Оплаты</span>
+    </nav>
+
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Платежи</p>
+        <h1>Оплаты и <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">чеки</span></h1>
+        <p class="lead mb-0">История платежей и загрузка чеков для подтверждения</p>
+    </div>
+
+    <!-- Инструкция -->
+    <div class="card-ai card-glow mb-4 animate-on-scroll" style="border-left: 4px solid var(--accent);">
+        <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px solid var(--border);">
+            <span class="rounded-3 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(99,102,241,.15); color: var(--accent);"><i class="bi bi-receipt"></i></span>
+            <h5 class="mb-0 fw-700" style="font-size: 1.05rem;">Как загрузить чек</h5>
+        </div>
+        <p class="small text-secondary mb-0">После оплаты курса загрузите чек (скриншот или PDF) в таблице ниже — выберите файл у нужной оплаты и нажмите «Загрузить». Менеджер подтвердит платёж после проверки.</p>
+    </div>
+
+    <!-- История оплат -->
+    <div class="card-ai card-glow animate-on-scroll" style="border-left: 4px solid var(--accent);">
+        <div class="d-flex align-items-center gap-2 mb-4 pb-2" style="border-bottom: 1px solid var(--border);">
+            <span class="rounded-3 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(99,102,241,.15); color: var(--accent);"><i class="bi bi-credit-card"></i></span>
+            <h5 class="mb-0 fw-700" style="font-size: 1.05rem;">История оплат</h5>
+        </div>
+        {% if payment_history %}
+        <div class="table-responsive">
+            <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.9rem;">
+                <thead>
+                    <tr class="border-bottom border-secondary border-opacity-25">
+                        <th class="text-secondary fw-normal">Дата</th>
+                        <th class="text-secondary fw-normal">Сумма</th>
+                        <th class="text-secondary fw-normal">Курс</th>
+                        <th class="text-secondary fw-normal">Статус</th>
+                        <th class="text-secondary fw-normal text-end">Чек</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payment_history %}
+                    <tr class="border-bottom border-secondary border-opacity-10">
+                        <td>{{ p.created_at|date:"d.m.Y" }}</td>
+                        <td>{{ p.amount|floatformat:0 }} ₽</td>
+                        <td>{% if p.subscription and p.subscription.tariff %}{{ p.subscription.tariff.course.title }}{% else %}—{% endif %}</td>
+                        <td>{% if p.is_confirmed %}<span class="text-success small">Подтверждено</span>{% else %}<span class="text-warning small">Ожидает</span>{% endif %}</td>
+                        <td class="text-end">
+                            {% if p.receipt %}
+                            <a href="{{ p.receipt.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-pdf me-1"></i>Скачать чек</a>
+                            {% else %}
+                            <form action="{% url 'upload_receipt' p.id %}" method="post" enctype="multipart/form-data" class="d-inline-flex flex-nowrap align-items-center justify-content-end gap-2 receipt-upload-form">
+                                {% csrf_token %}
+                                <input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png,.webp" class="form-control form-control-sm" style="max-width:140px" required>
+                                <button type="submit" class="btn btn-sm btn-ai">Загрузить</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-secondary small mb-0">Пока нет оплат.</p>
+        {% endif %}
+    </div>
+
+    <a href="{% url 'profile' %}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left me-1"></i>Назад в профиль</a>
+</div>
+{% endblock %}

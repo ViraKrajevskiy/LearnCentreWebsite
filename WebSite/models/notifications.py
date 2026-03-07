@@ -10,11 +10,13 @@ class Notification(DateCreate):
     KIND_HOMEWORK = 'homework'
     KIND_LESSON_SOON = 'lesson_soon'
     KIND_LESSON_STARTED = 'lesson_started'
+    KIND_CHAT_MESSAGE = 'chat_message'
     KIND_CHOICES = [
         (KIND_NEWS, 'Новость'),
         (KIND_HOMEWORK, 'Домашнее задание'),
         (KIND_LESSON_SOON, 'Урок через 30 мин'),
         (KIND_LESSON_STARTED, 'Урок начался'),
+        (KIND_CHAT_MESSAGE, 'Сообщение в чате'),
     ]
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='notifications')

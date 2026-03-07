@@ -21,6 +21,7 @@ from WebSite.models.pay_system.payment import StudentSubscription, Payment
 from WebSite.models.news_model import News
 from WebSite.models.course_application import CourseApplication
 from WebSite.models.study.submission import TaskSubmission
+from WebSite.models.group.groups import GroupChatMessage
 
 User = get_user_model()
 PREFIX = 'sample_'
@@ -44,9 +45,9 @@ class Command(BaseCommand):
             self._clear()
 
         self.stdout.write('Преподаватели...')
-        teachers, teacher_user = self._create_teachers()
+        teachers, teacher_user, mentors = self._create_teachers()
         self.stdout.write('Курсы и группы (по 20)...')
-        courses_data = self._create_courses_and_groups(teachers)
+        courses_data = self._create_courses_and_groups(teachers, mentors)
         self.stdout.write('Студенты (20)...')
         students = self._create_students()
         self.stdout.write('Уроки, подуроки, задания...')
@@ -65,6 +66,8 @@ class Command(BaseCommand):
         self._create_progress_attendance(students, courses_data)
         self.stdout.write('Сдачи заданий и оценки...')
         self._create_submissions_grades(students, courses_data)
+        self.stdout.write('Сообщения чатов групп (5)...')
+        self._create_group_chat_messages(courses_data, teachers, students)
 
         self.stdout.write(self.style.SUCCESS('Готово. БД заполнена (по ~20 объектов каждого класса).'))
         self.stdout.write('Пароль тестовых пользователей: demo123')
@@ -113,18 +116,38 @@ class Command(BaseCommand):
                 is_active=True,
             )
             teachers.append(Teacher.objects.create(user=u, choices='teacher', bio=f'Преподаватель {i}'))
-        return teachers, teacher_user
+        mentor_user = User.objects.filter(email=f'{PREFIX}mentor@example.com').first()
+        if not mentor_user:
+            mentor_user = User.objects.create_user(
+                email=f'{PREFIX}mentor@example.com',
+                password='demo123',
+                first_name='Ментор',
+                surname='Sample',
+                phone_number=make_phone(50),
+                role='teacher',
+                is_active=True,
+            )
+            Teacher.objects.create(user=mentor_user, choices='mentor', bio='Ментор группы, помогает студентам.')
+        mentors = list(Teacher.objects.filter(choices='mentor', user__email__startswith=PREFIX))
+        if not mentors:
+            mentors = [teachers[0]]
+        return teachers, teacher_user, mentors
 
-    def _create_courses_and_groups(self, teachers):
+    def _create_courses_and_groups(self, teachers, mentors):
         courses_data = []
         base = timezone.now().date() - timedelta(days=60)
         for i in range(1, COUNT + 1):
             teacher = teachers[(i - 1) % len(teachers)]
+            mentor = mentors[(i - 1) % len(mentors)]
             title = f'{PREFIX}Курс {i}'
             if Course.objects.filter(title=title).exists():
                 c = Course.objects.get(title=title)
                 g = c.groups.first()
                 if g:
+                    if not g.teacher_id:
+                        g.teacher = teacher
+                        g.mentor = mentor
+                        g.save()
                     courses_data.append({'course': c, 'group': g})
                 continue
             c = Course.objects.create(
@@ -139,6 +162,8 @@ class Command(BaseCommand):
             g = Group.objects.create(
                 name=f'{PREFIX}Группа {i}-1',
                 course=c,
+                teacher=teacher,
+                mentor=mentor,
                 start_date=base + timedelta(days=i * 7),
             )
             courses_data.append({'course': c, 'group': g})
@@ -172,16 +197,20 @@ class Command(BaseCommand):
         base_time = timezone.now() + timedelta(days=1)
         for idx, data in enumerate(courses_data[:COUNT]):
             course, group = data['course'], data['group']
+            creator = course.creator
             for j in range(1, 6):
                 s_at = base_time + timedelta(days=7 * j + idx * 2)
-                lesson, _ = Lesson.objects.get_or_create(
+                lesson, created = Lesson.objects.get_or_create(
                     course=course,
                     group=group,
                     title=f'{PREFIX}Урок {j}',
-                    defaults={'scheduled_at': s_at},
+                    defaults={'scheduled_at': s_at, 'created_by': creator},
                 )
                 if lesson.scheduled_at != s_at:
                     lesson.scheduled_at = s_at
+                    lesson.save()
+                if not lesson.created_by_id and creator:
+                    lesson.created_by = creator
                     lesson.save()
                 for k in range(1, 4):
                     sub, _ = SubLesson.objects.get_or_create(
@@ -296,3 +325,33 @@ class Command(BaseCommand):
         for gtype in [Grade.GradeType.LESSON, Grade.GradeType.CONTROL, Grade.GradeType.HOMEWORK]:
             for v in [72, 78, 85, 90, 95]:
                 Grade.objects.create(grade=gtype, grade_value=v)
+
+    def _create_group_chat_messages(self, courses_data, teachers, students):
+        """Добавляем 5 тестовых сообщений в чат первой группы."""
+        if not courses_data:
+            return
+        group = courses_data[0]['group']
+        if GroupChatMessage.objects.filter(group=group).exists():
+            return
+        authors = []
+        if getattr(group, 'teacher', None) and group.teacher and group.teacher.user_id:
+            authors.append(group.teacher.user)
+        if getattr(group, 'mentor', None) and group.mentor and group.mentor.user_id:
+            authors.append(group.mentor.user)
+        for s in group.students.all()[:2]:
+            if s.user_id:
+                authors.append(s.user)
+        if not authors:
+            authors = [User.objects.filter(email__startswith=PREFIX).first()]
+        if not authors or not authors[0]:
+            return
+        texts = [
+            'Добрый день! Напоминаю: следующий урок в среду в 18:00.',
+            'Есть вопросы по домашнему заданию — пишите сюда.',
+            'Спасибо, тогда до встречи на занятии.',
+            'Кто ещё не сдал задание по модулю 1?',
+            'Материалы к уроку выложу завтра в личном кабинете.',
+        ]
+        for i, text in enumerate(texts[:5]):
+            author = authors[i % len(authors)]
+            GroupChatMessage.objects.create(group=group, author=author, text=text)

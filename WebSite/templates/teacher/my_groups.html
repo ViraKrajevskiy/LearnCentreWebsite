@@ -1,0 +1,44 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Мои группы{% endblock %}
+{% block page_title %}Мои группы{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Преподавание</p>
+        <h1>Мои <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">группы</span></h1>
+        <p class="lead">Курсы и группы, в которых вы учитель или ментор</p>
+    </div>
+
+    {% if my_groups %}
+    <div class="card-ai card-glow animate-on-scroll">
+        <div class="list-group list-group-flush">
+            {% for g in my_groups %}
+            <a href="{% url 'teacher_messages' %}?group={{ g.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style="border-color: var(--border); background: var(--ai-subtle);">
+                <div>
+                    <div class="fw-600">{{ g.course.title }}</div>
+                    <div class="small text-secondary">Группа: {{ g.name }}</div>
+                    <div class="small mt-1">
+                        {% if g.teacher and g.teacher.user %}<span class="me-2"><i class="bi bi-person-badge"></i> Учитель: {{ g.teacher.user.get_full_name|default:"—" }}</span>{% endif %}
+                        {% if g.mentor and g.mentor.user %}<span><i class="bi bi-person-workspace"></i> Ментор: {{ g.mentor.user.get_full_name|default:"—" }}</span>{% endif %}
+                    </div>
+                </div>
+                <div>
+                    {% if g.teacher and g.teacher.user_id == request.user.id %}<span class="badge bg-primary">Вы учитель</span>{% endif %}
+                    {% if g.mentor and g.mentor.user_id == request.user.id %}<span class="badge bg-info">Вы ментор</span>{% endif %}
+                    <i class="bi bi-chevron-right ms-2 text-secondary"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card-ai card-glow animate-on-scroll p-5 text-center">
+        <i class="bi bi-people display-4 text-secondary mb-3"></i>
+        <p class="text-secondary mb-0">Вам пока не назначены группы. После назначения они появятся здесь.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

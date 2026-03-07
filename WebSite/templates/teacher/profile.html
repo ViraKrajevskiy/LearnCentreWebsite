@@ -1,0 +1,259 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Профиль{% endblock %}
+{% block page_title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="student-page profile-page">
+    <div id="profile-auth-required" class="alert alert-warning d-none">
+        <a href="{% url 'login' %}" class="alert-link">Войдите</a>, чтобы просмотреть профиль.
+    </div>
+    <div id="profile-content" class="d-none profile-wrap">
+        <aside class="profile-sidebar">
+            <div class="profile-card profile-card-user animate-on-scroll">
+                <div id="avatar-initials" class="profile-avatar">{% if profile_data %}{% if profile_data.surname or profile_data.first_name %}{{ profile_data.surname|slice:":1" }}{{ profile_data.first_name|slice:":1" }}{% else %}?{% endif %}{% else %}—{% endif %}</div>
+                <h1 id="profile-name" class="profile-name">{% if profile_data %}{{ profile_data.surname }} {{ profile_data.first_name }}{% else %}—{% endif %}</h1>
+                <p id="profile-email" class="profile-email">{% if profile_data %}{{ profile_data.email }}{% else %}—{% endif %}</p>
+                <p id="profile-role" class="small mb-0" style="color: var(--accent); font-weight: 600;">{% if profile_data.role_display %}{{ profile_data.role_display }}{% elif role_display %}{{ role_display }}{% endif %}</p>
+                <a href="{% url 'teacher_home' %}" class="btn btn-outline-secondary btn-sm w-100 mt-2"><i class="bi bi-arrow-left me-1"></i>В кабинет</a>
+                <button type="button" id="logout-btn" class="btn btn-outline-danger btn-sm w-100 mt-2"><i class="bi bi-box-arrow-right me-1"></i>Выйти</button>
+            </div>
+        </aside>
+        <div class="profile-main">
+            <section class="profile-section animate-on-scroll">
+                <h2 class="profile-section-title"><i class="bi bi-person-vcard"></i> Личные данные</h2>
+                <form id="profile-edit-form" class="profile-form">
+                    <div class="profile-form-grid">
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-first-name">Имя</label>
+                            <input type="text" name="first_name" id="profile-edit-first-name" class="form-control profile-input" placeholder="Имя" maxlength="50" value="{{ profile_data.first_name|default:'' }}">
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-surname">Фамилия</label>
+                            <input type="text" name="surname" id="profile-edit-surname" class="form-control profile-input" placeholder="Фамилия" maxlength="50" value="{{ profile_data.surname|default:'' }}">
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-email">Email</label>
+                            <input type="email" name="email" id="profile-edit-email" class="form-control profile-input" placeholder="email@example.com" required value="{{ profile_data.email|default:'' }}">
+                        </div>
+                        <div class="profile-field">
+                            <label class="profile-label" for="profile-edit-phone">Телефон</label>
+                            <input type="tel" name="phone_number" id="profile-edit-phone" class="form-control profile-input" placeholder="+7 999 123-45-67" required value="{{ profile_data.phone_number|default:'' }}">
+                        </div>
+                        <div class="profile-field profile-field-full">
+                            <label class="profile-label" for="profile-edit-telegram">Telegram (без @)</label>
+                            <input type="text" name="telegram_username" id="profile-edit-telegram" class="form-control profile-input" placeholder="username" maxlength="100" value="{{ profile_data.telegram_username|default:'' }}">
+                        </div>
+                    </div>
+                    <div id="profile-edit-error" class="alert alert-danger d-none mb-3"></div>
+                    <div id="profile-edit-success" class="alert alert-success d-none mb-3">Данные сохранены.</div>
+                    <button type="submit" class="btn btn-ai" id="profile-edit-submit"><i class="bi bi-check-lg me-1"></i>Сохранить</button>
+                </form>
+            </section>
+            <section class="profile-section profile-section-compact animate-on-scroll">
+                <h2 class="profile-section-title"><i class="bi bi-telegram"></i> Telegram-бот</h2>
+                <p class="profile-section-desc mb-0">Команды <b>/profile</b>, <b>/payments</b>, <b>/resetpassword</b> (сброс пароля по коду) в боте.</p>
+            </section>
+            <section class="profile-section animate-on-scroll">
+                <h2 class="profile-section-title"><i class="bi bi-key"></i> Смена пароля</h2>
+                <p class="profile-section-desc mb-3">По текущему паролю или по коду из Telegram-бота.</p>
+                <div class="mb-3 d-flex flex-wrap gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="change_password_method" id="method-password" value="password" checked>
+                        <label class="form-check-label" for="method-password">Текущий пароль</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="change_password_method" id="method-telegram" value="telegram">
+                        <label class="form-check-label" for="method-telegram">Код из Telegram</label>
+                    </div>
+                </div>
+                <div id="change-password-by-password">
+                    <form id="change-password-form" class="profile-form">
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Текущий пароль</label>
+                            <input type="password" name="old_password" class="form-control profile-input" placeholder="••••••••">
+                        </div>
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Новый пароль (не менее 8 символов)</label>
+                            <input type="password" name="new_password" class="form-control profile-input" minlength="8" placeholder="••••••••">
+                        </div>
+                        <div id="password-error" class="alert alert-danger d-none mb-3"></div>
+                        <button type="submit" class="btn btn-ai">Изменить пароль</button>
+                    </form>
+                </div>
+                <div id="change-password-by-telegram" class="d-none">
+                    <div id="telegram-otp-step1">
+                        <p class="text-muted small mb-2">Код придёт в привязанный Telegram. Сначала войдите в бота: /login</p>
+                        <button type="button" class="btn btn-ai btn-sm mb-3" id="request-password-otp-btn"><i class="bi bi-telegram me-1"></i>Получить код</button>
+                        <div id="request-otp-error" class="alert alert-danger d-none mb-2"></div>
+                    </div>
+                    <form id="change-password-otp-form" class="d-none profile-form">
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Код из Telegram</label>
+                            <input type="text" name="code" class="form-control profile-input" maxlength="6" placeholder="123456" autocomplete="one-time-code">
+                        </div>
+                        <div class="profile-field mb-3">
+                            <label class="profile-label">Новый пароль</label>
+                            <input type="password" name="new_password" class="form-control profile-input" minlength="8" placeholder="••••••••">
+                        </div>
+                        <div id="password-otp-error" class="alert alert-danger d-none mb-3"></div>
+                        <button type="submit" class="btn btn-ai">Изменить пароль</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const token = localStorage.getItem('access');
+    const authRequired = document.getElementById('profile-auth-required');
+    const profileContent = document.getElementById('profile-content');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    logoutBtn?.addEventListener('click', function () {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        window.location.href = '/login/';
+    });
+
+    if (!token) {
+        authRequired?.classList.remove('d-none');
+        return;
+    }
+    profileContent?.classList.remove('d-none');
+
+    fetch('/api/v1/auth/me/', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.status === 401 ? (localStorage.removeItem('access'), localStorage.removeItem('refresh'), null) : r.json())
+        .then(data => {
+            if (!data) { authRequired?.classList.remove('d-none'); profileContent?.classList.add('d-none'); return; }
+            const initials = (data.first_name?.[0] || '') + (data.surname?.[0] || '') || '?';
+            const el = id => document.getElementById(id);
+            if (el('avatar-initials')) el('avatar-initials').textContent = initials;
+            if (el('profile-name')) el('profile-name').textContent = `${data.surname || ''} ${data.first_name || ''}`.trim() || '—';
+            if (el('profile-email')) el('profile-email').textContent = data.email || '—';
+            if (el('profile-edit-first-name')) el('profile-edit-first-name').value = data.first_name || '';
+            if (el('profile-edit-surname')) el('profile-edit-surname').value = data.surname || '';
+            if (el('profile-edit-email')) el('profile-edit-email').value = data.email || '';
+            if (el('profile-edit-phone')) el('profile-edit-phone').value = data.phone_number || '';
+            if (el('profile-edit-telegram')) el('profile-edit-telegram').value = (data.telegram_username || '').replace(/^@/, '');
+        });
+
+    document.getElementById('profile-edit-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const err = document.getElementById('profile-edit-error');
+        const ok = document.getElementById('profile-edit-success');
+        err.classList.add('d-none'); ok.classList.add('d-none');
+        fetch('/api/v1/auth/me/', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('access') || '') },
+            body: JSON.stringify({
+                first_name: document.getElementById('profile-edit-first-name').value,
+                surname: document.getElementById('profile-edit-surname').value,
+                email: document.getElementById('profile-edit-email').value,
+                phone_number: document.getElementById('profile-edit-phone').value,
+                telegram_username: document.getElementById('profile-edit-telegram').value
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.email !== undefined) { ok.classList.remove('d-none'); return; }
+            err.textContent = data.detail || (typeof data === 'string' ? data : 'Ошибка'); err.classList.remove('d-none');
+        }).catch(() => { err.textContent = 'Ошибка сети'; err.classList.remove('d-none'); });
+    });
+
+    var passwordOtpSessionId = null;
+    var methodPassword = document.getElementById('method-password');
+    var methodTelegram = document.getElementById('method-telegram');
+    var byPasswordBlock = document.getElementById('change-password-by-password');
+    var byTelegramBlock = document.getElementById('change-password-by-telegram');
+    function toggleChangePasswordMethod() {
+        var byTelegram = methodTelegram && methodTelegram.checked;
+        if (byPasswordBlock) byPasswordBlock.classList.toggle('d-none', byTelegram);
+        if (byTelegramBlock) byTelegramBlock.classList.toggle('d-none', !byTelegram);
+    }
+    methodPassword?.addEventListener('change', toggleChangePasswordMethod);
+    methodTelegram?.addEventListener('change', toggleChangePasswordMethod);
+    toggleChangePasswordMethod();
+
+    document.getElementById('request-password-otp-btn')?.addEventListener('click', async function() {
+        var errEl = document.getElementById('request-otp-error');
+        errEl.classList.add('d-none');
+        var res = await fetch('/api/v1/auth/request-change-password-otp/', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('access') || '') }
+        });
+        var data = await res.json().catch(function() { return {}; });
+        if (res.ok) {
+            passwordOtpSessionId = data.session_id;
+            document.getElementById('telegram-otp-step1')?.classList.add('d-none');
+            document.getElementById('change-password-otp-form')?.classList.remove('d-none');
+        } else {
+            errEl.textContent = data.error || 'Не удалось отправить код. Войдите в бота: /login';
+            errEl.classList.remove('d-none');
+        }
+    });
+
+    document.getElementById('change-password-otp-form')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var form = e.target;
+        var errEl = document.getElementById('password-otp-error');
+        errEl.classList.add('d-none');
+        if (!passwordOtpSessionId) {
+            errEl.textContent = 'Сначала нажмите «Получить код».';
+            errEl.classList.remove('d-none');
+            return;
+        }
+        var res = await fetch('/api/v1/auth/change-password/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + (localStorage.getItem('access') || '')
+            },
+            body: JSON.stringify({
+                session_id: passwordOtpSessionId,
+                code: (form.querySelector('[name="code"]')?.value || '').trim(),
+                new_password: form.querySelector('[name="new_password"]')?.value || ''
+            })
+        });
+        var data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (res.ok) {
+            form.reset();
+            passwordOtpSessionId = null;
+            document.getElementById('telegram-otp-step1')?.classList.remove('d-none');
+            form.classList.add('d-none');
+            errEl.classList.remove('alert-danger');
+            errEl.classList.add('alert-success');
+            errEl.textContent = 'Пароль успешно изменён.';
+        } else {
+            errEl.classList.remove('alert-success');
+            errEl.classList.add('alert-danger');
+            errEl.textContent = (data.code && data.code[0]) || (data.new_password && data.new_password[0]) || data.error || 'Ошибка';
+        }
+        errEl.classList.remove('d-none');
+    });
+
+    document.getElementById('change-password-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = e.target;
+        var err = document.getElementById('password-error');
+        err.classList.add('d-none');
+        var oldP = form.querySelector('input[name="old_password"]').value;
+        var newP = form.querySelector('input[name="new_password"]').value;
+        if (!newP || newP.length < 8) { err.textContent = 'Новый пароль не менее 8 символов'; err.classList.remove('d-none'); return; }
+        fetch('/api/v1/auth/change-password/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('access') || '') },
+            body: JSON.stringify({ old_password: oldP, new_password: newP })
+        }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); }).then(function(_ref) {
+            var ok = _ref.ok, data = _ref.data;
+            if (ok) { form.reset(); err.classList.add('d-none'); alert('Пароль изменён.'); return; }
+            err.textContent = data.error || data.detail || 'Ошибка'; err.classList.remove('d-none');
+        }).catch(function() { err.textContent = 'Ошибка сети'; err.classList.remove('d-none'); });
+    });
+})();
+</script>
+{% endblock %}

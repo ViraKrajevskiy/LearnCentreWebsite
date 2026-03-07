@@ -1,0 +1,86 @@
+{% extends "student/base.html" %}
+{% load static %}
+
+{% block title %}Чат группы {{ group.name }}{% endblock %}
+{% block page_title %}Чат группы{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <nav style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-secondary);margin-bottom:24px;flex-wrap:wrap">
+        <a href="{% url 'student_home' %}" style="color:var(--accent);font-weight:600;text-decoration:none">Главная</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+        <a href="{% url 'my-courses' %}" style="color:var(--accent);font-weight:600;text-decoration:none">Мои курсы</a>
+        <i class="bi bi-chevron-right" style="font-size:.7rem"></i>
+        <span style="color:var(--text-primary);font-weight:600">Чат: {{ group.name }}</span>
+    </nav>
+
+    <div class="card-ai card-glow animate-on-scroll mb-4">
+        <h4 style="font-size:1rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <i class="bi bi-chat-dots" style="color:var(--accent)"></i> {{ group.course.title }} — {{ group.name }}
+        </h4>
+        <p class="text-secondary small mb-0">Здесь общаются студенты группы, учитель и ментор. Можете задать вопрос учителю курса.</p>
+    </div>
+
+    <div class="card-ai card-glow animate-on-scroll mb-4 p-3" style="max-height:400px;overflow-y:auto">
+        {% for msg in chat_messages %}
+        <div class="mb-3 d-flex {% if request.user.id == msg.author_id %}justify-content-end{% else %}justify-content-start{% endif %}">
+            <div class="rounded-3 px-3 py-2 {% if request.user.id == msg.author_id %}text-end{% else %}text-start{% endif %}" style="max-width: 85%; {% if request.user.id == msg.author_id %}background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(139,92,246,.14)); border: 1px solid rgba(99,102,241,.35);{% else %}background: var(--ai-subtle); border: 1px solid var(--border);{% endif %}">
+                <div class="d-flex align-items-center gap-2 flex-wrap small mb-1 {% if request.user.id == msg.author_id %}justify-content-end{% else %}justify-content-start{% endif %}">
+                    {% if request.user.id == msg.author_id %}
+                    <span class="fw-600" style="color: var(--accent);">Вы</span>
+                    <span class="text-secondary">{{ msg.created_at|date:"d.m.Y H:i" }}</span>
+                    <span class="ms-1">
+                        <a href="{% url 'group_chat' group.id %}?edit={{ msg.id }}" class="small text-secondary text-decoration-none">Изменить</a>
+                        <form method="post" action="" class="d-inline" onsubmit="return confirm('Удалить сообщение?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="message_id" value="{{ msg.id }}">
+                            <button type="submit" class="btn btn-link p-0 small text-danger text-decoration-none">Удалить</button>
+                        </form>
+                    </span>
+                    {% else %}
+                    <span style="font-size:.75rem;font-weight:700;color:var(--accent)">
+                        {% if group.teacher and group.teacher.user_id == msg.author_id %}
+                            <i class="bi bi-person-badge"></i> Учитель
+                        {% elif group.mentor and group.mentor.user_id == msg.author_id %}
+                            <i class="bi bi-person-workspace"></i> Ментор
+                        {% else %}
+                            <i class="bi bi-person"></i> Студент
+                        {% endif %}
+                    </span>
+                    <span style="font-size:.72rem;color:var(--text-secondary)">{% if msg.author.get_full_name %}{{ msg.author.get_full_name }}{% else %}Участник{% endif %}</span>
+                    <span style="font-size:.7rem;color:var(--text-secondary)">{{ msg.created_at|date:"d.m.Y H:i" }}</span>
+                    {% endif %}
+                </div>
+                <div style="font-size:.88rem;white-space:pre-wrap;word-break:break-word">{{ msg.text }}</div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-secondary text-center py-4 mb-0">Пока нет сообщений. Напишите первым!</p>
+        {% endfor %}
+    </div>
+
+    <div class="card-ai card-glow animate-on-scroll">
+        {% if edit_message_id %}
+        <form method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="message_id" value="{{ edit_message_id }}">
+            <label class="form-label small fw-600">Редактировать сообщение</label>
+            <div class="d-flex gap-2 flex-wrap align-items-end">
+                <textarea name="text" class="form-control flex-grow-1" rows="2" maxlength="5000" required>{{ edit_message_text }}</textarea>
+                <button type="submit" class="btn btn-ai">Сохранить</button>
+                <a href="{% url 'group_chat' group.id %}" class="btn btn-outline-secondary">Отмена</a>
+            </div>
+        </form>
+        {% else %}
+        <form method="post" action="">
+            {% csrf_token %}
+            <label class="form-label small fw-600">Ваше сообщение</label>
+            <textarea name="text" class="form-control mb-3" rows="3" placeholder="Написать учителю или в общий чат группы..." maxlength="5000" required></textarea>
+            <button type="submit" class="btn btn-ai"><i class="bi bi-send me-1"></i>Отправить</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

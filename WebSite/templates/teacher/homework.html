@@ -1,0 +1,120 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Проверка домашних работ{% endblock %}
+{% block page_title %}Проверка домашки{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Работы студентов</p>
+        <h1>Проверка <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">домашки</span></h1>
+        <p class="lead">Задания на уроке и домашние задания проверяют учитель и ментор. Контрольные работы — только учитель.</p>
+    </div>
+
+    {% if my_groups %}
+    <div class="card-ai card-glow animate-on-scroll mb-4">
+        <div class="card-header-custom">
+            <h3 class="card-title-custom"><i class="bi bi-people me-2" style="color: var(--accent)"></i>Группы</h3>
+        </div>
+        <div class="list-group list-group-flush">
+            {% for g in my_groups %}
+            <a href="{% url 'teacher_homework' %}?group={{ g.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if selected_group and selected_group.id == g.id %}active{% endif %}" style="{% if not selected_group or selected_group.id != g.id %}border-color: var(--border); background: var(--ai-subtle); color: inherit;{% endif %}">
+                <div>
+                    <div class="fw-600">{{ g.course.title }}</div>
+                    <div class="small opacity-75">Группа: {{ g.name }}</div>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if selected_group %}
+    <div class="card-ai card-glow animate-on-scroll">
+        <div class="card-header-custom">
+            <h3 class="card-title-custom"><i class="bi bi-clipboard-check me-2" style="color: var(--accent)"></i>Сданные работы — {{ selected_group.course.title }}, {{ selected_group.name }}</h3>
+        </div>
+        {% if submissions %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" style="border-color: var(--border);">
+                <thead style="background: var(--ai-subtle);">
+                    <tr>
+                        <th>Студент</th>
+                        <th>Урок / задание</th>
+                        <th>Тип</th>
+                        <th>Ответ</th>
+                        <th>Балл</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td>
+                            <strong>{{ sub.student.user.get_full_name|default:sub.student.user.email }}</strong>
+                            <div class="small text-secondary">{{ sub.created_at|date:"d.m.Y H:i" }}</div>
+                        </td>
+                        <td>
+                            <div>{{ sub.task.sub_lesson.lesson.title }}</div>
+                            <div class="small text-secondary">{{ sub.task.description|truncatechars:60 }}</div>
+                            <div class="small">Макс. балл: {{ sub.task.max_score }}</div>
+                        </td>
+                        <td>
+                            {% if sub.task.task_type == 'control' %}
+                            <span class="badge bg-warning text-dark">Контрольная</span>
+                            {% elif sub.task.task_type == 'homework' %}
+                            <span class="badge bg-info">Домашка</span>
+                            {% else %}
+                            <span class="badge bg-secondary">На уроке</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub.text %}<div class="small" style="max-width:220px;white-space:pre-wrap;word-break:break-word;">{{ sub.text|truncatechars:150 }}</div>{% endif %}
+                            {% if sub.file %}<a href="{{ sub.file.url }}" target="_blank" class="small me-2"><i class="bi bi-download"></i> Файл</a>{% endif %}
+                            {% if not sub.text and not sub.file %}<span class="text-secondary">—</span>{% endif %}
+                            <a href="{% url 'teacher_submission_detail' sub.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary mt-1" title="Открыть в отдельном окне"><i class="bi bi-box-arrow-up-right"></i> Просмотр</a>
+                        </td>
+                        <td>
+                            {% if sub.grade_value is not None %}
+                            <strong>{{ sub.grade_value }}</strong> / {{ sub.task.max_score }}
+                            {% if sub.graded_by %}<div class="small text-secondary">выставил {{ sub.graded_by.get_full_name|default:"—" }}</div>{% endif %}
+                            {% else %}
+                            <span class="text-secondary">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub.task.task_type == 'control' and is_mentor %}
+                            <span class="small text-muted">Только учитель</span>
+                            {% else %}
+                            <form method="post" action="{% url 'teacher_homework' %}?group={{ selected_group.id }}" class="d-inline-flex align-items-center gap-2 flex-wrap">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="grade">
+                                <input type="hidden" name="group_id" value="{{ selected_group.id }}">
+                                <input type="hidden" name="submission_id" value="{{ sub.id }}">
+                                <input type="number" name="grade_value" min="0" max="{{ sub.task.max_score }}" value="{{ sub.grade_value|default:'' }}" placeholder="0–{{ sub.task.max_score }}" class="form-control form-control-sm" style="width: 70px;">
+                                <button type="submit" class="btn btn-sm btn-ai">ОК</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-secondary p-4 mb-0">В этой группе пока нет сданных работ.</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="text-secondary">Выберите группу выше, чтобы увидеть сданные работы.</p>
+    {% endif %}
+
+    {% else %}
+    <div class="card-ai card-glow animate-on-scroll p-5 text-center">
+        <i class="bi bi-clipboard-check display-4 text-secondary mb-3"></i>
+        <p class="text-secondary mb-0">Вам пока не назначены группы. После назначения здесь появятся сданные работы для проверки.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

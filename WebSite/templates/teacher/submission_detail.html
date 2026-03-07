@@ -1,0 +1,60 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Просмотр сдачи{% endblock %}
+{% block page_title %}Ответ студента{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="card-ai card-glow animate-on-scroll">
+        <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h3 class="card-title-custom mb-0"><i class="bi bi-clipboard-check me-2" style="color: var(--accent)"></i>Сдача задания</h3>
+            <a href="{% url 'teacher_homework' %}?group={{ group.id }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>К списку сдач</a>
+        </div>
+        <div class="p-4">
+            <dl class="row mb-4">
+                <dt class="col-sm-3 text-secondary">Студент</dt>
+                <dd class="col-sm-9"><strong>{{ sub.student.user.get_full_name|default:sub.student.user.email }}</strong></dd>
+
+                <dt class="col-sm-3 text-secondary">Урок</dt>
+                <dd class="col-sm-9">{{ sub.task.sub_lesson.lesson.title }}</dd>
+
+                <dt class="col-sm-3 text-secondary">Задание</dt>
+                <dd class="col-sm-9">{{ sub.task.description }}</dd>
+
+                <dt class="col-sm-3 text-secondary">Тип</dt>
+                <dd class="col-sm-9">
+                    {% if sub.task.task_type == 'control' %}<span class="badge bg-warning text-dark">Контрольная</span>
+                    {% elif sub.task.task_type == 'homework' %}<span class="badge bg-info">Домашка</span>
+                    {% else %}<span class="badge bg-secondary">На уроке</span>{% endif %}
+                </dd>
+
+                <dt class="col-sm-3 text-secondary">Сдано</dt>
+                <dd class="col-sm-9">{{ sub.created_at|date:"d.m.Y H:i" }}</dd>
+
+                {% if sub.grade_value is not None %}
+                <dt class="col-sm-3 text-secondary">Балл</dt>
+                <dd class="col-sm-9"><strong>{{ sub.grade_value }}</strong> / {{ sub.task.max_score }}{% if sub.graded_by %} (выставил {{ sub.graded_by.get_full_name|default:"—" }}){% endif %}</dd>
+                {% endif %}
+            </dl>
+
+            <h5 class="mb-2">Текст ответа</h5>
+            {% if sub.text %}
+            <div class="p-3 rounded-3 mb-4" style="background: var(--ai-subtle); border: 1px solid var(--border); white-space: pre-wrap; word-break: break-word;">{{ sub.text }}</div>
+            {% else %}
+            <p class="text-secondary mb-4">Текста нет.</p>
+            {% endif %}
+
+            <h5 class="mb-2">Прикреплённый файл</h5>
+            {% if sub.file %}
+            <p class="mb-0">
+                <a href="{{ sub.file.url }}" target="_blank" rel="noopener" class="btn btn-ai"><i class="bi bi-download me-1"></i>Скачать файл</a>
+                <span class="small text-secondary ms-2">{{ sub.file.name }}</span>
+            </p>
+            {% else %}
+            <p class="text-secondary mb-0">Файл не прикреплён.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

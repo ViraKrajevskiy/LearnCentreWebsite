@@ -1,0 +1,54 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Главная — Кабинет преподавателя{% endblock %}
+{% block page_title %}Главная{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up" style="margin-bottom: 28px;">
+        <p class="text-uppercase mb-1" style="font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--accent)">
+            {% if is_mentor %}Кабинет ментора{% else %}Кабинет преподавателя{% endif %}
+        </p>
+        <h1 style="font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;line-height:1.2;margin-bottom:6px">
+            Привет, <span style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">{{ request.user.first_name|default:"Преподаватель" }}</span> 👋
+        </h1>
+        <p class="text-secondary" style="font-size:.9rem">{{ today_date|date:"d E Y" }}</p>
+    </div>
+
+    <div class="stats-grid mb-4" style="grid-template-columns:repeat(2,1fr)">
+        <a href="{% url 'teacher_my_groups' %}" class="stat-card animate-on-scroll stagger-1 stat-card-hover text-decoration-none" style="color:inherit;position:relative;overflow:hidden">
+            <div class="stat-value">{{ my_groups|length }}</div>
+            <div class="stat-label">Моих групп</div>
+            <i class="bi bi-people" style="position:absolute;top:12px;right:12px;font-size:1.8rem;color:var(--accent);opacity:.18"></i>
+        </a>
+        <a href="{% url 'teacher_messages' %}" class="stat-card animate-on-scroll stagger-2 stat-card-hover text-decoration-none" style="color:inherit;position:relative;overflow:hidden">
+            <div class="stat-value"><i class="bi bi-chat-dots"></i></div>
+            <div class="stat-label">Сообщения</div>
+        </a>
+    </div>
+
+    <div class="card-ai card-glow animate-on-scroll mb-4">
+        <div class="card-header-custom">
+            <h3 class="card-title-custom"><i class="bi bi-people me-2" style="color:var(--accent)"></i>Мои группы</h3>
+            <a href="{% url 'teacher_my_groups' %}" class="btn btn-sm btn-ai">Все группы</a>
+        </div>
+        {% if my_groups %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+            {% for g in my_groups %}
+            <a href="{% url 'teacher_messages' %}?group={{ g.id }}" class="d-block p-3 rounded-3 text-decoration-none" style="background:var(--ai-subtle);border:1px solid var(--border);color:inherit;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                <div class="fw-600 text-truncate">{{ g.course.title }}</div>
+                <div class="small text-secondary">Группа: {{ g.name }}</div>
+                <div class="small mt-2 text-secondary">
+                    {% if g.teacher and g.teacher.user_id == request.user.id %}<span class="badge bg-primary me-1">Вы (учитель)</span>{% endif %}
+                    {% if g.mentor and g.mentor.user_id == request.user.id %}<span class="badge bg-info">Вы (ментор)</span>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-secondary mb-0 p-4">Пока нет назначенных групп. Ожидайте назначения в курсах.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

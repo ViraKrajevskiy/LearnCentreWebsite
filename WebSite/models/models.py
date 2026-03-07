@@ -68,5 +68,15 @@ class User(AbstractBaseUser, PermissionsMixin, DateCreate):
         latest = max(results, key=lambda r: r.created_at)
         return latest.profile_id
 
+    def get_full_name(self):
+        """ФИО: фамилия и имя (как в требованиях)."""
+        parts = [self.surname or '', self.first_name or '']
+        if getattr(self, 'last_name', None):
+            parts.append(self.last_name or '')
+        return ' '.join(p for p in parts if p).strip() or self.email or ''
+
+    def get_short_name(self):
+        return self.first_name or self.email or ''
+
     def __str__(self):
         return f"{self.email} ({self.get_role_display()})"

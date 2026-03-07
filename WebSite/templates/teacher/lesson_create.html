@@ -1,0 +1,57 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Создать урок{% endblock %}
+{% block page_title %}Создать урок / ДЗ{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Урок</p>
+        <h1>Создать <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">урок</span></h1>
+        <p class="lead">Добавьте урок в одну из ваших групп. После создания можно добавить подуроки и задания (в т.ч. ДЗ и контрольные).</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-warning">{{ error }}</div>
+    {% endif %}
+
+    {% if teaching_groups %}
+    <div class="card-ai card-glow animate-on-scroll">
+        <div class="card-header-custom">
+            <h3 class="card-title-custom"><i class="bi bi-plus-circle me-2" style="color: var(--accent)"></i>Новый урок</h3>
+        </div>
+        <div class="p-4">
+            <form method="post" action="{% url 'teacher_lesson_create' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-600">Группа <span class="text-danger">*</span></label>
+                    <select name="group_id" class="form-select" required style="border: 2px solid var(--border);">
+                        <option value="">— Выберите группу —</option>
+                        {% for g in teaching_groups %}
+                        <option value="{{ g.id }}">{{ g.course.title }} — {{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-600">Название урока <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" required maxlength="255" placeholder="Например: Введение в Python" style="border: 2px solid var(--border);">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-600">Дата и время проведения</label>
+                    <input type="datetime-local" name="scheduled_at" class="form-control" style="border: 2px solid var(--border);">
+                    <small class="text-secondary">Если не указать, будет установлено через 7 дней.</small>
+                </div>
+                <button type="submit" class="btn btn-ai"><i class="bi bi-plus-lg me-1"></i>Создать урок</button>
+                <a href="{% url 'teacher_home' %}" class="btn btn-outline-secondary ms-2">Отмена</a>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-ai card-glow p-4">
+        <p class="text-secondary mb-0">Вам не назначены группы в роли учителя. Создавать уроки могут только учителя по своим группам.</p>
+        <a href="{% url 'teacher_home' %}" class="btn btn-ai mt-3">На главную</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

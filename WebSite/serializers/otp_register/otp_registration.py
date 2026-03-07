@@ -97,14 +97,27 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(write_only=True)
+    """Смена пароля: либо по текущему паролю, либо по коду из Telegram."""
+    old_password = serializers.CharField(write_only=True, required=False)
     new_password = serializers.CharField(write_only=True, min_length=8)
+    # Вариант «по коду из Telegram»
+    session_id = serializers.UUIDField(required=False)
+    code = serializers.CharField(max_length=6, required=False)
 
-    def validate_old_password(self, value):
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError('Неверный текущий пароль.')
-        return value
+    def validate(self, attrs):
+        has_password = bool(attrs.get('old_password'))
+        has_otp = attrs.get('session_id') is not None and attrs.get('code')
+        if has_password and has_otp:
+            raise serializers.ValidationError('Укажите либо текущий пароль, либо код из Telegram.')
+        if not has_password and not has_otp:
+            raise serializers.ValidationError('Укажите текущий пароль или запросите код в Telegram и введите код.')
+        if has_password:
+            user = self.context['request'].user
+            if not user.check_password(attrs['old_password']):
+                raise serializers.ValidationError('Неверный текущий пароль.')
+        if has_otp:
+            attrs['code'] = sanitize_otp_code(attrs['code'])
+        return attrs
 
 
 class ProfileSerializer(serializers.ModelSerializer):

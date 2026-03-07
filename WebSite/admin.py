@@ -13,12 +13,13 @@ from WebSite.models.study.lesson_comment import LessonComment
 from WebSite.models.study.submission import TaskSubmission
 from WebSite.models.study.grade_model import Grade
 from WebSite.models.study.tarif_system import Tariff
-from WebSite.models.group.groups import Group
+from WebSite.models.group.groups import Group, GroupChatMessage
 from WebSite.models.pay_system.payment import Payment, StudentSubscription
 from WebSite.models.notifications import Notification
 from WebSite.models.news_model import News
 from WebSite.models.proftest_result import TestResult
 from WebSite.models.course_application import CourseApplication
+from WebSite.models.telegram_link import TelegramLinkToken
 
 User = get_user_model()
 
@@ -241,14 +242,14 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display  = ['title', 'course', 'group', 'scheduled_at', 'sub_count']
+    list_display  = ['title', 'course', 'group', 'created_by', 'scheduled_at', 'sub_count']
     list_filter   = ['course', 'group']
     search_fields = ['title', 'course__title', 'group__name']
     readonly_fields = []
     date_hierarchy = 'scheduled_at'
     ordering      = ['scheduled_at']
     inlines       = [SubLessonInline]
-    autocomplete_fields = ['course', 'group']
+    autocomplete_fields = ['course', 'group', 'created_by']
     list_per_page = 30
 
     @admin.display(description='Подуроков')
@@ -277,8 +278,8 @@ class SubLessonAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display  = ['short_desc', 'sub_lesson', 'max_score']
-    list_filter   = ['sub_lesson__lesson__course']
+    list_display  = ['short_desc', 'sub_lesson', 'task_type', 'max_score']
+    list_filter   = ['task_type', 'sub_lesson__lesson__course']
     search_fields = ['description', 'sub_lesson__title', 'sub_lesson__lesson__title']
 
     @admin.display(description='Задание')
@@ -310,12 +311,16 @@ class LessonCommentAdmin(admin.ModelAdmin):
 
 @admin.register(TaskSubmission)
 class TaskSubmissionAdmin(admin.ModelAdmin):
-    list_display  = ['student', 'task', 'short_text', 'file_link', 'created_at']
-    list_filter   = ['task__sub_lesson__lesson__course']
+    list_display  = ['student', 'task', 'task_type', 'grade_value', 'graded_by', 'short_text', 'file_link', 'created_at']
+    list_filter   = ['task__sub_lesson__lesson__course', 'task__task_type']
     search_fields = ['text', 'student__user__email']
     readonly_fields = ['created_at']
     ordering      = ['-created_at']
     list_per_page = 30
+
+    @admin.display(description='Тип')
+    def task_type(self, obj):
+        return obj.task.get_task_type_display() if obj.task_id else '—'
 
     @admin.display(description='Ответ')
     def short_text(self, obj):
@@ -379,10 +384,11 @@ class LessonGroupInline(admin.TabularInline):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display  = ['name', 'course', 'student_count', 'lesson_count', 'start_date', 'created_at']
+    list_display  = ['name', 'course', 'teacher', 'mentor', 'student_count', 'lesson_count', 'start_date', 'created_at']
     list_filter   = ['course', 'start_date']
     search_fields = ['name', 'course__title']
     filter_horizontal = ['students']
+    autocomplete_fields = ['teacher', 'mentor']
     readonly_fields = ['created_at', 'updated_at']
     ordering      = ['-start_date']
     inlines       = [LessonGroupInline]
@@ -396,14 +402,27 @@ class GroupAdmin(admin.ModelAdmin):
         return obj.lessons.count()
 
 
+@admin.register(GroupChatMessage)
+class GroupChatMessageAdmin(admin.ModelAdmin):
+    list_display  = ['group', 'author', 'short_text', 'created_at']
+    list_filter   = ['group__course']
+    search_fields = ['text', 'group__name', 'author__email']
+    readonly_fields = ['created_at']
+    ordering      = ['-created_at']
+
+    @admin.display(description='Текст')
+    def short_text(self, obj):
+        return (obj.text[:60] + '…') if obj.text and len(obj.text) > 60 else (obj.text or '—')
+
+
 # ─────────────────────────────────────────
 # TARIFF
 # ─────────────────────────────────────────
 
 @admin.register(Tariff)
 class TariffAdmin(admin.ModelAdmin):
-    list_display  = ['title', 'course', 'price', 'duration_days', 'created_at']
-    list_filter   = ['course']
+    list_display  = ['title', 'course', 'price', 'duration_days', 'learning_mode', 'created_at']
+    list_filter   = ['course', 'learning_mode']
     search_fields = ['title', 'course__title']
     readonly_fields = ['created_at', 'updated_at']
     ordering      = ['course', 'price']
@@ -514,10 +533,22 @@ class CourseApplicationAdmin(admin.ModelAdmin):
     raw_id_fields = ['course', 'student']
 
 
+@admin.register(TelegramLinkToken)
+class TelegramLinkTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'token_short', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__email', 'token']
+    raw_id_fields = ['user']
+
+    def token_short(self, obj):
+        return (obj.token[:12] + '…') if obj.token and len(obj.token) > 12 else (obj.token or '')
+    token_short.short_description = 'Токен'
+
+
 # ─────────────────────────────────────────
 # ADMIN SITE CUSTOMIZATION
 # ─────────────────────────────────────────
 
-admin.site.site_header  = '⚡ Swift Intell — Панель управления'
-admin.site.site_title   = 'Swift Intell Admin'
+admin.site.site_header  = '⚡ 101 school — Панель управления'
+admin.site.site_title   = '101 school Admin'
 admin.site.index_title  = 'Добро пожаловать в панель управления'

@@ -1,0 +1,161 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Урок: {{ lesson.title }}{% endblock %}
+{% block page_title %}Урок: {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'teacher_lesson_create' %}">Создать урок</a></li>
+                <li class="breadcrumb-item active">{{ lesson.title }}</li>
+            </ol>
+        </nav>
+        <h1 class="mt-2">{{ lesson.title }}</h1>
+        <p class="text-secondary mb-0">{{ lesson.group.course.title }}, группа {{ lesson.group.name }} · {{ lesson.scheduled_at|date:"d.m.Y H:i" }}</p>
+        {% if lesson.video_url %}
+        <p class="small mt-1 mb-0"><a href="{{ lesson.video_url }}" target="_blank" rel="noopener"><i class="bi bi-play-circle me-1"></i>Видео урока</a></p>
+        {% endif %}
+    </div>
+
+    <div class="card-ai card-glow animate-on-scroll mb-4">
+        <div class="card-header-custom">
+            <h3 class="card-title-custom"><i class="bi bi-pencil-square me-2" style="color: var(--accent)"></i>Редактировать урок</h3>
+        </div>
+        <div class="p-4">
+            <form method="post" action="{% url 'teacher_lesson_edit' lesson.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_lesson">
+                <div class="row g-3 mb-2">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-600">Тема / название урока</label>
+                        <input type="text" name="lesson_title" class="form-control" value="{{ lesson.title }}" required maxlength="255" style="border: 2px solid var(--border);">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-600">Дата и время</label>
+                        <input type="datetime-local" name="lesson_scheduled_at" class="form-control" value="{{ lesson.scheduled_at|date:'Y-m-d' }}T{{ lesson.scheduled_at|time:'H:i' }}" style="border: 2px solid var(--border);">
+                    </div>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <label class="form-label small fw-600">Ссылка на видео урока</label>
+                        <input type="url" name="lesson_video_url" class="form-control" value="{{ lesson.video_url|default:'' }}" placeholder="https://..." maxlength="500" style="border: 2px solid var(--border);">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-ai btn-sm">Сохранить урок</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-ai card-glow animate-on-scroll mb-4">
+        <div class="card-header-custom">
+            <h3 class="card-title-custom"><i class="bi bi-collection me-2" style="color: var(--accent)"></i>Подуроки и задания</h3>
+            <a href="{% url 'teacher_lesson_create' %}" class="btn btn-sm btn-ai">+ Новый урок</a>
+        </div>
+        <div class="p-4">
+            {% for sub, tasks in sub_lessons_data %}
+            <div class="border rounded-3 p-3 mb-4" style="border-color: var(--border) !important; background: var(--ai-subtle);">
+                <h5 class="mb-2">Подурок {{ sub.order }}: {{ sub.title }}</h5>
+                <form method="post" action="{% url 'teacher_lesson_edit' lesson.id %}" class="mb-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_sublesson">
+                    <input type="hidden" name="sub_lesson_id" value="{{ sub.id }}">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Тема подурока</label>
+                            <input type="text" name="sub_title" class="form-control form-control-sm" value="{{ sub.title }}" maxlength="255" style="border: 2px solid var(--border);">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-0">Ссылка на видео / материал</label>
+                            <input type="url" name="content_link" class="form-control form-control-sm" value="{{ sub.content_link }}" required style="border: 2px solid var(--border);">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Сохранить</button>
+                        </div>
+                    </div>
+                </form>
+                <p class="small text-secondary mb-2"><a href="{{ sub.content_link }}" target="_blank" rel="noopener">{{ sub.content_link|truncatechars:60 }}</a></p>
+                <div class="mb-3">
+                    <strong class="small">Задания:</strong>
+                    {% for task in tasks %}
+                    <div class="small py-2 border-bottom" style="border-color: var(--border) !important;">
+                        {{ task.description|truncatechars:100 }}
+                        <span class="badge {% if task.task_type == 'control' %}bg-warning text-dark{% elif task.task_type == 'homework' %}bg-info{% else %}bg-secondary{% endif %} ms-1">{{ task.get_task_type_display }}</span>
+                        макс. {{ task.max_score }}
+                        {% if task.video_url %}
+                        <a href="{{ task.video_url }}" target="_blank" rel="noopener" class="small ms-1"><i class="bi bi-play-circle"></i> видео</a>
+                        {% endif %}
+                        {% if task.attachment %}
+                        <a href="{{ task.attachment.url }}" target="_blank" rel="noopener" class="small ms-1"><i class="bi bi-file-earmark-arrow-down"></i> файл</a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="small text-secondary mb-0">Нет заданий.</p>
+                    {% endfor %}
+                </div>
+                <div class="mt-3 p-3 rounded-3" style="background: var(--bg); border: 1px solid var(--border);">
+                    <strong class="small d-block mb-2">Добавить задание или ДЗ</strong>
+                    <form method="post" action="{% url 'teacher_lesson_edit' lesson.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_task">
+                        <input type="hidden" name="sub_lesson_id" value="{{ sub.id }}">
+                        <div class="row g-2 mb-2">
+                            <div class="col-12">
+                                <label class="form-label small mb-0">Описание задания</label>
+                                <textarea name="description" class="form-control form-control-sm" placeholder="Текст задания..." required maxlength="2000" rows="2" style="border: 2px solid var(--border);"></textarea>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small mb-0">Тип</label>
+                                <select name="task_type" class="form-select form-select-sm" style="border: 2px solid var(--border);">
+                                    <option value="lesson">Задание на уроке</option>
+                                    <option value="homework">Домашнее задание</option>
+                                    <option value="control">Контрольная работа</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-0">Макс. балл</label>
+                                <input type="number" name="max_score" value="100" min="1" max="100" class="form-control form-control-sm" style="border: 2px solid var(--border);">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label small mb-0">Ссылка на видео (необязательно)</label>
+                                <input type="url" name="task_video_url" class="form-control form-control-sm" placeholder="https://..." maxlength="500" style="border: 2px solid var(--border);">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small mb-0">Прикрепить файл задания (PDF, документ)</label>
+                                <input type="file" name="task_attachment" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.txt,.rtf" style="border: 2px solid var(--border);">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-ai">Добавить задание / ДЗ</button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-secondary">Подуроков пока нет. Добавьте первый ниже.</p>
+            {% endfor %}
+
+            <hr style="border-color: var(--border);">
+            <h5 class="mb-3">Добавить подурок</h5>
+            <form method="post" action="{% url 'teacher_lesson_edit' lesson.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_sublesson">
+                <input type="hidden" name="order" value="{{ sub_lessons_data|length|add:1 }}">
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                        <input type="text" name="sub_title" class="form-control" placeholder="Название подурока" required maxlength="255" style="border: 2px solid var(--border);">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="url" name="content_link" class="form-control" placeholder="Ссылка на видео или материал" required style="border: 2px solid var(--border);">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-ai w-100">Добавить подурок</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

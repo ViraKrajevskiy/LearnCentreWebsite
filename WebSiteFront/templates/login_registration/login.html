@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Вход — Swift Intell</title>
+<title>Вход — 101 school</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -303,7 +303,7 @@ nav {
 <nav>
   <a href="/" class="nav-logo">
     <span class="nav-logo-mark">SI</span>
-    Swift<em>Intell</em>
+    101 <em>school</em>
   </a>
   <div class="nav-right">
     <span>Нет аккаунта?</span>
@@ -325,7 +325,7 @@ nav {
     <div class="lp-content">
       <div class="lp-logo">
         <div class="lp-logo-mark">SI</div>
-        Swift<em>Intell</em>
+        101 <em>school</em>
       </div>
 
       <div class="lp-quote" id="quoteText">
@@ -341,9 +341,9 @@ nav {
 
       <div id="loginMode">
         <div class="form-header">
-          <div class="form-eyebrow">Вход в аккаунт</div>
-          <h2 class="form-title">С возвращением 👋</h2>
-          <p class="form-sub">Нет аккаунта? <a href="/register/">Создать бесплатно</a></p>
+          <div class="form-eyebrow">{% if login_type == 'staff' %}Вход для преподавателей и менторов{% else %}Вход в аккаунт{% endif %}</div>
+          <h2 class="form-title">{% if login_type == 'staff' %}Кабинет учителя / ментора{% else %}С возвращением 👋{% endif %}</h2>
+          <p class="form-sub">{% if login_type == 'staff' %}Студентам — <a href="/login/">вход на платформу</a>{% else %}Нет аккаунта? <a href="/register/">Создать бесплатно</a>{% endif %}</p>
         </div>
 
         <div class="social-btns">
@@ -387,10 +387,13 @@ nav {
           Войти в аккаунт
         </button>
 
-        <div class="reg-promo">
+        {% if login_type != 'staff' %}
+        <div class="reg-promo" id="regPromo">
           <p>Ещё нет аккаунта? Зарегистрируйтесь и получите <strong style="color:var(--pu)">скидку 40%</strong> на первый курс</p>
           <a href="/register/">Создать аккаунт бесплатно →</a>
         </div>
+        <p class="text-center small mt-3"><a href="{% url 'staff_login' %}" class="text-secondary">Преподавателям и менторам — отдельный вход</a></p>
+        {% endif %}
       </div>
 
       <div id="forgotMode">
@@ -478,11 +481,15 @@ async function doLogin() {
   btn.innerHTML = '<div class="spinner"></div> Входим...';
   err.classList.remove('show');
 
+  var loginType = '{{ login_type|default:"" }}';
+  var body = { phone_number: id, password: pwd };
+  if (loginType === 'staff') body.login_type = 'staff';
+
   try {
     const resp = await fetch('/api/v1/auth/login/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone_number: id, password: pwd })
+      body: JSON.stringify(body)
     });
 
     const data = await resp.json();
@@ -490,7 +497,12 @@ async function doLogin() {
     if(resp.ok) {
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
-      window.location.href = '/student/';
+      var role = (data.role || '').toLowerCase();
+      if (role === 'teacher' || role === 'mentor' || role === 'staff') {
+        window.location.href = '/teacher/';
+      } else {
+        window.location.href = '/student/';
+      }
     } else {
       btn.classList.remove('loading');
       btn.innerHTML = 'Войти в аккаунт';

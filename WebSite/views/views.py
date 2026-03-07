@@ -3,7 +3,7 @@ from functools import wraps
 from urllib.parse import urlparse, parse_qs
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,9 +16,10 @@ from WebSite.models.study.lesson import Course, Lesson, SubLesson, Task
 from WebSite.models.study.lesson_comment import LessonComment
 from WebSite.models.study.submission import TaskSubmission
 from WebSite.models.pay_system.payment import StudentSubscription, Payment
+from WebSite.models.study.tarif_system import Tariff
 from WebSite.models.notifications import Notification
 from WebSite.models.news_model import News
-from WebSite.models.group.groups import Group
+from WebSite.models.group.groups import Group, GroupChatMessage
 from WebSite.utils.input_validation import sanitize_text_field, validate_int_id
 
 
@@ -28,10 +29,43 @@ def student_required(view_func):
     @wraps(view_func)
     @login_required(login_url='login')
     def _wrapped(request, *args, **kwargs):
+        if request.user.role in ('teacher', 'mentor', 'staff'):
+            return redirect('teacher_home')
         if not hasattr(request.user, 'student'):
             return redirect('login')
         return view_func(request, *args, **kwargs)
     return _wrapped
+
+
+def teacher_required(view_func):
+    """Доступ только для учителей, менторов и staff. Редирект на логин при отсутствии прав."""
+    @wraps(view_func)
+    @login_required(login_url='login')
+    def _wrapped(request, *args, **kwargs):
+        if request.user.role not in ('teacher', 'mentor', 'staff'):
+            if hasattr(request.user, 'student'):
+                return redirect('student_home')
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped
+
+
+def _teacher_or_mentor_groups(user):
+    """Группы, в которых user является учителем или ментором."""
+    teacher_profile = getattr(user, 'teachers', None)
+    if not teacher_profile:
+        return Group.objects.none()
+    return Group.objects.filter(
+        Q(teacher=teacher_profile) | Q(mentor=teacher_profile)
+    ).select_related('course', 'teacher', 'mentor').distinct()
+
+
+def _teacher_only_groups(user):
+    """Группы, в которых user является именно учителем (для создания уроков)."""
+    teacher_profile = getattr(user, 'teachers', None)
+    if not teacher_profile:
+        return Group.objects.none()
+    return Group.objects.filter(teacher=teacher_profile).select_related('course', 'teacher', 'mentor')
 
 
 def _get_student_from_request(request):
@@ -50,6 +84,38 @@ def _get_student_from_request(request):
         except Exception:
             pass
     return None
+
+
+def _lesson_completed(student, lesson):
+    """Урок считается сданным, если есть посещение (Attendance)."""
+    return Attendance.objects.filter(student=student, lesson=lesson).exists()
+
+
+def _get_open_lesson_ids(student, group, learning_mode, now=None):
+    """
+    Возвращает set id уроков группы, которые открыты студенту.
+    - smooth: все уроки открыты.
+    - active: последовательно — урок открыт, если сдан предыдущий и наступило scheduled_at этого урока.
+    """
+    if now is None:
+        now = timezone.now()
+    lessons = list(Lesson.objects.filter(group=group).order_by('scheduled_at'))
+    if not lessons:
+        return set()
+    if learning_mode == Tariff.LEARNING_SMOOTH:
+        return {l.id for l in lessons}
+    # active: по порядку — открыт, если наступило время и предыдущий сдан
+    open_ids = set()
+    for i, lesson in enumerate(lessons):
+        if lesson.scheduled_at and lesson.scheduled_at > now:
+            break
+        if i == 0:
+            open_ids.add(lesson.id)
+        elif _lesson_completed(student, lessons[i - 1]):
+            open_ids.add(lesson.id)
+        else:
+            break
+    return open_ids
 
 
 def _get_my_courses_data(student):
@@ -84,22 +150,23 @@ def _get_my_courses_data(student):
     groups_by_course = {g.course_id: g for g in student_groups}
 
     # Один запрос: все группы курсов с количеством уроков и префетчем уроков по порядку
-    groups_with_lessons = Group.objects.filter(course_id__in=course_ids).annotate(
+    groups_with_lessons = list(Group.objects.filter(course_id__in=course_ids).annotate(
         lessons_count=Count('lessons')
     ).prefetch_related(
         Prefetch('lessons', queryset=Lesson.objects.order_by('scheduled_at'))
-    )
-    for g in groups_with_lessons:
-        if g.course_id not in groups_by_course:
-            groups_by_course[g.course_id] = g
-    # Для курсов без группы студента — первая группа курса
-    first_group_per_course = {}
-    for g in groups_with_lessons:
-        if g.course_id not in first_group_per_course:
-            first_group_per_course[g.course_id] = g
+    ))
+    # Количество уроков по курсу (берём у любой группы курса — у аннотированных)
+    lessons_count_by_course = {g.course_id: g.lessons_count for g in groups_with_lessons}
+    # Подменить группы в groups_by_course на аннотированные с префетчем уроков, где есть
+    annotated_by_course = {g.course_id: g for g in groups_with_lessons}
     for cid in course_ids:
-        if cid not in groups_by_course and cid in first_group_per_course:
-            groups_by_course[cid] = first_group_per_course[cid]
+        if cid in annotated_by_course:
+            groups_by_course[cid] = annotated_by_course[cid]
+        elif cid not in groups_by_course and groups_with_lessons:
+            for g in groups_with_lessons:
+                if g.course_id == cid:
+                    groups_by_course[cid] = g
+                    break
 
     # Один запрос: посещённые уроки студента по этим курсам
     attended_lesson_ids = set(
@@ -119,20 +186,23 @@ def _get_my_courses_data(student):
     result = []
     for course, sub in courses_order:
         group = groups_by_course.get(course.id)
-        total = group.lessons_count if group else 0
+        total = lessons_count_by_course.get(course.id, 0) if group else 0
         attended = attendance_counts.get(course.id, 0)
         next_lesson = None
         first_lesson = None
+        learning_mode = getattr(sub.tariff, 'learning_mode', Tariff.LEARNING_SMOOTH)
+        open_lesson_ids = _get_open_lesson_ids(student, group, learning_mode) if group else set()
         if group:
             for lesson in group.lessons.all():
                 if first_lesson is None:
                     first_lesson = lesson
-                if lesson.id not in attended_lesson_ids:
+                # Следующий урок: первый открытый и ещё не сданный
+                if lesson.id in open_lesson_ids and lesson.id not in attended_lesson_ids:
                     next_lesson = lesson
                     break
         continue_url = (
-            reverse('lesson', args=[next_lesson.id]) if next_lesson else
-            (reverse('lesson', args=[first_lesson.id]) if first_lesson else None)
+            reverse('lesson_detail', args=[next_lesson.id]) if next_lesson else
+            (reverse('lesson_detail', args=[first_lesson.id]) if first_lesson and first_lesson.id in open_lesson_ids else None)
         )
         result.append({
             'course': course,
@@ -143,6 +213,8 @@ def _get_my_courses_data(student):
             'next_lesson': next_lesson,
             'continue_url': continue_url,
             'subscription': sub,
+            'open_lesson_ids': open_lesson_ids,
+            'learning_mode': learning_mode,
         })
     return result
 
@@ -206,11 +278,11 @@ def main_invite(request):
 
 
 def main_login(request):
-    return render(request, 'main_pages/login.html', {'login_type': 'student'})
+    return render(request, 'login_registration/login.html', {'login_type': 'student'})
 
 
 def main_staff_login(request):
-    return render(request, 'main_pages/login.html', {'login_type': 'staff'})
+    return render(request, 'login_registration/login.html', {'login_type': 'staff'})
 
 
 def main_register(request):
@@ -265,7 +337,7 @@ def student_home(request):
         # optimization: get attendance counts in one query
         att_counts = Attendance.objects.filter(student=student).aggregate(
             total=Count('id'),
-            present=Count('id', filter=timezone.Q(is_present=True))
+            present=Count('id', filter=Q(is_present=True))
         )
         total_att = att_counts['total']
         present_att = att_counts['present']
@@ -379,26 +451,42 @@ def student_lesson_redirect(request, lesson_id):
 @student_required
 def student_lesson_detail(request, lesson_id):
     lesson = get_object_or_404(
-        Lesson.objects.select_related('course', 'group').prefetch_related(
+        Lesson.objects.select_related(
+            'course', 'course__creator', 'group', 'group__teacher', 'group__mentor', 'created_by'
+        ).prefetch_related(
             'sub_lessons__tasks'
         ),
         pk=lesson_id
     )
 
-    if request.user.is_authenticated and hasattr(request.user, 'student'):
-        student = request.user.student
-        has_access = StudentSubscription.objects.filter(
-            student=student, tariff__course=lesson.course
-        ).exists()
-        if not has_access:
-            return redirect('my-courses')
+    student = request.user.student
+    sub = StudentSubscription.objects.filter(
+        student=student, tariff__course=lesson.course
+    ).select_related('tariff').first()
+    if not sub:
+        return redirect('my-courses')
 
-    other_lessons = Lesson.objects.filter(
-        group=lesson.group
-    ).order_by('scheduled_at')
+    learning_mode = getattr(sub.tariff, 'learning_mode', Tariff.LEARNING_SMOOTH)
+    open_lesson_ids = _get_open_lesson_ids(student, lesson.group, learning_mode)
+    lesson_locked = lesson.id not in open_lesson_ids
+    unlock_at = lesson.scheduled_at if lesson_locked else None
 
-    prev_lesson = other_lessons.filter(scheduled_at__lt=lesson.scheduled_at).order_by('-scheduled_at').first()
-    next_lesson = other_lessons.filter(scheduled_at__gt=lesson.scheduled_at).order_by('scheduled_at').first()
+    other_lessons = list(Lesson.objects.filter(group=lesson.group).order_by('scheduled_at'))
+    other_lessons_with_lock = [
+        {
+            'lesson': l,
+            'is_locked': l.id not in open_lesson_ids,
+            'unlock_at': l.scheduled_at,
+        }
+        for l in other_lessons
+    ]
+
+    try:
+        idx = next(i for i, l in enumerate(other_lessons) if l.id == lesson.id)
+    except StopIteration:
+        idx = 0
+    prev_lesson = other_lessons[idx - 1] if idx > 0 else None
+    next_lesson = other_lessons[idx + 1] if idx < len(other_lessons) - 1 else None
 
     attendance = None
     lesson_grades = []
@@ -407,9 +495,9 @@ def student_lesson_detail(request, lesson_id):
     if request.user.is_authenticated and hasattr(request.user, 'student'):
         student = request.user.student
         attendance = Attendance.objects.filter(student=student, lesson=lesson).first()
-        # Optimization: only query if needed, and lesson_grades/student_grades were empty anyway
-        lesson_grades = list(Grade.objects.filter(student=student, lesson=lesson).select_related('student__user'))
-        student_grades = lesson_grades # in this context they seem same or similar
+        # Grade model has no lesson/student FK; show no per-lesson grades here
+        lesson_grades = []
+        student_grades = []
     
     sub_lessons = list(lesson.sub_lessons.all())
     sub_lessons_videos = []
@@ -422,7 +510,7 @@ def student_lesson_detail(request, lesson_id):
         })
     first_video = sub_lessons_videos[0] if sub_lessons_videos else None
     lesson_tasks = [(task, sub) for sub in sub_lessons for task in sub.tasks.all()]
-    lesson_comments = (
+    lesson_comments = list(
         LessonComment.objects.filter(lesson=lesson)
         .select_related('student', 'student__user')
         .order_by('-created_at')
@@ -446,9 +534,14 @@ def student_lesson_detail(request, lesson_id):
         for task, sub in lesson_tasks
     ]
 
+    lesson_teacher = getattr(lesson.group, 'teacher', None)
+    lesson_mentor = getattr(lesson.group, 'mentor', None)
+    lesson_created_by = getattr(lesson, 'created_by', None) or getattr(lesson.course, 'creator', None)
+
     return render(request, 'student/lesson_detail.html', {
         'lesson': lesson,
         'other_lessons': other_lessons,
+        'other_lessons_with_lock': other_lessons_with_lock,
         'prev_lesson': prev_lesson,
         'next_lesson': next_lesson,
         'attendance': attendance,
@@ -459,7 +552,121 @@ def student_lesson_detail(request, lesson_id):
         'lesson_tasks': lesson_tasks,
         'lesson_tasks_with_subs': lesson_tasks_with_subs,
         'lesson_comments': lesson_comments,
+        'lesson_teacher': lesson_teacher,
+        'lesson_mentor': lesson_mentor,
+        'lesson_created_by': lesson_created_by,
+        'lesson_locked': lesson_locked,
+        'unlock_at': unlock_at,
+        'learning_mode': learning_mode,
     })
+
+
+def _user_can_access_group_chat(user, group):
+    """Студент группы, учитель или ментор группы могут писать в чат."""
+    if not user.is_authenticated:
+        return False
+    if hasattr(user, 'student') and user.student and group.students.filter(pk=user.student.pk).exists():
+        return True
+    if getattr(group, 'teacher', None) and group.teacher and getattr(group.teacher, 'user', None) and group.teacher.user_id == user.pk:
+        return True
+    if getattr(group, 'mentor', None) and group.mentor and getattr(group.mentor, 'user', None) and group.mentor.user_id == user.pk:
+        return True
+    return False
+
+
+def _notify_students_about_chat_message(group, author, text):
+    """Создаёт уведомления для всех студентов группы о новом сообщении в чате (кроме автора)."""
+    author_student_id = getattr(author, 'student_id', None) or (author.student.pk if hasattr(author, 'student') and author.student else None)
+    students = group.students.all()
+    author_name = (author.get_full_name() or author.email or 'Участник').strip() or 'Участник'
+    msg_preview = (text or '').strip()[:120]
+    if len((text or '').strip()) > 120:
+        msg_preview += '…'
+    title = f'Чат: {group.name}'
+    message = f'От {author_name}: {msg_preview}' if msg_preview else f'От {author_name}'
+    link = reverse('messages') + f'?group={group.pk}'
+    for student in students:
+        if author_student_id and student.pk == author_student_id:
+            continue
+        Notification.objects.create(
+            student=student,
+            kind=Notification.KIND_CHAT_MESSAGE,
+            title=title,
+            message=message,
+            link=link,
+        )
+
+
+@student_required
+def student_group_chat(request, group_id):
+    """Чат группы: студенты группы + учитель + ментор. Список сообщений, отправка, редактирование и удаление."""
+    group = get_object_or_404(
+        Group.objects.select_related('course', 'teacher', 'mentor'),
+        pk=group_id
+    )
+    if not _user_can_access_group_chat(request.user, group):
+        return redirect('my-courses')
+    messages_list = list(
+        GroupChatMessage.objects.filter(group=group)
+        .select_related('author')
+        .order_by('created_at')[:200]
+    )
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'delete':
+            msg_id = request.POST.get('message_id')
+            if msg_id:
+                try:
+                    msg = GroupChatMessage.objects.get(pk=int(msg_id), group=group, author=request.user)
+                    msg.delete()
+                except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                    pass
+        elif action == 'edit':
+            msg_id = request.POST.get('message_id')
+            text = (request.POST.get('text') or '').strip()
+            if msg_id and text and len(text) <= 5000:
+                try:
+                    msg = GroupChatMessage.objects.get(pk=int(msg_id), group=group, author=request.user)
+                    msg.text = text
+                    msg.save()
+                except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                    pass
+        else:
+            text = (request.POST.get('text') or '').strip()
+            if text and len(text) <= 5000:
+                GroupChatMessage.objects.create(group=group, author=request.user, text=text)
+                _notify_students_about_chat_message(group, request.user, text)
+        return redirect('group_chat', group_id=group_id)
+    edit_message_id = None
+    edit_message_text = None
+    edit_param = request.GET.get('edit')
+    if edit_param:
+        try:
+            em = GroupChatMessage.objects.get(pk=int(edit_param), group=group, author=request.user)
+            edit_message_id = em.pk
+            edit_message_text = em.text
+        except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+            pass
+    return render(request, 'student/group_chat.html', {
+        'group': group,
+        'chat_messages': messages_list,
+        'edit_message_id': edit_message_id,
+        'edit_message_text': edit_message_text or '',
+    })
+
+
+@student_required
+@require_POST
+def clear_my_group_chat(request, group_id):
+    """Удалить все свои сообщения в чате группы. Редирект на next или в личные сообщения."""
+    group = get_object_or_404(Group.objects.select_related('course'), pk=group_id)
+    if not _user_can_access_group_chat(request.user, group):
+        return redirect('my-courses')
+    GroupChatMessage.objects.filter(group=group, author=request.user).delete()
+    next_url = request.GET.get('next') or request.POST.get('next')
+    if next_url:
+        return redirect(next_url)
+    return redirect(reverse('messages') + f'?group={group_id}')
 
 
 @student_required
@@ -538,49 +745,22 @@ def student_profile(request):
         user.proftest_offer_shown_at = timezone.now()
         user.save(update_fields=['proftest_offer_shown_at'])
 
-    payment_history = []
-    performance_data = []
-    if hasattr(user, 'student'):
-        student = user.student
-        payment_history = (
-            Payment.objects.filter(student=student)
-            .select_related('subscription', 'subscription__tariff', 'subscription__tariff__course')
-            .order_by('-created_at')[:50]
-        )
-        # Успеваемость: по каждому курсу — прогресс и сданные/несданные задания (batch)
-        progress_list = list(
-            StudentProgress.objects.filter(student=student).select_related('course')
-        )
-        if progress_list:
-            course_ids = [p.course_id for p in progress_list]
-            tasks_total_by_course = dict(
-                Task.objects.filter(sub_lesson__lesson__course_id__in=course_ids)
-                .values('sub_lesson__lesson__course_id')
-                .annotate(total=Count('id'))
-                .values_list('sub_lesson__lesson__course_id', 'total')
-            )
-            submitted_by_course = dict(
-                TaskSubmission.objects.filter(
-                    student=student,
-                    task__sub_lesson__lesson__course_id__in=course_ids
-                )
-                .values('task__sub_lesson__lesson__course_id')
-                .annotate(cnt=Count('task', distinct=True))
-                .values_list('task__sub_lesson__lesson__course_id', 'cnt')
-            )
-            for progress in progress_list:
-                cid = progress.course_id
-                performance_data.append({
-                    'course': progress.course,
-                    'progress': progress,
-                    'tasks_total': tasks_total_by_course.get(cid, 0),
-                    'tasks_submitted': submitted_by_course.get(cid, 0),
-                })
-
     return render(request, 'student/profile.html', {
         'show_proftest_prompt': show_proftest_prompt,
+    })
+
+
+@student_required
+def student_payments(request):
+    """Отдельная страница: история оплат и загрузка чеков."""
+    student = request.user.student
+    payment_history = (
+        Payment.objects.filter(student=student)
+        .select_related('subscription', 'subscription__tariff', 'subscription__tariff__course')
+        .order_by('-created_at')[:50]
+    )
+    return render(request, 'student/payments.html', {
         'payment_history': payment_history,
-        'performance_data': performance_data,
     })
 
 
@@ -591,7 +771,84 @@ def student_ai_chat(request):
 
 @student_required
 def student_messages(request):
-    return render(request, 'student/messages.html')
+    """Личные сообщения: чаты групп (переписка с учителем/ментором по каждой группе)."""
+    student = request.user.student
+    purchased_course_ids = StudentSubscription.objects.filter(
+        student=student
+    ).values_list('tariff__course_id', flat=True).distinct()
+    my_groups = list(
+        Group.objects.filter(students=student, course_id__in=purchased_course_ids)
+        .select_related('course', 'teacher', 'mentor')
+        .order_by('-start_date')
+    )
+    selected_group = None
+    chat_messages = []
+    group_id_param = request.GET.get('group') or request.POST.get('group_id')
+    if request.method == 'POST' and group_id_param:
+        try:
+            gid = int(group_id_param)
+            g = next((g for g in my_groups if g.pk == gid), None)
+            if not g:
+                pass
+            elif request.POST.get('action') == 'delete':
+                msg_id = request.POST.get('message_id')
+                if msg_id:
+                    try:
+                        msg = GroupChatMessage.objects.get(pk=int(msg_id), group=g, author=request.user)
+                        msg.delete()
+                    except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                        pass
+                return redirect(reverse('messages') + f'?group={gid}')
+            elif request.POST.get('action') == 'edit':
+                msg_id = request.POST.get('message_id')
+                text = (request.POST.get('text') or '').strip()
+                if msg_id and text and len(text) <= 5000:
+                    try:
+                        msg = GroupChatMessage.objects.get(pk=int(msg_id), group=g, author=request.user)
+                        msg.text = text
+                        msg.save()
+                    except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                        pass
+                return redirect(reverse('messages') + f'?group={gid}')
+            else:
+                text = (request.POST.get('text') or '').strip()
+                if text and len(text) <= 5000:
+                    GroupChatMessage.objects.create(group=g, author=request.user, text=text)
+                    _notify_students_about_chat_message(g, request.user, text)
+                return redirect(reverse('messages') + f'?group={gid}')
+        except (ValueError, TypeError):
+            pass
+    edit_message_id = None
+    edit_message_text = None
+    if group_id_param:
+        try:
+            gid = int(group_id_param)
+            selected_group = next((g for g in my_groups if g.pk == gid), None)
+            if selected_group:
+                chat_messages = list(
+                    GroupChatMessage.objects.filter(group=selected_group)
+                    .select_related('author')
+                    .order_by('created_at')[:200]
+                )
+                edit_param = request.GET.get('edit')
+                if edit_param:
+                    try:
+                        em = GroupChatMessage.objects.get(
+                            pk=int(edit_param), group=selected_group, author=request.user
+                        )
+                        edit_message_id = em.pk
+                        edit_message_text = em.text
+                    except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                        pass
+        except (ValueError, TypeError):
+            pass
+    return render(request, 'student/messages.html', {
+        'my_groups': my_groups,
+        'selected_group': selected_group,
+        'chat_messages': chat_messages,
+        'edit_message_id': edit_message_id,
+        'edit_message_text': edit_message_text or '',
+    })
 
 
 @student_required
@@ -621,6 +878,440 @@ def student_attendance(request):
             .order_by('-lesson__scheduled_at')
         )
     return render(request, 'student/attendance.html', {'attendance_list': attendance_list})
+
+
+# --- TEACHER / MENTOR VIEWS ---
+
+@teacher_required
+def teacher_home(request):
+    """Главная кабинета учителя/ментора."""
+    my_groups = list(_teacher_or_mentor_groups(request.user).order_by('-start_date')[:10])
+    is_mentor = getattr(request.user, 'teachers', None) and getattr(request.user.teachers, 'choices', None) == 'mentor'
+    return render(request, 'teacher/home.html', {
+        'my_groups': my_groups,
+        'is_mentor': is_mentor,
+        'today_date': timezone.now().date(),
+    })
+
+
+@teacher_required
+def teacher_my_groups(request):
+    """Мои группы (где я учитель или ментор)."""
+    my_groups = list(_teacher_or_mentor_groups(request.user).order_by('-start_date'))
+    is_mentor = getattr(request.user, 'teachers', None) and getattr(request.user.teachers, 'choices', None) == 'mentor'
+    return render(request, 'teacher/my_groups.html', {
+        'my_groups': my_groups,
+        'is_mentor': is_mentor,
+    })
+
+
+@teacher_required
+def teacher_messages(request):
+    """Сообщения: чаты групп (учитель/ментор видит те же чаты, что и студенты группы)."""
+    my_groups = list(_teacher_or_mentor_groups(request.user).order_by('-start_date'))
+    selected_group = None
+    chat_messages = []
+    group_id_param = request.GET.get('group') or request.POST.get('group_id')
+    if request.method == 'POST' and group_id_param:
+        try:
+            gid = int(group_id_param)
+            g = next((g for g in my_groups if g.pk == gid), None)
+            if g:
+                if request.POST.get('action') == 'delete':
+                    msg_id = request.POST.get('message_id')
+                    if msg_id:
+                        try:
+                            msg = GroupChatMessage.objects.get(pk=int(msg_id), group=g, author=request.user)
+                            msg.delete()
+                        except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                            pass
+                    return redirect(reverse('teacher_messages') + f'?group={gid}')
+                elif request.POST.get('action') == 'edit':
+                    msg_id = request.POST.get('message_id')
+                    text = (request.POST.get('text') or '').strip()
+                    if msg_id and text and len(text) <= 5000:
+                        try:
+                            msg = GroupChatMessage.objects.get(pk=int(msg_id), group=g, author=request.user)
+                            msg.text = text
+                            msg.save()
+                        except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                            pass
+                    return redirect(reverse('teacher_messages') + f'?group={gid}')
+                else:
+                    text = (request.POST.get('text') or '').strip()
+                    if text and len(text) <= 5000:
+                        GroupChatMessage.objects.create(group=g, author=request.user, text=text)
+                        _notify_students_about_chat_message(g, request.user, text)
+                return redirect(reverse('teacher_messages') + f'?group={gid}')
+        except (ValueError, TypeError):
+            pass
+    edit_message_id = None
+    edit_message_text = None
+    if group_id_param:
+        try:
+            gid = int(group_id_param)
+            selected_group = next((g for g in my_groups if g.pk == gid), None)
+            if selected_group:
+                chat_messages = list(
+                    GroupChatMessage.objects.filter(group=selected_group)
+                    .select_related('author')
+                    .order_by('created_at')[:200]
+                )
+                edit_param = request.GET.get('edit')
+                if edit_param:
+                    try:
+                        em = GroupChatMessage.objects.get(
+                            pk=int(edit_param), group=selected_group, author=request.user
+                        )
+                        edit_message_id = em.pk
+                        edit_message_text = em.text
+                    except (GroupChatMessage.DoesNotExist, ValueError, TypeError):
+                        pass
+        except (ValueError, TypeError):
+            pass
+    return render(request, 'teacher/messages.html', {
+        'my_groups': my_groups,
+        'selected_group': selected_group,
+        'chat_messages': chat_messages,
+        'edit_message_id': edit_message_id,
+        'edit_message_text': edit_message_text or '',
+    })
+
+
+@teacher_required
+def teacher_homework(request):
+    """Проверка ДЗ и заданий по группам. Ментор не может выставлять оценку за контрольные."""
+    from WebSite.models.study.lesson import Task
+
+    my_groups = list(_teacher_or_mentor_groups(request.user).order_by('-start_date'))
+    teacher_profile = getattr(request.user, 'teachers', None)
+    is_mentor = teacher_profile and getattr(teacher_profile, 'choices', None) == 'mentor'
+
+    selected_group = None
+    submissions = []
+
+    group_id_param = request.GET.get('group') or request.POST.get('group_id')
+    if request.method == 'POST' and request.POST.get('action') == 'grade':
+        sub_id = request.POST.get('submission_id')
+        grade_val = request.POST.get('grade_value')
+        redirect_group_id = request.POST.get('group_id') or request.GET.get('group')
+        try:
+            sub = TaskSubmission.objects.select_related('task', 'task__sub_lesson', 'task__sub_lesson__lesson').get(pk=int(sub_id))
+        except (TaskSubmission.DoesNotExist, ValueError, TypeError):
+            pass
+        else:
+            gr = sub.task.sub_lesson.lesson.group
+            if gr and any(g.pk == gr.pk for g in my_groups):
+                redirect_group_id = str(gr.id)
+                can_grade = True
+                if sub.task.task_type == Task.TaskType.CONTROL and is_mentor:
+                    can_grade = False
+                if can_grade and grade_val is not None:
+                    try:
+                        gv = int(grade_val)
+                        max_s = getattr(sub.task, 'max_score', 100) or 100
+                        if 0 <= gv <= min(100, max_s):
+                            sub.grade_value = gv
+                            sub.graded_at = timezone.now()
+                            sub.graded_by = request.user
+                            sub.save(update_fields=['grade_value', 'graded_at', 'graded_by'])
+                    except (ValueError, TypeError):
+                        pass
+        if redirect_group_id:
+            return redirect(reverse('teacher_homework') + f'?group={redirect_group_id}')
+        return redirect('teacher_homework')
+
+    if group_id_param:
+        try:
+            gid = int(group_id_param)
+            selected_group = next((g for g in my_groups if g.pk == gid), None)
+            if selected_group:
+                submissions = list(
+                    TaskSubmission.objects
+                    .filter(
+                        task__sub_lesson__lesson__group=selected_group,
+                        student__study_groups=selected_group,
+                    )
+                    .select_related('student', 'student__user', 'task', 'task__sub_lesson', 'task__sub_lesson__lesson', 'graded_by')
+                    .distinct()
+                    .order_by('-created_at')
+                )
+        except (ValueError, TypeError):
+            pass
+
+    return render(request, 'teacher/homework.html', {
+        'my_groups': my_groups,
+        'selected_group': selected_group,
+        'submissions': submissions,
+        'is_mentor': is_mentor,
+    })
+
+
+@teacher_required
+def teacher_submission_detail(request, submission_id):
+    """Просмотр сдачи в отдельном окне: полный текст ответа и скачивание файла."""
+    sub = get_object_or_404(
+        TaskSubmission.objects.select_related(
+            'student', 'student__user', 'task', 'task__sub_lesson', 'task__sub_lesson__lesson', 'task__sub_lesson__lesson__group', 'graded_by'
+        ),
+        pk=submission_id
+    )
+    group = sub.task.sub_lesson.lesson.group
+    my_group_ids = list(_teacher_or_mentor_groups(request.user).values_list('pk', flat=True))
+    if group.pk not in my_group_ids:
+        return redirect('teacher_homework')
+    return render(request, 'teacher/submission_detail.html', {
+        'sub': sub,
+        'group': group,
+    })
+
+
+@teacher_required
+def teacher_lessons_panel(request):
+    """Отдел «Урок»: три панели — создание урока, домашнее задание к уроку, задание для урока (только учитель)."""
+    teacher_profile_obj = getattr(request.user, 'teachers', None)
+    is_teacher = teacher_profile_obj and getattr(teacher_profile_obj, 'choices', None) == 'teacher'
+    if not is_teacher:
+        return redirect('teacher_home')
+
+    teaching_groups = list(_teacher_only_groups(request.user).order_by('-start_date'))
+    teaching_group_ids = [g.pk for g in teaching_groups]
+    lessons = list(
+        Lesson.objects.filter(group_id__in=teaching_group_ids)
+        .select_related('group', 'group__course')
+        .prefetch_related(Prefetch('sub_lessons', queryset=SubLesson.objects.order_by('order')))
+        .order_by('-scheduled_at')
+    )
+    lessons_list = [{'id': l.id, 'title': l.title, 'group_name': l.group.name} for l in lessons]
+    sub_lessons_by_lesson = {}
+    for l in lessons:
+        sub_lessons_by_lesson[l.id] = [{'id': s.id, 'title': s.title} for s in l.sub_lessons.all()]
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'create_lesson':
+            group_id = request.POST.get('group_id')
+            title = (request.POST.get('title') or '').strip()
+            scheduled = request.POST.get('scheduled_at')
+            video_url = (request.POST.get('lesson_video_url') or '').strip()
+            group = next((g for g in teaching_groups if str(g.pk) == group_id), None)
+            if not group or not title:
+                return render(request, 'teacher/lessons_panel.html', {
+                    'teaching_groups': teaching_groups,
+                    'lessons_list': lessons_list,
+                    'sub_lessons_by_lesson': sub_lessons_by_lesson,
+                    'error': 'Выберите группу и введите название урока.',
+                })
+            try:
+                from datetime import datetime
+                scheduled_at = timezone.make_aware(datetime.fromisoformat(scheduled.replace('Z', '+00:00'))) if scheduled else timezone.now() + timedelta(days=7)
+            except Exception:
+                scheduled_at = timezone.now() + timedelta(days=7)
+            lesson = Lesson.objects.create(
+                course=group.course,
+                group=group,
+                title=title,
+                scheduled_at=scheduled_at,
+                video_url=video_url,
+                created_by=teacher_profile_obj,
+            )
+            return redirect('teacher_lesson_edit', lesson_id=lesson.pk)
+        if action in ('add_homework_task', 'add_lesson_task'):
+            lesson_id = request.POST.get('lesson_id')
+            sub_lesson_id = request.POST.get('sub_lesson_id')
+            desc = (request.POST.get('description') or '').strip()
+            max_score = int(request.POST.get('max_score') or 100)
+            task_video_url = (request.POST.get('task_video_url') or '').strip()
+            task_file = request.FILES.get('task_attachment')
+            task_type = Task.TaskType.HOMEWORK if action == 'add_homework_task' else Task.TaskType.LESSON
+            if not lesson_id or not sub_lesson_id or not desc:
+                return render(request, 'teacher/lessons_panel.html', {
+                    'teaching_groups': teaching_groups,
+                    'lessons_list': lessons_list,
+                    'sub_lessons_by_lesson': sub_lessons_by_lesson,
+                    'error': 'Выберите урок и подурок, введите описание задания.',
+                })
+            lesson = get_object_or_404(Lesson, pk=lesson_id)
+            if lesson.group_id not in teaching_group_ids:
+                return redirect('teacher_home')
+            sub = get_object_or_404(SubLesson, pk=sub_lesson_id, lesson=lesson)
+            task = Task(sub_lesson=sub, description=desc, max_score=max_score, task_type=task_type, video_url=task_video_url)
+            if task_file:
+                task.attachment = task_file
+            task.save()
+            return redirect('teacher_lesson_edit', lesson_id=lesson.id)
+
+    return render(request, 'teacher/lessons_panel.html', {
+        'teaching_groups': teaching_groups,
+        'lessons_list': lessons_list,
+        'sub_lessons_by_lesson': sub_lessons_by_lesson,
+    })
+
+
+@teacher_required
+def teacher_lesson_create(request):
+    """Создать урок (только учитель). Выбор группы, название, дата — затем переход к добавлению подуроков и заданий."""
+    teacher_profile_obj = getattr(request.user, 'teachers', None)
+    is_teacher = teacher_profile_obj and getattr(teacher_profile_obj, 'choices', None) == 'teacher'
+    if not is_teacher:
+        return redirect('teacher_home')
+
+    teaching_groups = list(_teacher_only_groups(request.user).order_by('-start_date'))
+    if not teaching_groups:
+        return render(request, 'teacher/lesson_create.html', {'teaching_groups': [], 'error': 'Вам не назначены группы как учителю.'})
+
+    if request.method == 'POST':
+        group_id = request.POST.get('group_id')
+        title = (request.POST.get('title') or '').strip()
+        scheduled = request.POST.get('scheduled_at')
+        group = next((g for g in teaching_groups if str(g.pk) == group_id), None)
+        if not group or not title:
+            return render(request, 'teacher/lesson_create.html', {
+                'teaching_groups': teaching_groups,
+                'error': 'Выберите группу и введите название урока.',
+            })
+        try:
+            from datetime import datetime
+            scheduled_at = timezone.make_aware(datetime.fromisoformat(scheduled.replace('Z', '+00:00'))) if scheduled else timezone.now() + timedelta(days=7)
+        except Exception:
+            scheduled_at = timezone.now() + timedelta(days=7)
+        lesson = Lesson.objects.create(
+            course=group.course,
+            group=group,
+            title=title,
+            scheduled_at=scheduled_at,
+            created_by=teacher_profile_obj,
+        )
+        return redirect('teacher_lesson_edit', lesson_id=lesson.pk)
+
+    return render(request, 'teacher/lesson_create.html', {
+        'teaching_groups': teaching_groups,
+    })
+
+
+@teacher_required
+def teacher_lesson_edit(request, lesson_id):
+    """Редактирование урока: подуроки и задания (только учитель)."""
+    from WebSite.models.study.lesson import Task
+
+    teacher_profile_obj = getattr(request.user, 'teachers', None)
+    is_teacher = teacher_profile_obj and getattr(teacher_profile_obj, 'choices', None) == 'teacher'
+    if not is_teacher:
+        return redirect('teacher_home')
+
+    lesson = get_object_or_404(
+        Lesson.objects.select_related('course', 'group', 'created_by'),
+        pk=lesson_id
+    )
+    teaching_group_ids = list(_teacher_only_groups(request.user).values_list('pk', flat=True))
+    if lesson.group_id not in teaching_group_ids:
+        return redirect('teacher_lesson_create')
+
+    sub_lessons = list(lesson.sub_lessons.all().order_by('order'))
+    sub_lessons_data = []
+    for sub in sub_lessons:
+        tasks = list(sub.tasks.all().order_by('id'))
+        sub_lessons_data.append((sub, tasks))
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'update_lesson':
+            title = (request.POST.get('lesson_title') or '').strip()
+            video_url = (request.POST.get('lesson_video_url') or '').strip()
+            scheduled_raw = request.POST.get('lesson_scheduled_at') or ''
+            if title:
+                lesson.title = title
+            if scheduled_raw:
+                try:
+                    from django.utils.dateparse import parse_datetime
+                    parsed = parse_datetime(scheduled_raw)
+                    if parsed:
+                        lesson.scheduled_at = parsed
+                except Exception:
+                    pass
+            lesson.video_url = video_url
+            lesson.save(update_fields=['title', 'scheduled_at', 'video_url'])
+            return redirect('teacher_lesson_edit', lesson_id=lesson_id)
+        if action == 'update_sublesson':
+            sub_id = request.POST.get('sub_lesson_id')
+            stitle = (request.POST.get('sub_title') or '').strip()
+            slink = (request.POST.get('content_link') or '').strip()
+            sub = next((s for s, _ in sub_lessons_data if str(s.pk) == sub_id), None)
+            if sub:
+                if stitle:
+                    sub.title = stitle
+                if slink:
+                    sub.content_link = slink
+                sub.save(update_fields=['title', 'content_link'])
+            return redirect('teacher_lesson_edit', lesson_id=lesson_id)
+        if action == 'add_sublesson':
+            stitle = (request.POST.get('sub_title') or '').strip()
+            slink = (request.POST.get('content_link') or '').strip()
+            order = int(request.POST.get('order') or len(sub_lessons_data) + 1)
+            if stitle and slink:
+                SubLesson.objects.create(lesson=lesson, title=stitle, content_link=slink, order=order)
+            return redirect('teacher_lesson_edit', lesson_id=lesson_id)
+        if action == 'add_task':
+            sub_id = request.POST.get('sub_lesson_id')
+            desc = (request.POST.get('description') or '').strip()
+            task_type = request.POST.get('task_type') or Task.TaskType.LESSON
+            max_score = int(request.POST.get('max_score') or 100)
+            task_video_url = (request.POST.get('task_video_url') or '').strip()
+            task_file = request.FILES.get('task_attachment')
+            sub = next((s for s, _ in sub_lessons_data if str(s.pk) == sub_id), None)
+            if sub and desc:
+                task = Task(
+                    sub_lesson=sub,
+                    description=desc,
+                    max_score=max_score,
+                    task_type=task_type,
+                    video_url=task_video_url or '',
+                )
+                if task_file:
+                    task.attachment = task_file
+                task.save()
+            return redirect('teacher_lesson_edit', lesson_id=lesson_id)
+
+    return render(request, 'teacher/lesson_edit.html', {
+        'lesson': lesson,
+        'sub_lessons_data': sub_lessons_data,
+    })
+
+
+@teacher_required
+def teacher_news(request):
+    """Новости для учителя и ментора (тот же список, что и у студентов)."""
+    news_list = News.objects.filter(is_published=True).order_by('-created_at')[:50]
+    return render(request, 'teacher/news.html', {'news_list': news_list})
+
+
+@teacher_required
+def teacher_news_detail(request, pk):
+    """Просмотр одной новости."""
+    news_item = get_object_or_404(News.objects.filter(is_published=True), pk=pk)
+    return render(request, 'teacher/news_detail.html', {'news_item': news_item})
+
+
+@teacher_required
+def teacher_profile(request):
+    """Профиль преподавателя/ментора (роль, личные данные, смена пароля). Оба видят свои данные."""
+    user = request.user
+    teacher_profile_obj = getattr(user, 'teachers', None)
+    is_mentor = teacher_profile_obj and getattr(teacher_profile_obj, 'choices', None) == 'mentor'
+    role_display = 'Ментор' if is_mentor else 'Учитель'
+    profile_data = {
+        'first_name': getattr(user, 'first_name', '') or '',
+        'surname': getattr(user, 'surname', '') or '',
+        'email': getattr(user, 'email', '') or '',
+        'phone_number': getattr(user, 'phone_number', '') or '',
+        'telegram_username': (getattr(user, 'telegram_username', '') or '').strip().lstrip('@'),
+        'role_display': role_display,
+    }
+    return render(request, 'teacher/profile.html', {
+        'is_mentor': is_mentor,
+        'role_display': role_display,
+        'profile_data': profile_data,
+    })
 
 
 # --- ACTIONS (POST ONLY) ---
@@ -663,6 +1354,9 @@ def submit_task_view(request, task_id):
     if not text and not file_obj:
         return JsonResponse({'error': 'Добавьте текст или файл'}, status=400)
     TaskSubmission.objects.create(student=student, task=task, text=text or '', file=file_obj or None)
+    # Отметить урок как посещённый (для тарифа «активное обучение» — следующий откроется после сдачи)
+    lesson = task.sub_lesson.lesson
+    Attendance.objects.get_or_create(student=student, lesson=lesson, defaults={'is_present': True})
     return JsonResponse({'ok': True, 'message': 'Ответ отправлен!', 'attempts_left': 2 - submission_count})
 
 

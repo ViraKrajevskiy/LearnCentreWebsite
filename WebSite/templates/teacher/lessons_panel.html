@@ -1,0 +1,210 @@
+{% extends "teacher/base.html" %}
+{% load static %}
+
+{% block title %}Урок{% endblock %}
+{% block page_title %}Урок{% endblock %}
+
+{% block content %}
+<div class="student-page">
+    <div class="page-hero anim-fade-up mb-4">
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Урок</p>
+        <h1><span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Урок</span></h1>
+        <p class="lead">Создание урока, домашнего задания к уроку и заданий для самого урока.</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-warning mb-4">{{ error }}</div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Панель 1: Создать урок -->
+        <div class="col-12">
+            <div class="card-ai card-glow animate-on-scroll">
+                <div class="card-header-custom">
+                    <h3 class="card-title-custom"><i class="bi bi-plus-circle me-2" style="color: var(--accent)"></i>Создать урок</h3>
+                </div>
+                <div class="p-4">
+                    {% if teaching_groups %}
+                    <form method="post" action="{% url 'teacher_lessons_panel' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="create_lesson">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-600">Группа <span class="text-danger">*</span></label>
+                                <select name="group_id" class="form-select" required style="border: 2px solid var(--border);">
+                                    <option value="">— Выберите группу —</option>
+                                    {% for g in teaching_groups %}
+                                    <option value="{{ g.id }}">{{ g.course.title }} — {{ g.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-600">Название урока <span class="text-danger">*</span></label>
+                                <input type="text" name="title" class="form-control" required maxlength="255" placeholder="Например: Введение в Python" style="border: 2px solid var(--border);">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Дата и время</label>
+                                <input type="datetime-local" name="scheduled_at" class="form-control" style="border: 2px solid var(--border);">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-600">Ссылка на видео урока (необязательно)</label>
+                                <input type="url" name="lesson_video_url" class="form-control" placeholder="https://..." maxlength="500" style="border: 2px solid var(--border);">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-ai"><i class="bi bi-plus-lg me-1"></i>Создать урок</button>
+                                <a href="{% url 'teacher_lesson_create' %}" class="btn btn-outline-secondary ms-2">Подробнее: страница создания урока</a>
+                            </div>
+                        </div>
+                    </form>
+                    {% else %}
+                    <p class="text-secondary mb-0">Вам не назначены группы в роли учителя.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Панель 2: Домашнее задание к уроку -->
+        <div class="col-12">
+            <div class="card-ai card-glow animate-on-scroll">
+                <div class="card-header-custom">
+                    <h3 class="card-title-custom"><i class="bi bi-house-door me-2" style="color: var(--accent)"></i>Домашнее задание к уроку</h3>
+                </div>
+                <div class="p-4">
+                    {% if lessons_list %}
+                    <form method="post" action="{% url 'teacher_lessons_panel' %}" enctype="multipart/form-data" id="form-homework">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_homework_task">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Урок <span class="text-danger">*</span></label>
+                                <select name="lesson_id" id="homework-lesson-id" class="form-select" required style="border: 2px solid var(--border);">
+                                    <option value="">— Выберите урок —</option>
+                                    {% for l in lessons_list %}
+                                    <option value="{{ l.id }}">{{ l.title }} ({{ l.group_name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Подурок <span class="text-danger">*</span></label>
+                                <select name="sub_lesson_id" id="homework-sub-lesson-id" class="form-select" required style="border: 2px solid var(--border);">
+                                    <option value="">— Сначала выберите урок —</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Макс. балл</label>
+                                <input type="number" name="max_score" value="100" min="1" max="100" class="form-control" style="border: 2px solid var(--border);">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-600">Описание задания <span class="text-danger">*</span></label>
+                            <textarea name="description" class="form-control" required rows="3" placeholder="Текст домашнего задания..." maxlength="2000" style="border: 2px solid var(--border);"></textarea>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-600">Ссылка на видео (необязательно)</label>
+                                <input type="url" name="task_video_url" class="form-control" placeholder="https://..." maxlength="500" style="border: 2px solid var(--border);">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-600">Прикрепить файл (PDF, документ)</label>
+                                <input type="file" name="task_attachment" class="form-control" accept=".pdf,.doc,.docx,.txt,.rtf" style="border: 2px solid var(--border);">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-ai"><i class="bi bi-house-door me-1"></i>Добавить домашнее задание</button>
+                    </form>
+                    {% else %}
+                    <p class="text-secondary mb-0">Сначала создайте урок и добавьте подуроки в <a href="{% url 'teacher_lesson_create' %}">редактировании урока</a>.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Панель 3: Задание для урока -->
+        <div class="col-12">
+            <div class="card-ai card-glow animate-on-scroll">
+                <div class="card-header-custom">
+                    <h3 class="card-title-custom"><i class="bi bi-pencil-square me-2" style="color: var(--accent)"></i>Задание для урока</h3>
+                </div>
+                <div class="p-4">
+                    {% if lessons_list %}
+                    <form method="post" action="{% url 'teacher_lessons_panel' %}" enctype="multipart/form-data" id="form-lesson-task">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_lesson_task">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Урок <span class="text-danger">*</span></label>
+                                <select name="lesson_id" id="lesson-task-lesson-id" class="form-select" required style="border: 2px solid var(--border);">
+                                    <option value="">— Выберите урок —</option>
+                                    {% for l in lessons_list %}
+                                    <option value="{{ l.id }}">{{ l.title }} ({{ l.group_name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Подурок <span class="text-danger">*</span></label>
+                                <select name="sub_lesson_id" id="lesson-task-sub-lesson-id" class="form-select" required style="border: 2px solid var(--border);">
+                                    <option value="">— Сначала выберите урок —</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-600">Макс. балл</label>
+                                <input type="number" name="max_score" value="100" min="1" max="100" class="form-control" style="border: 2px solid var(--border);">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-600">Описание задания <span class="text-danger">*</span></label>
+                            <textarea name="description" class="form-control" required rows="3" placeholder="Текст задания на урок..." maxlength="2000" style="border: 2px solid var(--border);"></textarea>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-600">Ссылка на видео (необязательно)</label>
+                                <input type="url" name="task_video_url" class="form-control" placeholder="https://..." maxlength="500" style="border: 2px solid var(--border);">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-600">Прикрепить файл</label>
+                                <input type="file" name="task_attachment" class="form-control" accept=".pdf,.doc,.docx,.txt,.rtf" style="border: 2px solid var(--border);">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-ai"><i class="bi bi-pencil-square me-1"></i>Добавить задание для урока</button>
+                    </form>
+                    {% else %}
+                    <p class="text-secondary mb-0">Сначала создайте урок и добавьте подуроки в <a href="{% url 'teacher_lesson_create' %}">редактировании урока</a>.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ sub_lessons_by_lesson|json_script:"subLessonsData" }}
+<script>
+(function() {
+    var dataEl = document.getElementById('subLessonsData');
+    var subLessonsByLesson = dataEl ? JSON.parse(dataEl.textContent) : {};
+    function fillSubLessons(lessonSelectId, subSelectId) {
+        var lessonSelect = document.getElementById(lessonSelectId);
+        var subSelect = document.getElementById(subSelectId);
+        if (!lessonSelect || !subSelect) return;
+        function update() {
+            var lessonId = lessonSelect.value;
+            subSelect.innerHTML = '<option value="">— Выберите подурок —</option>';
+            if (!lessonId) return;
+            var subs = subLessonsByLesson[lessonId] || subLessonsByLesson[String(lessonId)];
+            if (subs && subs.length) {
+                subs.forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.title;
+                    subSelect.appendChild(opt);
+                });
+            } else {
+                subSelect.innerHTML = '<option value="">— В этом уроке нет подуроков —</option>';
+            }
+        }
+        lessonSelect.addEventListener('change', update);
+        update();
+    }
+    fillSubLessons('homework-lesson-id', 'homework-sub-lesson-id');
+    fillSubLessons('lesson-task-lesson-id', 'lesson-task-sub-lesson-id');
+})();
+</script>
+{% endblock %}

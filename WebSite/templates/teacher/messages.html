@@ -1,37 +1,34 @@
-{% extends "student/base.html" %}
+{% extends "teacher/base.html" %}
 {% load static %}
 
-{% block title %}Личные сообщения{% endblock %}
-{% block page_title %}Личные сообщения{% endblock %}
+{% block title %}Сообщения{% endblock %}
+{% block page_title %}Сообщения{% endblock %}
 
 {% block content %}
 <div class="student-page">
     <div class="page-hero anim-fade-up mb-4">
-        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Связь</p>
-        <h1>Личные <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">сообщения</span></h1>
-        <p class="lead">Переписка с преподавателями и менторами по группам</p>
+        <p class="text-uppercase mb-2" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: var(--accent);">Чат</p>
+        <h1>Сообщения <span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">групп</span></h1>
+        <p class="lead">Переписка со студентами и коллегами по группам</p>
     </div>
 
     <div class="card-ai card-glow animate-on-scroll">
         <div class="row g-0" style="min-height: 560px;">
             <div class="col-md-4 border-end" style="border-color: var(--border) !important;">
                 <div class="p-3 border-bottom" style="border-color: var(--border) !important;">
-                    <strong class="fs-6">Диалоги</strong>
+                    <strong class="fs-6">Группы</strong>
                 </div>
                 <div class="conversation-list" style="max-height: 480px; overflow-y: auto;">
                     {% if my_groups %}
                         {% for g in my_groups %}
-                        <a href="{% url 'messages' %}?group={{ g.id }}" class="d-block p-3 text-decoration-none border-bottom" style="border-color: var(--border) !important; color: inherit; {% if selected_group and selected_group.id == g.id %}background: var(--ai-subtle); border-left: 3px solid var(--accent);{% endif %}">
+                        <a href="{% url 'teacher_messages' %}?group={{ g.id }}" class="d-block p-3 text-decoration-none border-bottom" style="border-color: var(--border) !important; color: inherit; {% if selected_group and selected_group.id == g.id %}background: var(--ai-subtle); border-left: 3px solid var(--accent);{% endif %}">
                             <div class="fw-600 text-truncate">{{ g.course.title }}</div>
                             <div class="small text-secondary">Группа: {{ g.name }}</div>
-                            {% if g.teacher and g.teacher.user %}<div class="small mt-1 text-secondary"><i class="bi bi-person-badge me-1"></i>Учитель: {% if g.teacher.user.get_full_name %}{{ g.teacher.user.get_full_name }}{% else %}—{% endif %}</div>{% endif %}
-                            {% if g.mentor and g.mentor.user %}<div class="small text-secondary"><i class="bi bi-person-workspace me-1"></i>Ментор: {% if g.mentor.user.get_full_name %}{{ g.mentor.user.get_full_name }}{% else %}—{% endif %}</div>{% endif %}
                         </a>
                         {% endfor %}
                     {% else %}
                         <div class="p-4 text-center text-secondary" style="min-height: 200px;">
-                            <p class="mb-0">Нет диалогов</p>
-                            <small>Вы будете видеть чаты групп, в которых состоите (Мои курсы)</small>
+                            <p class="mb-0">Нет групп</p>
                         </div>
                     {% endif %}
                 </div>
@@ -54,8 +51,8 @@
                                 <span class="fw-600" style="color: var(--accent);">Вы</span>
                                 <span class="text-secondary">{{ msg.created_at|date:"d.m.Y H:i" }}</span>
                                 <span class="ms-1">
-                                    <a href="{% url 'messages' %}?group={{ selected_group.id }}&edit={{ msg.id }}" class="text-secondary small text-decoration-none">Изменить</a>
-                                    <form method="post" action="{% url 'messages' %}?group={{ selected_group.id }}" class="d-inline" onsubmit="return confirm('Удалить сообщение?');">
+                                    <a href="{% url 'teacher_messages' %}?group={{ selected_group.id }}&edit={{ msg.id }}" class="text-secondary small text-decoration-none">Изменить</a>
+                                    <form method="post" action="{% url 'teacher_messages' %}?group={{ selected_group.id }}" class="d-inline" onsubmit="return confirm('Удалить сообщение?');">
                                         {% csrf_token %}
                                         <input type="hidden" name="group_id" value="{{ selected_group.id }}">
                                         <input type="hidden" name="action" value="delete">
@@ -86,7 +83,7 @@
                 </div>
                 <div class="p-4 border-top" style="border-color: var(--border) !important;">
                     {% if edit_message_id %}
-                    <form method="post" action="{% url 'messages' %}?group={{ selected_group.id }}">
+                    <form method="post" action="{% url 'teacher_messages' %}?group={{ selected_group.id }}">
                         {% csrf_token %}
                         <input type="hidden" name="group_id" value="{{ selected_group.id }}">
                         <input type="hidden" name="action" value="edit">
@@ -95,15 +92,15 @@
                         <div class="d-flex gap-2 mt-1">
                             <textarea name="text" class="form-control rounded-4" rows="2" style="border: 2px solid var(--border);" maxlength="5000" required>{{ edit_message_text }}</textarea>
                             <button type="submit" class="btn btn-ai align-self-end">Сохранить</button>
-                            <a href="{% url 'messages' %}?group={{ selected_group.id }}" class="btn btn-outline-secondary align-self-end">Отмена</a>
+                            <a href="{% url 'teacher_messages' %}?group={{ selected_group.id }}" class="btn btn-outline-secondary align-self-end">Отмена</a>
                         </div>
                     </form>
                     {% else %}
-                    <form method="post" action="{% url 'messages' %}?group={{ selected_group.id }}">
+                    <form method="post" action="{% url 'teacher_messages' %}?group={{ selected_group.id }}">
                         {% csrf_token %}
                         <input type="hidden" name="group_id" value="{{ selected_group.id }}">
                         <div class="d-flex gap-2">
-                            <input type="text" name="text" class="form-control rounded-4" placeholder="Написать сообщение учителю или в чат группы..." style="border: 2px solid var(--border);" maxlength="5000" required>
+                            <input type="text" name="text" class="form-control rounded-4" placeholder="Написать сообщение в чат группы..." style="border: 2px solid var(--border);" maxlength="5000" required>
                             <button type="submit" class="btn btn-ai px-4"><i class="bi bi-send-fill"></i></button>
                         </div>
                     </form>
@@ -111,7 +108,7 @@
                 </div>
                 {% else %}
                 <div class="flex-grow-1 p-4 d-flex align-items-center justify-content-center" style="min-height: 280px;">
-                    <p class="text-secondary mb-0 text-center">Выберите диалог слева — чат группы с учителем и ментором</p>
+                    <p class="text-secondary mb-0 text-center">Выберите группу слева, чтобы открыть чат</p>
                 </div>
                 {% endif %}
             </div>

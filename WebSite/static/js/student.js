@@ -115,16 +115,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Подсветка только выбранного раздела: «Главная» (/student) — только при точном совпадении
+    // Подсветка только выбранного раздела: «Главная» — только при точном совпадении (и для /student, и для /teacher)
     const currentPath = (window.location.pathname || '').replace(/\/$/, '') || '/';
-    const studentRoot = '/student';
+    const sectionRoot = currentPath.indexOf('/teacher') === 0 ? '/teacher' : (currentPath.indexOf('/student') === 0 ? '/student' : '');
     document.querySelectorAll('.nav-item').forEach(item => {
         const href = (item.getAttribute('href') || '').replace(/\/$/, '') || '';
         let active = false;
         if (href) {
             if (currentPath === href) {
                 active = true;
-            } else if (href !== studentRoot && href !== '/' && currentPath.startsWith(href + '/')) {
+            } else if (href !== sectionRoot && href !== '/' && currentPath.startsWith(href + '/')) {
                 active = true; // подстраница раздела (например урок внутри курса)
             }
         }
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notificationsList.innerHTML = '<div class="text-center text-secondary py-4 small">Нет уведомлений</div>';
             return;
         }
-        var kinds = { news: 'Новость', homework: 'Домашнее задание', lesson_soon: 'Урок через 30 мин', lesson_started: 'Урок начался' };
+        var kinds = { news: 'Новость', homework: 'Домашнее задание', lesson_soon: 'Урок через 30 мин', lesson_started: 'Урок начался', chat_message: 'Сообщение в чате' };
         var html = '';
         list.forEach(function(n) {
             var kindLabel = escapeHtml(kinds[n.kind] || n.kind);

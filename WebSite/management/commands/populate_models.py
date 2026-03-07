@@ -106,7 +106,7 @@ class Command(BaseCommand):
                     'choices': 'teacher',
                     'bio': 'Опытный преподаватель по программированию и AI.',
                     'experience_years': '10',
-                    'working_companies': 'Swift Intell, Тинькофф',
+                    'working_companies': '101 school, Тинькофф',
                 },
             )
             self.stdout.write('  Создан преподаватель: demo_teacher@example.com')

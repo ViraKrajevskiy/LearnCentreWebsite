@@ -17,6 +17,7 @@ from WebSite.serializers.otp_register.otp_registration import (
     RegistrationSerializer, OTPVerifySerializer, LoginSerializer,
     ProfileSerializer, ChangePasswordSerializer, UpdateProfileSerializer
 )
+from WebSite.utils.telegram import send_telegram_message
 
 User = get_user_model()
 
@@ -178,20 +179,23 @@ class LoginView(APIView):
         if not user.is_active:
             return Response({"error": "Аккаунт не активирован. Завершите регистрацию через OTP."}, status=status.HTTP_400_BAD_REQUEST)
 
-        login_type = serializer.validated_data.get('login_type', 'student')
+        # Если login_type не передан — разрешаем любой роль; редирект по role на фронте
+        login_type = request.data.get('login_type')
         staff_roles = ['teacher', 'mentor', 'staff']
-        if login_type == 'staff' and user.role not in staff_roles:
-            return Response(
-                {"error": "Вход для сотрудников. Ваш аккаунт не имеет прав доступа."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        if login_type == 'student' and user.role in staff_roles:
-            return Response(
-                {"error": "Вход для студентов. Сотрудникам — используйте страницу входа для персонала."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if login_type == 'staff':
+            if user.role not in staff_roles:
+                return Response(
+                    {"error": "Вход для сотрудников. Ваш аккаунт не имеет прав доступа."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        elif login_type == 'student':
+            if user.role in staff_roles:
+                return Response(
+                    {"error": "Вход для студентов. Сотрудникам — используйте страницу входа для персонала."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
-        if login_type == 'student':
+        if user.role not in staff_roles:
             Student.objects.get_or_create(user=user, defaults={'course': None})
         login(request, user)
         refresh = RefreshToken.for_user(user)
@@ -199,6 +203,7 @@ class LoginView(APIView):
             "message": "Вход выполнен",
             "access": str(refresh.access_token),
             "refresh": str(refresh),
+            "role": user.role,
         }, status=status.HTTP_200_OK)
 
 
@@ -234,20 +239,90 @@ class ProfileView(APIView):
     patch = put
 
 
+class RequestChangePasswordOTPView(APIView):
+    """Запросить код для смены пароля — код придёт в Telegram (привязанный к аккаунту)."""
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=['Регистрация и Авторизация'],
+        summary='Запросить код смены пароля в Telegram',
+        description='Создаёт OTP и отправляет код в Telegram пользователя. Вернёт session_id для шага верификации.',
+        responses={
+            200: inline_serializer(
+                name='RequestChangePasswordOTPSuccess',
+                fields={
+                    'session_id': serializers.UUIDField(),
+                    'message': serializers.CharField(),
+                }
+            ),
+            400: OpenApiResponse(description='Telegram не привязан к аккаунту'),
+        },
+    )
+    def post(self, request):
+        user = request.user
+        if not getattr(user, 'telegram_chat_id', None):
+            return Response(
+                {"error": "К аккаунту не привязан Telegram. Привяжите Telegram в профиле или смените пароль по текущему паролю."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        code = str(random.randint(100000, 999999))
+        identifier = f"pwchange:{user.pk}"
+        otp_record = UserOTP.objects.create(identifier=identifier, code=code)
+        send_telegram_message(
+            user.telegram_chat_id,
+            f"Код для смены пароля на сайте LearnCentre:\n<code>{code}</code>\n\nВведите его на странице смены пароля. Код действителен 5 минут.",
+        )
+        return Response({
+            "session_id": otp_record.session_id,
+            "message": "Код отправлен в Telegram. Введите его и новый пароль ниже.",
+        }, status=status.HTTP_200_OK)
+
+
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=['Регистрация и Авторизация'],
         summary='Смена пароля',
-        description='Требует Bearer токен. Старый и новый пароль.',
+        description='По текущему паролю (old_password + new_password) или по коду из Telegram (session_id + code + new_password).',
         request=ChangePasswordSerializer,
         responses={200: OpenApiResponse(description='Пароль успешно изменён')},
     )
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            request.user.set_password(serializer.validated_data['new_password'])
-            request.user.save()
-            return Response({"message": "Пароль успешно изменён"}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = serializer.validated_data
+        new_password = data['new_password']
+
+        if data.get('session_id') and data.get('code'):
+            session_id = data['session_id']
+            code = data['code']
+            try:
+                otp = UserOTP.objects.get(session_id=session_id)
+            except UserOTP.DoesNotExist:
+                return Response({"error": "Сессия не найдена. Запросите код заново."}, status=status.HTTP_400_BAD_REQUEST)
+            if not otp.is_valid:
+                return Response({"error": "Код истёк или уже использован. Запросите новый код."}, status=status.HTTP_400_BAD_REQUEST)
+            if not (otp.identifier or "").startswith("pwchange:"):
+                return Response({"error": "Неверная сессия смены пароля."}, status=status.HTTP_400_BAD_REQUEST)
+            if otp.code != code:
+                otp.attempts += 1
+                otp.save()
+                return Response({"error": "Неверный код."}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                user_id = int(otp.identifier.split(":", 1)[1])
+                user = User.objects.get(pk=user_id)
+            except (ValueError, User.DoesNotExist):
+                return Response({"error": "Пользователь не найден."}, status=status.HTTP_400_BAD_REQUEST)
+            if user.pk != request.user.pk:
+                return Response({"error": "Сессия не принадлежит текущему пользователю."}, status=status.HTTP_403_FORBIDDEN)
+            otp.is_used = True
+            otp.save()
+            user.set_password(new_password)
+            user.save()
+            return Response({"message": "Пароль успешно изменён."}, status=status.HTTP_200_OK)
+
+        request.user.set_password(new_password)
+        request.user.save()
+        return Response({"message": "Пароль успешно изменён"}, status=status.HTTP_200_OK)

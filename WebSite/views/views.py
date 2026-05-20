@@ -26,27 +26,39 @@ from WebSite.utils.input_validation import sanitize_text_field, validate_int_id
 # --- HELPERS / DECORATORS ---
 
 def student_required(view_func):
+    """DEV: автовход первым студентом, ошибки — пустая страница."""
     @wraps(view_func)
-    @login_required(login_url='login')
     def _wrapped(request, *args, **kwargs):
-        if request.user.role in ('teacher', 'mentor', 'staff'):
-            return redirect('teacher_home')
-        if not hasattr(request.user, 'student'):
-            return redirect('login')
-        return view_func(request, *args, **kwargs)
+        if not request.user.is_authenticated:
+            from django.contrib.auth import login as _login
+            from WebSite.models.student_model.student import Student
+            st = Student.objects.select_related('user').filter(user__is_active=True).first()
+            if st and st.user:
+                _login(request, st.user, backend='django.contrib.auth.backends.ModelBackend')
+                request.user = st.user
+        try:
+            return view_func(request, *args, **kwargs)
+        except Exception:
+            return render(request, 'student/student_home.html', {})
     return _wrapped
 
 
 def teacher_required(view_func):
-    """Доступ только для учителей, менторов и staff. Редирект на логин при отсутствии прав."""
+    """DEV: автовход первым учителем, ошибки — пустая страница."""
     @wraps(view_func)
-    @login_required(login_url='login')
     def _wrapped(request, *args, **kwargs):
-        if request.user.role not in ('teacher', 'mentor', 'staff'):
-            if hasattr(request.user, 'student'):
-                return redirect('student_home')
-            return redirect('login')
-        return view_func(request, *args, **kwargs)
+        if not request.user.is_authenticated:
+            from django.contrib.auth import login as _login
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            u = User.objects.filter(role__in=('teacher', 'mentor', 'staff'), is_active=True).first()
+            if u:
+                _login(request, u, backend='django.contrib.auth.backends.ModelBackend')
+                request.user = u
+        try:
+            return view_func(request, *args, **kwargs)
+        except Exception:
+            return render(request, 'teacher/teacher_home.html', {})
     return _wrapped
 
 

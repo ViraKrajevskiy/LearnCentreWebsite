@@ -258,7 +258,9 @@ def main_home(request):
 
 
 def main_courses(request):
-    return render(request, 'main_pages/courses.html')
+    from django.conf import settings
+    video_id = getattr(settings, 'GOOGLE_DRIVE_COURSES_VIDEO_ID', None)
+    return render(request, 'main_pages/courses.html', {'google_drive_video_id': video_id})
 
 
 def main_about(request):

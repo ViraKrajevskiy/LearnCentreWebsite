@@ -168,3 +168,6 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Видео с Google Диска на странице «Направления» (курсы). ID из ссылки: drive.google.com/file/d/VIDEO_ID/view
+GOOGLE_DRIVE_COURSES_VIDEO_ID = (os.getenv('GOOGLE_DRIVE_COURSES_VIDEO_ID') or '').strip() or None

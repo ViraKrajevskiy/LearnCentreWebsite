@@ -22,3 +22,5 @@ db.sqlite3-journal
 Thumbs.db
 
 build
+staticfiles/
+WebSite/middleware.py

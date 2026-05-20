@@ -9,6 +9,23 @@
         <h1 class="section-title">Направления</h1>
         <p class="section-subtitle">Обучаем с AI. Выберите программу и начните обучение.</p>
 
+        {% if google_drive_video_id %}
+        <div class="row justify-content-center mb-5">
+            <div class="col-12 col-lg-10">
+                <div class="rounded-3 overflow-hidden shadow-sm gdrive-video-wrap" style="background: #111; position: relative; padding-bottom: 56.25%; height: 0;">
+                    <iframe
+                        src="https://drive.google.com/file/d/{{ google_drive_video_id }}/preview?embed=true"
+                        allow="autoplay; fullscreen"
+                        allowfullscreen
+                        title="Видео о курсах"
+                        style="position: absolute; top: -48px; left: 0; width: 100%; height: calc(100% + 56px); border: none;"
+                    ></iframe>
+                    <div class="gdrive-video-overlay" aria-hidden="true" style="position: absolute; top: 0; left: 0; width: 100%; height: 48px; z-index: 2; pointer-events: auto; cursor: default;"></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="row g-4">
             <div class="col-md-6 col-lg-4">
                 <div class="course-card-public">
